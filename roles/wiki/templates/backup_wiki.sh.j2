@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# backup script for {{ wiki_backup_path }}
+
+# stop services
+/etc/init.d/nginx stop
+/etc/init.d/{{ wiki_php }} stop
+
+src="{{ wiki_root_path }} {{ wiki_content }}" 
+dest="{{ wiki_backup_dir }}"
+day=$(date +%Y%m%d)
+
+/bin/tar -czf "$dest/wiki-$day.tar.gz" --exclude {{ wiki_root_path }}/data/cache --exclude {{ wiki_content }}cache $src
+
+# start services
+/etc/init.d/nginx start
+/etc/init.d/{{ wiki_php }} start

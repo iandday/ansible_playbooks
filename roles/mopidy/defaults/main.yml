@@ -1,0 +1,42 @@
+---
+#
+# roles/mopidy/defaults/main.yaml
+#
+
+mopidy_required_vars:
+  - mopidy_apt_list
+  - mopidy_jellyfin_host
+  - mopidy_jellyfin_username
+  - mopidy_jellyfin_password
+  - mopidy_pandora_partner_encryption_key
+  - mopidy_pandora_partner_decryption_key
+  - mopidy_pandora_partner_password
+  - mopidy_pandora_username
+  - mopidy_pandora_password
+mopidy_apt_packages:
+  - mopidy-spotify
+  - gstreamer1.0-libav
+  - build-essential 
+  - python3-dev 
+  - python3-pip
+  - python3-gst-1.0
+  - gir1.2-gstreamer-1.0 
+  - gir1.2-gst-plugins-base-1.0 
+  - gstreamer1.0-plugins-good 
+  - gstreamer1.0-plugins-ugly
+  - gstreamer1.0-tools
+mopidy_python_packages:
+  - setuptools
+  - wheel
+  - mopidy
+  - Mopidy-Jellyfin
+  - Mopidy-InternetArchive
+  - Mopidy-Pandora
+  - Mopidy-Podcast
+  - Mopidy-YouTube
+  - Mopidy-RadioNet
+  - Mopidy-TuneIn
+  - Mopidy-SomaFM
+  - mopidy-mopify
+mopidy_gpg_key: 'https://apt.mopidy.com/mopidy.gpg'
+mopidy_conf_path: '/etc/mopidy/mopidy.conf'

@@ -1,0 +1,19 @@
+---
+#
+# roles/syslog_ng/defaults/main.yaml
+#
+
+syslog_ng_required_vars:
+  - syslog_ng_log_service_username
+  - syslog_ng_log_service_password
+  - syslog_ng_log_path
+  - syslog_ng_unifi_receive_port
+  - syslog_ng_opnsense_receive_port
+  - syslog_ng_config
+syslog_ng_apt_packages:
+  - syslog-ng
+syslog_ng_log_dest: '/var/log/syslog-ng'
+syslog_ng_conf_dir: '/etc/syslog-ng/conf.d/'
+syslog_ng_conf_file: '/etc/syslog-ng/syslog-ng.conf'
+syslog_ng_log_user: root
+syslog_ng_log_group: root

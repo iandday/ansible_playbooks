@@ -1,0 +1,28 @@
+---
+#
+#  Nextcloud LXC 
+#
+
+- name: deploy container
+  hosts: nextcloud
+  gather_facts: false
+  pre_tasks:
+    - name: create lxc
+      import_role:
+        name: common
+        tasks_from: create_lxc.yml
+      delegate_to: localhost
+    - name: gather facts
+      gather_facts:
+    - name: change hostname
+      import_role:
+        name: common
+        tasks_from: change_hostname.yml
+    - name: post clone setup
+      import_role:
+        name: common
+        tasks_from: post_creation.yml
+  roles: 
+  - nginx
+  - mysql
+  - nextcloud

@@ -1,0 +1,14 @@
+---
+#
+# roles/snapcast_server/tasks/main.yml
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ snapcast_server_required_vars }}'
+
+- name: load snapcast_server install tasks
+  include_tasks: snapcast_server_install.yml

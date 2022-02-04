@@ -1,0 +1,3 @@
+====== @NAME@ (@USER@) - Private Page ======
+This page is **only viewable by you and reserved for your own usage**
+

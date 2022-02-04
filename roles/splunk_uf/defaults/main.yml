@@ -1,0 +1,17 @@
+---
+#
+# roles/splunk_uf/defaults/main.yaml
+#
+
+splunk_uf_required_vars:
+  - splunk_uf_admin_password
+  - splunk_uf_inputs
+splunk_uf_apt_packages:
+  - nfs-common
+  - cifs-utils
+  - git
+  - acl
+splunk_uf_url: 'https://download.splunk.com/products/universalforwarder/releases/8.2.3/linux/splunkforwarder-8.2.3-cd0848707637-linux-2.6-amd64.deb'
+splunk_uf_user: splunk
+splunk_uf_group: splunk
+splunk_uf_dir: '/opt/splunkforwarder'

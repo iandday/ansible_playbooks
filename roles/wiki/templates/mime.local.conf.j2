@@ -1,0 +1,8 @@
+# mime.local.conf
+
+# {{ ansible_managed }}
+#
+
+{% for ext in wiki_upload_extensions %}
+{{ ext.extension }}        {{ ext.mime }}  
+{% endfor %}

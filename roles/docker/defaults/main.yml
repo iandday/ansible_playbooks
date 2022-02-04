@@ -1,0 +1,32 @@
+---
+#
+# roles/docker/defaults/main.yml
+#
+
+docker_user: docker
+docker_uid: 997
+docker_gid: 3333
+docker_compose_url: 'https://github.com/docker/compose/releases/download/{{ docker_compose_ver }}/docker-compose-Linux-x86_64'
+docker_required_vars:
+  - docker_compose_ver
+  - docker_backup_username
+  - docker_backup_password
+docker_apt_packages: 
+  - cifs-utils
+  - nfs-common 
+  - apt-transport-https 
+  - ca-certificates 
+  - curl 
+  - software-properties-common
+  - docker-ce
+  - python3-pip
+docker_package_repo: 
+  - 'deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable'
+docker_repo_key: 
+  - 'https://download.docker.com/linux/ubuntu/gpg'
+docker_python_packages:
+  - docker
+docker_backup_dir: '/home/ansible/backup/docker'
+docker_s3_bucket: 'docker-volumes'
+docker_s3_id: '{{ vault_docker_s3_id }}'
+docker_s3_key: '{{ vault_docker_s3_key }}'

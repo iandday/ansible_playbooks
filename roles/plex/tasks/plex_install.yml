@@ -1,0 +1,123 @@
+---
+#
+# roles/plex/tasks/plex_install.yml
+#
+
+- name: Install APT key for Plex
+  become: true
+  apt_key:
+    url: https://downloads.plex.tv/plex-keys/PlexSign.key
+
+- name: Install repo for Plex controller
+  become: true
+  apt_repository:
+    repo: deb https://downloads.plex.tv/repo/deb public main
+    state: present
+    filename: 'plexmediaserver.list'
+
+- name: update apt cache and install required packages
+  become: true
+  apt: 
+    name: '{{ plex_apt_packages }}'
+    state: present
+    update_cache: yes
+
+- name: Enable plex
+  become: true
+  systemd:
+    name: plexmediaserver
+    state: started
+    enabled: true
+
+- name: mount movies share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ plex_movies_path }}'
+    mount_dest: '{{ plex_movies_dest }}'
+    mount_username: '{{ plex_service_username }}'
+    mount_password: '{{ plex_service_password }}'
+    mount_uid: '{{ plex_user }}'
+    mount_gid: '{{ plex_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: mount music share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ plex_music_path }}'
+    mount_dest: '{{ plex_music_dest }}'
+    mount_username: '{{ plex_service_username }}'
+    mount_password: '{{ plex_service_password }}'
+    mount_uid: '{{ plex_user }}'
+    mount_gid: '{{ plex_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: mount tv share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ plex_tv_path }}'
+    mount_dest: '{{ plex_tv_dest }}'
+    mount_username: '{{ plex_service_username }}'
+    mount_password: '{{ plex_service_password }}'
+    mount_uid: '{{ plex_user }}'
+    mount_gid: '{{ plex_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+# - name: create backup directory
+#   file:
+#     path: '{{ item }}'
+#     state: directory
+#     mode: 0700
+#     owner: '{{ plex_user }}'
+#     group: '{{ plex_group }}'
+#   with_items:
+#     - '{{ all_backup_root }}' 
+#     - '{{ plex_backup_dir }}' 
+#   become: true
+
+# - name: mount backup share
+#   include_role:
+#     name: common
+#     tasks_from: mount_share
+#   vars:
+#     mount_src:  '{{ all_nas_backup }}'
+#     mount_dest: '{{ all_backup_root }}'
+#     mount_username: '{{ plex_service_username }}'
+#     mount_password: '{{ plex_service_password }}'
+#     mount_uid: '{{ plex_user }}'
+#     mount_gid: '{{ plex_group }}'
+#     mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+#   no_log: true
+
+# - name: copy backup script
+#   template:
+#     src: backup_plex.sh.j2
+#     dest: /usr/local/bin/backup_plex.sh
+#     mode: 'a+x'
+#   become: true
+
+# - name: setup backup cronjob
+#   cron:
+#     name: 'Backup plex'
+#     job: '/usr/local/bin/backup_plex.sh'
+#     user: root
+#     cron_file: backup_plex
+#     hour: '3'
+#     minute: '5'
+#   become: true
+
+# - name: configure backup rotation
+#   include_role:
+#     name: common
+#     tasks_from: rotate_backups
+#   vars:
+#     - cron_user: root
+#     - backup_path: '{{ plex_backup_dir }}'

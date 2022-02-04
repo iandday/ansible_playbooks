@@ -1,0 +1,19 @@
+---
+#
+# roles/nginx/tasks/main.yml
+#
+
+- name: Install nginx package
+  apt: 
+    pkg: '{{ item }}' 
+    state: latest
+    force: yes
+  loop: '{{ nginx_apt_packages }}'
+  become: true
+
+- name: disable default site
+  file:
+    path: '/etc/nginx/sites-enabled/default'
+    state: absent    
+  notify: restart nginx
+  become: true

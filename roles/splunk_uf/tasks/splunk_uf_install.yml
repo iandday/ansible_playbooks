@@ -1,0 +1,71 @@
+---
+#
+# roles/splunk_uf/tasks/splunk_uf_install.yml
+#
+
+
+- name: update apt cache and install required packages
+  become: true
+  ansible.builtin.apt: 
+    name: '{{ splunk_uf_apt_packages }}'
+    state: present
+    update_cache: yes
+
+
+- name: get installed packages
+  become: true
+  package_facts: 
+    manager: apt
+
+- name: download and install splunk_uf package
+  become: true
+  apt:
+    deb: '{{ splunk_uf_url }}'
+    install_recommends: yes
+  when: '"splunkforwarder" not in ansible_facts.packages'
+
+- name: create splunk group
+  become: true
+  ansible.builtin.group:
+    name: '{{ splunk_uf_group }}'
+    state: present
+
+- name: create splunk user
+  become: true
+  user:
+    name: '{{ splunk_uf_user }}'
+    group: '{{ splunk_uf_group }}'
+
+- name: configure forwader
+  become: true
+  template:
+    src: '{{ item  }}.j2'
+    dest: '{{ splunk_uf_dir }}/etc/system/local/{{ item }}'
+    owner: '{{ splunk_uf_user }}'
+    group: '{{ splunk_uf_group }}'  
+    mode: 0744
+  with_items:
+    - outputs.conf
+    - inputs.conf
+  notify: restart splunk
+    
+- name: modify splunk_uf directory permissions
+  become: true
+  file:
+    path: '{{ splunk_uf_dir }}'
+    owner: '{{ splunk_uf_user }}'
+    group: '{{ splunk_uf_group }}'
+    recurse: yes
+
+- name: initial splunk_uf start
+  become: true
+  become_user: '{{ splunk_uf_user }}'
+  command: '{{ splunk_uf_dir }}/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd {{ splunk_uf_admin_password }}'
+  when: '"splunkforwarder" not in ansible_facts.packages'
+
+  
+- name: start splunk_uf at boot
+  become: true
+  command: '{{ splunk_uf_dir }}/bin/splunk enable boot-start -user {{ splunk_uf_user }}' 
+  when: '"splunkforwarder" not in ansible_facts.packages'
+

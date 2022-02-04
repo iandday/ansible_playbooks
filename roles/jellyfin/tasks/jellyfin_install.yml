@@ -1,0 +1,128 @@
+---
+#
+# roles/jellyfin/tasks/jellyfin_install.yml
+#
+
+- name: update apt cache and install required packages
+  apt: 
+    name: '{{ jellyfin_apt_packages }}'
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Import Jellyfin Team GPG key
+  apt_key:
+    url: '{{ jellyfin_gpg_key }}'
+    state: present
+  become: true
+
+- name: Add Jellyfin repository
+  apt_repository:
+    repo: >
+      deb https://repo.jellyfin.org/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} main
+    state: present
+  become: true
+
+- name: Install Jellyfin 
+  apt:
+    update_cache: true
+    name:
+      - jellyfin
+      - python{{ "3" if ansible_python.version.major == 3 }}-lxml
+    state: present
+  become: true
+
+- name: Enable Jellyfin
+  systemd:
+    name: jellyfin
+    state: started
+    enabled: true
+  become: true
+
+- name: mount movies share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ jellyfin_movies_path }}'
+    mount_dest: '{{ jellyfin_movies_dest }}'
+    mount_username: '{{ jellyfin_service_username }}'
+    mount_password: '{{ jellyfin_service_password }}'
+    mount_uid: '{{ jellyfin_user }}'
+    mount_gid: '{{ jellyfin_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: mount music share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ jellyfin_music_path }}'
+    mount_dest: '{{ jellyfin_music_dest }}'
+    mount_username: '{{ jellyfin_service_username }}'
+    mount_password: '{{ jellyfin_service_password }}'
+    mount_uid: '{{ jellyfin_user }}'
+    mount_gid: '{{ jellyfin_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: mount tv share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ jellyfin_tv_path }}'
+    mount_dest: '{{ jellyfin_tv_dest }}'
+    mount_username: '{{ jellyfin_service_username }}'
+    mount_password: '{{ jellyfin_service_password }}'
+    mount_uid: '{{ jellyfin_user }}'
+    mount_gid: '{{ jellyfin_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: create backup directory
+  file:
+    path: '{{ all_backup_root }}'
+    state: directory 
+  become: true
+
+- name: mount backup share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ all_nas_backup }}'
+    mount_dest: '{{ all_backup_root }}'
+    mount_username: '{{ jellyfin_service_username }}'
+    mount_password: '{{ jellyfin_service_password }}'
+    mount_uid: '{{ jellyfin_user }}'
+    mount_gid: '{{ jellyfin_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: copy backup script
+  template:
+    src: backup_jellyfin.sh.j2
+    dest: /usr/local/bin/backup_jellyfin.sh
+    mode: 'a+x'
+  become: true
+
+- name: setup backup cronjob
+  cron:
+    name: 'Backup jellyfin'
+    job: '/usr/local/bin/backup_jellyfin.sh'
+    user: root
+    cron_file: backup_jellyfin
+    hour: '3'
+    minute: '5'
+  become: true
+
+- name: configure backup rotation
+  include_role:
+    name: common
+    tasks_from: rotate_backups
+  vars:
+    - cron_user: root
+    - backup_path: '{{ jellyfin_backup_dir }}'

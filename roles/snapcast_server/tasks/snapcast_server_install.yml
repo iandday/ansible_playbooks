@@ -1,0 +1,22 @@
+---
+#
+# roles/snapcast_server/tasks/snapcast_server_install.yml
+#
+
+
+- name: update apt cache and install required package
+  apt: 
+    deb: '{{ snapcast_server_deb_url }}'
+    state: present
+    update_cache: yes
+  become: true
+
+- name: configure snapcast
+  template:
+    src: snapserver.conf.j2
+    dest: /etc/snapserver.conf
+  become: true
+
+
+
+

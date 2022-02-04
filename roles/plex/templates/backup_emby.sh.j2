@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# backup script for plex
+
+# stop services
+systemctl start plex-server
+
+
+src="{{ plex_data_dir}}config {{ plex_data_dir}}plugins {{ plex_data_dir}}data/collections {{ plex_data_dir}}data/playlists {{ plex_data_dir}}data/displaypreferences.db {{ plex_data_dir}}/data/userdata_v2.db {{ plex_data_dir}}data/users.db {{ plex_data_dir}}data/library.db" 
+dest="{{ plex_backup_dir }}"
+day=$(date +%Y%m%d)
+
+/bin/tar --ignore-failed-read -czf "$dest/plex-$day.tar.gz" $src 
+
+# start services
+systemctl start plex-server

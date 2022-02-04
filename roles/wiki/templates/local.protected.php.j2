@@ -1,0 +1,12 @@
+<?php
+/*
+ * Dokuwiki's Main Configuration File - Local Protected Settings
+ * {{ ansible_managed }}
+ */
+
+{% if wiki_local_protected is defined %}
+{%   for conf in wiki_local_protected %}
+$conf{{ conf.name }} = '{{ conf.value }}';
+{%   endfor %}
+{% endif %}
+// End Ansible generated config

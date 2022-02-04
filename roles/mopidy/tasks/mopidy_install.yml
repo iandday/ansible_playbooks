@@ -1,0 +1,43 @@
+---
+#
+# roles/mopidy/tasks/mopidy_install.yml
+#
+
+- name: Import mopidy Team GPG key
+  apt_key:
+    url: '{{ mopidy_gpg_key }}'
+    state: present
+  become: true
+
+- name: Add mopidy repository
+  apt_repository:
+    repo: '{{ mopidy_apt_list }}'
+    state: present
+  become: true
+
+- name: update apt cache and install required packages
+  apt: 
+    name: '{{ mopidy_apt_packages }}'
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Install pip dependencies
+  pip:
+    name: '{{ mopidy_python_packages }}'
+    state: present
+  notify: restart mopidy
+  become: true
+
+- name: copy mopidy config
+  template:
+    src: mopidy.conf.j2
+    dest: /etc/mopidy/mopidy.conf
+  become: true
+
+- name: Enable mopidy
+  systemd:
+    name: mopidy
+    state: started
+    enabled: true
+  become: true

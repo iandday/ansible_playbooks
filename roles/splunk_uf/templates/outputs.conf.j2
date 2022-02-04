@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+[tcpout]
+defaultGroup=splunk
+
+[tcpout:splunk]
+server={{ all_splunk_ip }}:{{ all_splunk_uf_port }}
+useACK=true
+useSSL=false
+sendCookedData=true

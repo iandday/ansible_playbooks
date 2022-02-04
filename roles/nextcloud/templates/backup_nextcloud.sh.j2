@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+sudo -u {{ nextcloud_user }} php {{ nextcloud_install_path }}/occ maintenance:mode --on
+mysqldump --single-transaction -h 127.0.0.1 -u {{ mysql_user }} -p{{ vault_nextcloud_mysql_password }} {{ mysql_database }} > {{ nextcloud_backup_dir }}/nextcloud-sqlbkp_`date +"%Y%m%d"`.bak
+sudo -u www-data php {{ nextcloud_install_path }}/occ maintenance:mode --off

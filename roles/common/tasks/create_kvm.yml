@@ -1,0 +1,146 @@
+---
+#
+# roles/common/tasks/create_kvm.yml
+#
+
+
+- name: create kvm from template
+  proxmox_kvm:
+    api_user: '{{ all_pve_api_user }}' 
+    api_password: '{{ all_pve_api_password }}' 
+    api_host: '{{ all_pve_api_host }}' 
+    node: '{{ kvm_node }}' 
+    name:  '{{ inventory_hostname }}'
+    clone:  '{{ all_kvm_template_name }}' 
+    storage: '{{ all_kvm_storage_target }}'
+    agent: yes
+    full: yes
+    reboot: yes
+    state: present
+    timeout: 900
+  delegate_to: localhost
+  register: kvm_create
+
+- name: pause for creation to finish
+  pause:
+    seconds: 10
+  when: kvm_create.changed
+  tags: 
+  - skip_ansible_lint
+
+- name: update kvm configuration
+  proxmox_kvm:
+    api_user: '{{ all_pve_api_user }}' 
+    api_password: '{{ all_pve_api_password }}' 
+    api_host: '{{ all_pve_api_host }}' 
+    name:  '{{ inventory_hostname }}'
+    cores: '{{ kvm_cores | default("1") }}'
+    memory: '{{ kvm_memory | default("1024") }}' 
+    ipconfig:
+      ipconfig0: 'ip={{ ansible_host }}/24,gw={{ all_gateway }}'
+    node: '{{ kvm_node }}'
+    update: yes
+    agent: yes
+    full: yes
+    reboot: yes
+    autostart: yes
+    boot: 'order=scsi0;net0'
+    description: '{{ kvm_description | default(" ") }}'
+    state: present
+    timeout: 900
+  delegate_to: localhost
+  register: kvm_update
+  when: kvm_create.changed
+  tags: 
+  - skip_ansible_lint
+
+- name: resize disk - authenticate to API
+  uri:
+    url: "https://{{ all_pve_api_host }}:8006/api2/json/access/ticket"
+    validate_certs: "{{ all_proxmox_validate_certs }}"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      username: "{{ all_pve_api_user }}"
+      password: "{{ all_pve_api_password }}"
+  when: kvm_create.changed
+  delegate_to: localhost
+  register: auth
+  tags: 
+  - skip_ansible_lint
+
+- name: resize disk - get VMID
+  proxmox_kvm:
+    api_user: '{{ all_pve_api_user }}' 
+    api_password: '{{ all_pve_api_password }}' 
+    api_host: '{{ all_pve_api_host }}' 
+    node: "{{ kvm_node }}"
+    name: "{{ inventory_hostname }}"
+    state: current
+  when: kvm_create.changed
+  delegate_to: localhost
+  register: status
+  tags: 
+  - skip_ansible_lint
+
+- name: resize disk - set fact VMID
+  set_fact:
+    vm_vmid: "{{ status.msg | regex_replace('.*vmid = ([1-9][0-9]{0,3}).*', '\\1') }}"
+  when: vm_vmid is not defined and kvm_create.changed
+
+- name: resize disk - call API
+  uri:
+    url: "https://{{ all_pve_api_host }}:8006/api2/json/nodes/{{ kvm_node }}/qemu/{{ vm_vmid }}/resize"
+    validate_certs: "{{ all_proxmox_validate_certs }}"
+    method: PUT
+    headers: 
+      Cookie: "PVEAuthCookie={{ auth.json.data.ticket }}"
+      CSRFPreventionToken: "{{ auth.json.data.CSRFPreventionToken }}"
+    body_format: form-urlencoded
+    body:
+      disk: scsi0
+      size: '{{ kvm_storage | default("20G")  }}'
+  when: kvm_create.changed
+  delegate_to: localhost
+  tags: 
+  - skip_ansible_lint
+
+- name: start kvm
+  proxmox_kvm:
+    name: '{{ inventory_hostname }}'
+    api_user: '{{ all_pve_api_user }}' 
+    api_password: '{{ all_pve_api_password }}' 
+    api_host: '{{ all_pve_api_host }}' 
+    state: started
+    timeout: 300
+  when: kvm_create.changed
+  delegate_to: localhost
+  tags: 
+  - skip_ansible_lint
+
+- name: wait for host to respond
+  wait_for:
+    port: 22
+    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    search_regex: OpenSSH
+    delay: 10
+  connection: local
+  when: kvm_create.changed
+  tags: 
+  - skip_ansible_lint
+
+- name: pause for cloud init
+  pause:
+    seconds: 90
+  when: kvm_create.changed
+  tags: 
+  - skip_ansible_lint
+
+- name: run post-creation tasks 
+  include_role:
+    name: common
+    tasks_from: post_creation.yml
+  when: kvm_create.changed 
+  tags: 
+  - skip_ansible_lint
+

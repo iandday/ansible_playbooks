@@ -1,0 +1,35 @@
+---
+#
+# roles/nextcloud/vars/main.yml
+#
+
+nextcloud_php_version: 7.4
+nextcloud_version: '22.2.3'
+nextcloud_bookmarks_version: '10.0.2'
+nextcloud_contacts_version: '4.0.7'
+nextcloud_calendar_version: '2.3.4'
+nextcloud_totp_version: '6.1.0'
+nextcloud_apps:
+  - {name: bookmarks, url: 'https://github.com/nextcloud/bookmarks/releases/download/v{{ nextcloud_bookmarks_version }}/bookmarks-{{ nextcloud_bookmarks_version }}.tar.gz', path: '/tmp/bookmarks.tgz'}
+  - {name: contacts, url: 'https://github.com/nextcloud/contacts/archive/refs/tags/v{{ nextcloud_contacts_version }}.tar.gz', path: '/tmp/contacts.tgz'}
+  - {name: calendar, url: 'https://github.com/nextcloud/calendar/archive/refs/tags/v{{ nextcloud_calendar_version }}.tar.gz', path: '/tmp/calendar.tgz'}
+  - {name: twofactor_totp, url: 'https://github.com/nextcloud/twofactor_totp/archive/refs/tags/v{{ nextcloud_totp_version }}.tar.gz', path: '/tmp/totp.tgz'}
+nextcloud_service_username: svcNextcloud
+nextcloud_service_password: '{{ nextcloud_ldap_bind_password }}'
+nextcloud_network_path: '//freenas/nextcloud'
+nextcloud_external_share_config: /tmp/externalShares
+nextcloud_ldap_bind_name: '{{ vault_nextcloud_ldap_bind_name }}'
+nextcloud_ldap_bind_password: '{{ vault_nextcloud_ldap_bind_password }}'
+nextcloud_ldap_base_dn: '{{ vault_nextcloud_ldap_base_users }}'
+nextcloud_ldap_base_groups: '{{ vault_nextcloud_ldap_base_users }}'
+nextcloud_ldap_base_users: '{{ vault_nextcloud_ldap_base_users }}'
+nextcloud_ldap_group_filter: '(|(cn=sgNextcloudUser)(cn=sgNextcloudAdmin))'
+nextcloud_ldap_host: '{{ vault_nextcloud_ldap_host }}'
+nextcloud_ldap_login_filter: '{{ vault_nextcloud_ldap_login_filter }}'
+nextcloud_ldap_filter_email: 1
+nextcloud_ldap_port: 389
+nextcloud_ldap_display_name: 'displayname'
+nextcloud_ldap_display_name2: 'mail'
+nextcloud_ldap_user_filter: '{{ vault_nextcloud_ldap_user_filter }}'
+nextcloud_ldap_user_filter_class: person
+nextcloud_backup_dir: '/home/ansible/backup/nextcloud'

@@ -1,0 +1,28 @@
+---
+#
+#  Create self-signed ca
+#
+
+- name: create certificate
+  hosts: localhost
+  tasks:
+  - name: create router cert
+    include_role:
+      name: common
+      tasks_from: create_certificate.yml
+    vars:
+      certificate_key: '{{ all_certifcate_path }}/keys/router.pem'
+      certificate_csr: '{{ all_certifcate_path }}/router.csr'
+      certificate: '{{ all_certifcate_path }}/router.crt'
+      certificate_cn: router.ianday.me
+      certificate_ip: 10.168.1.1
+  - name: create freeNAS cert
+    include_role:
+      name: common
+      tasks_from: create_certificate.yml
+    vars:
+      certificate_key: '{{ all_certifcate_path }}/keys/freenas.pem'
+      certificate_csr: '{{ all_certifcate_path }}/freenas.csr'
+      certificate: '{{ all_certifcate_path }}/freenas.crt'
+      certificate_cn: freenas.ianday.me
+      certificate_ip: 10.168.1.3

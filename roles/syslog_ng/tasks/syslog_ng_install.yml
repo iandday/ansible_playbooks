@@ -1,0 +1,55 @@
+---
+#
+# roles/syslog_ng/tasks/syslog_ng_install.yml
+#
+
+- name: update apt cache and install required packages
+  apt: 
+    name: '{{ syslog_ng_apt_packages }}'
+    state: present
+    update_cache: yes
+  become: true
+
+- name: create syslogng directory
+  file:
+    path: '{{ syslog_ng_log_dest }}'
+    state: directory
+    owner: '{{ syslog_ng_log_user }}'
+    group: '{{ syslog_ng_log_group }}'
+  become: true
+
+- name: mount log share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ syslog_ng_log_path }}'
+    mount_dest: '{{ syslog_ng_log_dest }}'
+    mount_username: '{{ syslog_ng_log_service_username }}'
+    mount_password: '{{ syslog_ng_log_service_password }}'
+    mount_uid: '{{ syslog_ng_log_user }}'
+    mount_gid: '{{ syslog_ng_log_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
+
+- name: copy base syslog_ng config
+  template:
+    src: syslog-ng.conf.j2
+    dest: /etc/syslog-ng/syslog-ng.conf
+  notify: restart syslog
+  become: true
+
+- name: copy additional syslog_ng config file
+  template:
+    src:  '{{ item }}.j2'
+    dest: '{{ syslog_ng_conf_dir }}{{ item }}'
+  loop: '{{ syslog_ng_config }}'
+  notify: restart syslog 
+  become: true
+
+- name: Enable syslog_ng
+  systemd:
+    name: syslog-ng
+    state: started
+    enabled: true
+  become: true

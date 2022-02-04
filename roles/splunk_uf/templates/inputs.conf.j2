@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# inputs.conf
+
+{% for entry in splunk_uf_inputs %}
+[monitor://{{ entry.path}}]
+disabled = 0
+host_segment = {{ entry.host_segment }}
+sourcetype = {{ entry.sourcetype }}
+index = {{ entry.index }}
+{% if entry.recursive is defined %}
+recursive = {{ entry.recursive }}
+{% endif %}
+{% if entry.tz is defined %}
+_tzhint = {{ entry.tz }}
+{% endif %}
+{% if entry.whitelist is defined %}
+whitelist = {{ entry.whitelist }}
+{% endif %}
+
+
+{% endfor %}

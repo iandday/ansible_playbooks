@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+
+
+[global]
+follow symlinks = yes
+wide links = yes
+unix extensions = no
+
+{% for share in cifs_shares %}
+[{{ cifs_shares[share].cifs_comments }}]
+comment = {{ cifs_shares[share].cifs_comments }}
+path = {{ cifs_shares[share].cifs_path }}
+browseable = yes
+valid users = {{ cifs_user }}
+write list = {{ cifs_user }}
+create mask = 0775
+force create mode = 0775
+directory mask = 0775
+force directory mode = 0775
+store dos attributes = Yes
+hide unreadable = yes
+{% endfor %}
+
+ 
+
+
+

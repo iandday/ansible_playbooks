@@ -1,0 +1,31 @@
+# create dokuwiki acronyms configuration page from wiki-accessible page
+#   allows all users to add acronyms instead of only administrative users
+# {{ ansible_managed }}
+import os
+import shutil
+
+input = '{{ wiki_content}}/pages/acronyms.txt'
+out = '{{ wiki_root_path }}/conf/acronyms.local.conf'
+results = dict()
+badChars = ['#','\n','=']
+
+with open(input, 'r') as inFile:
+    for line in inFile:
+        if line[:1] in badChars:
+            continue
+        else:
+            for entry in line.split(","):
+                if entry == '\n':
+                    continue
+                else:
+                   results[entry.split("|")[0]] = entry.split("|")[1]
+
+with open(out, 'w') as outFile:
+    for key, value in results.items():
+        outFile.write('%s\t%s\n' % (key, value))
+
+shutil.chown(out, user='{{ wiki_web_user }}', group='{{ wiki_web_user }}')
+os.chmod(out, 0o770)
+
+# touch config file to refresh settings
+open('{{ wiki_root_path }}/conf/local.php', 'a').close()

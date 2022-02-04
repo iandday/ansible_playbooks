@@ -1,0 +1,62 @@
+# {{ ansible_managed }}
+
+###########
+# Options #
+###########
+
+options {
+    create_dirs(yes);
+    owner({{ syslog_ng_log_user }});
+    group({{ syslog_ng_log_group }});
+    perm(0640);
+    dir_owner({{ syslog_ng_log_user }});
+    dir_group({{ syslog_ng_log_group }});
+    dir_perm(0750);
+};
+
+##########
+# Source #
+##########
+
+source s_tcp_pihole_ftl {
+    network(
+        ip(0.0.0.0)
+        transport("tcp")
+        port({{ syslog_ng_pihole_FTL_receive_port }})
+    );
+};
+source s_tcp_pihole {
+    network(
+        ip(0.0.0.0)
+        transport("tcp")
+        port({{ syslog_ng_pihole_receive_port }})
+    );
+};
+
+###############
+# Destination #
+###############
+destination d_file_pihole_ftl {
+    file(
+        "{{ syslog_ng_log_dest }}/pihole/${HOST}/${YEAR}/${MONTH}/pihole-FTL-${YEAR}${MONTH}${DAY}.log"
+    );
+};
+destination d_file_pihole {
+    file(
+        "{{ syslog_ng_log_dest }}/pihole/${HOST}/${YEAR}/${MONTH}/pihole-${YEAR}${MONTH}${DAY}.log"
+    );
+};
+
+##############
+# Log Action #
+##############
+
+log {
+    source(s_tcp_pihole_ftl);
+    destination(d_file_pihole_ftl);
+};
+
+log {
+    source(s_tcp_pihole);
+    destination(d_file_pihole);
+};

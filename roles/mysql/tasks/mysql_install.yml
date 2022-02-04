@@ -1,0 +1,94 @@
+---
+#
+# roles/mysql/tasks/mysql_install.yml
+#
+
+- name: add mariadb repo key
+  apt_key:
+    keyserver: hkp://keyserver.ubuntu.com:80
+    id: '{{ mysql_repo_key }}'
+    state: present
+  become: true
+
+- apt_repository:
+    repo: '{{ mysql_repo }}'
+    state: present
+    update_cache: true
+  become: true
+
+- name: check if already installed
+  stat: 
+    path: '/root/.my.cnf'
+  register: mysql_install_result
+  become: true
+
+- name: Specify MySQL root password before installing to disable auth_socket
+  debconf: 
+    name: mysql-server
+    question: '{{ item }}'
+    value: '{{ mysql_root_password | quote }}' 
+    vtype: password
+  when: mysql_install_result.stat.exists == False
+  with_items: 
+    - mysql-server/root_password
+    - mysql-server/root_password_again
+  become: true
+    
+- name: Install MySQL Packages
+  apt: 
+    pkg: '{{ item }}' 
+    state: latest
+    force: yes
+  loop: '{{ mysql_apt_packages }}'
+  become: true
+
+- name: Start mariadb
+  service: 
+    name: mysql
+    state: started 
+    enabled: yes
+  become: true
+
+- name: copy mysql credential file
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
+  become: true
+
+- name: Update root password for all root accounts
+  mysql_user: 
+    name: root 
+    host: '{{ item }}' 
+    password: '{{ mysql_root_password }}' 
+    priv: '*.*:ALL,GRANT'
+  with_items: '{{ mysql_hosts }}'
+  become: true
+
+- name: check and remove anonymous users
+  mysql_user: 
+    name: '' 
+    host: '{{ item }}' 
+    state: absent
+  with_items: '{{ mysql_hosts }}'    
+  become: true
+        
+- name: Create database
+  mysql_db: 
+    name: '{{ mysql_database }}'
+    state: present 
+    login_user: root 
+    login_password: '{{ mysql_root_password }}'
+  become: true  
+
+- name: create users
+  mysql_user: 
+    name: '{{ mysql_user }}'
+    password: '{{ mysql_password }}' 
+    priv: '{{ mysql_database }}.*:ALL' 
+    state: present 
+    login_user: root 
+    login_password: '{{ mysql_root_password }}'
+  become: true

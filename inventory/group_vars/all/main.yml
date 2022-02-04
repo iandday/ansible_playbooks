@@ -1,0 +1,39 @@
+---
+#
+# inventory/group_vars/all/main.yml
+#
+
+all_ansible_password: '{{ vault_all_ansible_password }}'
+all_template_hostname: template2004
+all_system_timezone: America/New_York
+all_pve_api_user: root@pam
+all_pve_api_password: '{{ vault_all_pve_api_password }}'
+all_pve_api_host: '{{ vault_all_pve_api_host }}'
+all_gateway: 10.168.1.1
+all_ansible_python_interpreter: /usr/bin/python3
+all_kvm_template_name: ubuntu-2004-cloudinit-template
+all_lxc_template_name: 'local:vztmpl/ubuntu-ansible-20.04.tar.gz'
+all_kvm_storage_target: 'local-lvm'
+all_domain: IANDAY
+all_ext_domain: ianday.me
+all_domain_controller: '{{ vault_all_domain_controller }}'
+all_base_dn: DC=ianday,DC=me
+docker_user: docker
+docker_uid: 997
+docker_gid: 3333
+all_docker_builds: /usr/local/docker/builds
+all_docker_storage: /usr/local/docker/storage
+all_docker_logs: '{{ all_docker_storage }}/logs'
+all_backup_root: /home/ansible/backup
+all_nas_backup: '//10.168.1.3/backup'
+all_dokcer_volume_backup_tag: '2.4.0'
+all_notification_email_from: '{{ vault_docker_utility_mail_username }}'
+all_notiication_email_to: '{{  vault_all_notiication_email_to }}'
+all_internal_mail_server: '{{ vault_docker_utility_mail_hostname }}'
+all_internal_mail_port: '25'
+all_local_s3_endpoint: '{{ vault_all_local_s3_endpoint }}'
+all_splunk_ip: 10.168.1.40
+all_splunk_uf_port: 9997
+all_proxmox_validate_certs: False
+common_certificate_path: '{{ playbook_dir }}/inventory/certificates'
+all_root_ca_cert: '{{ common_certificate_path }}/CA.crt'

@@ -1,0 +1,35 @@
+- name: change ansible user password
+  user:
+    name: ansible
+    update_password: always
+    password: "{{ all_ansible_password | password_hash('sha512') }}"
+  become: true
+
+- name: disable root password
+  user:
+    name: root
+    password: '!'
+  become: true
+
+- name: set timezone
+  timezone:
+    name: '{{ all_system_timezone }}'
+  become: true
+
+- name: Install apt packages
+  apt:
+    update_cache: yes
+    name: '{{ common_apt_poackages }}'
+  become: true
+
+- name: Install pip pakcages
+  pip:
+    name: '{{ common_pip_packages }}'
+  become: true
+
+- name: update packages
+  apt:
+    name: "*"
+    state: latest
+    force_apt_get: true
+  become: true

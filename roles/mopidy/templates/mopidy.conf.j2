@@ -1,0 +1,154 @@
+# {{ ansible_managed }}
+# For further information about options in this file see:
+#   https://docs.mopidy.com/
+#
+
+[audio]
+mixer = software
+output = audioresample ! audio/x-raw,rate=48000,channels=2,format=S16LE ! audioconvert ! wavenc ! filesink location=/tmp/snapfifo
+
+[file]
+enabled = false
+#media_dirs =
+#  $XDG_MUSIC_DIR|Music
+#  ~/|Home
+#excluded_file_extensions =
+#  .directory
+#  .html
+#  .jpeg
+#  .jpg
+#  .log
+#  .nfo
+#  .pdf
+#  .png
+#  .txt
+#  .zip
+#show_dotfiles = false
+#follow_symlinks = false
+#metadata_timeout = 1000
+
+[spotify]
+enabled = false
+
+[http]
+enabled = true
+hostname = ::
+port = 6680
+zeroconf = Mopidy HTTP server on $hostname
+default_app = mopidy
+
+[m3u]
+enabled = false
+#base_dir =
+#default_encoding = latin-1
+#default_extension = .m3u8
+#playlists_dir =
+
+[softwaremixer]
+enabled = true
+
+[stream]
+enabled = true
+#protocols =
+#  http
+#  https
+#  mms
+#  rtmp
+#  rtmps
+#  rtsp
+#metadata_blacklist =
+#timeout = 5000
+
+[youtube]
+enabled = false
+#youtube_api_key =
+#search_results = 15
+#playlist_max_videos = 20
+#api_enabled = false
+#musicapi_enabled = false
+#autoplay_enabled = false
+#strict_autoplay = false
+#max_autoplay_length = 600
+#max_degrees_of_separation = 3
+
+[tunein]
+enabled = false
+#timeout = 5000
+#filter =
+
+[somafm]
+enabled = true
+#encoding = mp3
+#quality = fast
+#dj_as_artist = true
+
+[radionet]
+enabled = true
+language = en
+#min_bitrate = 96
+#favorite_stations =
+
+[podcast]
+enabled = false
+#browse_root = Podcasts.opml
+#browse_order = desc
+#lookup_order = asc
+#cache_size = 64
+#cache_ttl = 86400
+#timeout = 10
+
+[pandora]
+enabled = true
+api_host = tuner.pandora.com/services/json/
+partner_encryption_key = {{ mopidy_pandora_partner_encryption_key }}
+partner_decryption_key = {{ mopidy_pandora_partner_decryption_key }}
+partner_username = android
+partner_password = {{ mopidy_pandora_partner_password }}
+partner_device = android-generic
+username = {{ mopidy_pandora_username }}
+password = {{ mopidy_pandora_password }}
+
+[mopify]
+enabled = true
+debug = false
+
+[jellyfin]
+enabled = true
+hostname = {{ mopidy_jellyfin_host }} 
+port = 8096
+username = {{ mopidy_jellyfin_username }}
+password = {{ mopidy_jellyfin_password }} 
+
+[internetarchive]
+enabled = true
+#base_url = http://archive.org
+#collections =
+#  audio
+#  etree
+#  librivoxaudio
+#  audio_bookspoetry
+#  audio_tech
+#  audio_music
+#  audio_news
+#  audio_foreign
+#  audio_podcast
+#  audio_religion
+#audio_formats =
+#  VBR MP3
+#  64Kbps MP3
+#image_formats =
+#  JPEG
+#  JPEG Thumb
+#browse_limit = 100
+#browse_views =
+#  downloads desc|Views
+#  titleSorter asc|Title
+#  publicdate desc|Date Archived
+#  date desc|Date Published
+#  creatorSorter asc|Creator
+#search_limit = 20
+#search_order =
+#cache_size = 128
+#cache_ttl = 86400
+#retries = 3
+#timeout = 10

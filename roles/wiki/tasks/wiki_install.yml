@@ -1,0 +1,357 @@
+---
+#
+# roles/wiki/tasks/wiki_install.yml
+#
+
+- name: update apt cache and install required packages
+  apt: 
+    name: '{{ wiki_apt_packages }}'
+    state: present
+    update_cache: yes
+  become: true
+
+- name: remove apache
+  apt:
+    name: apache2
+    state: absent
+    purge: yes
+  become: true
+
+- name: create directory for apache tika
+  file:
+    path: '{{ wiki_tika_path }}'
+    state: directory
+    owner: '{{ wiki_web_user }}'
+    group: '{{ wiki_web_user }}'
+  become: true
+
+- name: download tika
+  get_url:
+    url:  '{{ wiki_tika_url }}'
+    dest: '{{ wiki_tika_path }}/tika-app-{{ wiki_tika_version }}.jar'
+    owner: '{{ wiki_web_user }}'
+    group: '{{ wiki_web_user }}'
+    mode: 'a+x'
+  become: True
+
+- name: download and unpack dokuwiki tarball
+  unarchive:
+    remote_src: True
+    src: '{{ wiki_tar_url }}'
+    dest: '{{ wiki_web_root }}'
+  become: true
+
+- name: delete existing dokuwiki installation
+  file:
+    path: '{{ wiki_root_path }}'
+    state: absent
+  become: true
+
+- name: rename dokuwiki directory
+  shell: 'mv {{ wiki_web_root }}/dokuwiki-*/ {{ wiki_root_path }}'
+  become: true
+  
+- name: create wiki content directories if not present
+  file:
+    path: '{{ item }}'
+    state: directory
+  with_items:
+    - '{{ wiki_content_dirs }}'
+  become: true
+
+- name: create config directories
+  file:
+    path: '{{ wiki_template_conf_directory }}'
+    state: directory
+  become: true
+
+- name: remove existing plugins
+  file:
+    path: '{{ wiki_plugin_path }}/{{ item.name }}'
+    state: absent
+  with_items:
+    - '{{ wiki_plugins|default([]) }}'
+    - '{{ wiki_zip_plugins|default([]) }}'
+  become: true
+
+- name: recreate directory for each plugin
+  file:
+    path: '{{ wiki_plugin_path }}/{{ item.name }}'
+    state: directory
+  with_items: 
+    - '{{ wiki_plugins|default([]) }}'
+    - '{{ wiki_zip_plugins|default([]) }}'
+  become: true
+
+- name: download and install latest version of plugins
+  unarchive:
+    src: '{{ item.src }}'
+    dest: '{{ wiki_plugin_path }}/{{ item.name }}'
+    remote_src: yes
+    extra_opts: ['--strip-components=1']
+  with_items: '{{ wiki_plugins }}'
+  become: true
+
+- name: download and install latest version of zip plugins
+  unarchive:
+    src: '{{ item.src }}'
+    dest: '{{ wiki_plugin_path }}/{{ item.name }}'
+    remote_src: yes
+  with_items: '{{ wiki_zip_plugins }}'
+  become: true
+
+- name: create anchor plugin directory
+  file:
+    path: '{{ wiki_plugin_path }}/anchor'
+    state: directory
+  become: true
+
+- name: copy anchor plugin
+  copy:
+    src: '{{ item.s }}'
+    dest: '{{ wiki_plugin_path }}/anchor/{{ item.d }}'
+  with_items:
+    - {s: 'anchor.php', d: 'syntax.php'}
+    - {s: 'anchor.txt', d: 'plugin.into.txt'}   
+  become: true
+
+- name: remove existing templates
+  file:
+    path: '{{ wiki_tpl_path }}/{{ item.name }}'
+    state: absent
+  with_items:
+    - '{{ wiki_templates|default([]) }}'
+  become: true
+
+- name: recreate directory for each template
+  file:
+    path: '{{ wiki_tpl_path }}/{{ item.name }}'
+    state: directory
+  with_items: 
+    - '{{ wiki_templates|default([]) }}'
+  become: true
+
+- name: download and install latest version of templates
+  unarchive:
+    src: '{{ item.src }}'
+    dest: '{{ wiki_tpl_path }}/{{ item.name }}'
+    remote_src: yes
+    extra_opts: ['--strip-components=1']
+  with_items: '{{ wiki_templates }}'
+  become: true
+  
+- name: initialize main sidebar page
+  template:
+    src: sidebar.txt.j2
+    dest: '{{ wiki_content }}/pages/sidebar.txt'
+    force: no
+  become: true
+
+- name: initialize namespaces
+  file:
+    path: '{{ wiki_content }}/pages/{{ item.dir }}'
+    state: directory
+  with_items: 
+    - '{{ wiki_namespaces }}'
+  when: wiki_namespaces is defined
+  become: true
+
+- name: ensure each namespace has a start page
+  template: 
+    src: start.txt.j2
+    dest: '{{ wiki_content }}/pages/{{ item.dir }}/start.txt'
+    force: no
+  with_items: 
+    - '{{ wiki_namespaces }}'
+  when: wiki_namespaces is defined
+  become: true
+
+- name: ensure main start page is present
+  template:
+    src: start-main.txt.j2
+    dest: '{{ wiki_content }}/pages/start.txt'
+    force: no
+  become: true
+
+- name: copy wiki templates
+  copy:
+    src: '{{ item.s }}'
+    dest: '{{ item.d }}'
+    owner: '{{ wiki_web_user }}'
+    group: '{{ wiki_web_user }}'
+    mode: 0770
+  with_items:
+    - {s: 'page_template.txt', d: '{{ wiki_content }}/pages/__template.txt' }
+    - {s: 'user_template.txt', d: '{{ wiki_content }}/pages/user/userhomepage_private.txt'}
+    - {s: 'user_template.txt', d: '{{ wiki_content }}/pages/pagetemplates/userhomepage_private.txt'}
+    - {s: 'page_template.txt', d: '{{ wiki_content }}/pages/pagetemplates/template_page.txt'}
+    - {s: 'ns_template.txt', d: '{{ wiki_content }}/pages/pagetemplates/template_ns.txt'}
+    - {s: 'ebook_template.txt', d: '{{ wiki_content }}/pages/pagetemplates/ebook.txt'}
+    - {s: 'acronyms.txt', d: '{{ wiki_content }}/pages/acronyms.txt'}
+  become: true    
+
+- name: Generate admin password hash
+  command: mkpasswd '--method=SHA-512' '{{ wiki_admin_password }}'
+  register: admin_hash
+  no_log: true
+
+- name: set configuration files
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ wiki_root_path }}/conf/{{ item.dest }}'
+    owner: '{{ wiki_web_user }}'
+    group: '{{ wiki_web_user }}'
+  with_items:
+    - { src: acl.auth.php.j2, dest: acl.auth.php }
+    - { src: local.php.j2, dest: local.php }
+    - { src: local.protected.php.j2, dest: local.protected.php }
+    - { src: plugins.local.php.j2, dest: plugins.local.php }
+    - { src: users.auth.php.j2, dest: users.auth.php }
+    - { src: acronym_sync.py.j2, dest: acronym_sync.py }
+    - { src: mime.local.conf.j2, dest: mime.local.conf }  
+  become: true
+
+- name: set plugin configuration files
+  template:
+    src: '{{ item.src }}'
+    dest: '{{ wiki_plugin_path }}/{{ item.dest }}'
+  with_items:
+    - { src: converter.php.j2, dest: 'docsearch/conf/converter.php' }
+  become: true
+
+- name: generate custom acronym file
+  command: 'python3 {{ wiki_root_path }}/conf/acronym_sync.py'
+  become: true
+
+- name: set acronym cron job
+  cron:
+    name: update acronyms
+    minute: 04
+    hour: 04
+    user: root
+    job: 'python3 {{ wiki_root_path }}/conf/acronym_sync.py'
+    cron_file: acronym_sync
+  become: true
+
+- name: set document indexer job
+  cron:
+    name: update attachment index
+    minute: 05
+    hour: 05
+    user: root
+    job: 'sudo -u www-data php {{ wiki_plugin_path }}/docsearch/cron.php'
+    cron_file: acronym_sync
+  become: true
+
+- name: remove existing php upload limit
+  lineinfile:
+    dest: '{{ wiki_php_ini }}'
+    regexp: '{{ item }}'
+    state: absent
+  with_items: 
+    - '^upload_max_filesize\s=\s2M'
+    - '^post_max_size\s=\s8M'
+  become: true
+
+- name: add new php upload limit 
+  lineinfile:
+    dest: '{{ wiki_php_ini }}'
+    line: '{{ item.line }}'
+    insertafter: '{{ item.after }}'
+  with_items:
+    - {line: 'upload_max_filesize = {{ wiki_upload_size }}M', after: '; http://php.net/upload-max-filesize'}
+    - {line: 'post_max_size = {{ wiki_upload_size }}M', after: '; http://php.net/post-max-size'}
+  become: true
+
+- name: copy nginx config
+  template:
+    src: roles/wiki/templates/dokuwiki.j2
+    dest: /etc/nginx/sites-available/dokuwiki
+  become: True
+
+- name: enable nginx config
+  file:
+    src: /etc/nginx/sites-available/dokuwiki
+    dest: /etc/nginx/sites-enabled/dokuwiki
+    state: link
+  become: True
+
+- name: restrict access to wiki directories
+  file:
+    recurse: yes
+    mode: '0770'
+    owner: '{{ wiki_web_user }}'
+    group: '{{ wiki_web_user }}'
+    path: '{{ item }}'
+  with_items:
+    - '{{ wiki_root_path }}'
+    - '{{ wiki_content }}'
+  become: True
+  
+- name: remove install page
+  file:
+    path: '{{ wiki_root_path }}/install.php'
+    state: absent
+  become: true
+
+- name: restart nginx & php
+  service:
+    name: '{{ item }}'
+    state: restarted 
+  with_items:
+    - nginx
+    - '{{ wiki_php }}'  
+  become: True
+
+- name: create root backup directory
+  file:
+    path: '{{ all_backup_root }}'
+    state: directory
+    owner: '{{ wiki_web_user }}'
+    group: '{{ wiki_web_user }}'
+    mode: 0700
+  become: true
+
+- name: mount backup share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ all_nas_backup }}' 
+    mount_dest: '{{ all_backup_root }}'
+    mount_username: '{{ wiki_svc_account_username }}'
+    mount_password: '{{ wiki_svc_account_password }}'
+    mount_uid: '{{ wiki_web_user }}'
+    mount_gid: '{{ wiki_web_user }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'
+
+- name: create backup directory
+  file:
+    path: '{{ wiki_backup_dir }}'
+    state: directory 
+  become: true
+
+- name: copy backup script
+  template:
+    src: backup_wiki.sh.j2
+    dest: /usr/local/bin/backup_wiki.sh
+    mode: 'a+x'
+  become: true
+
+- name: setup backup cronjob
+  cron:
+    name: 'Backup wiki'
+    job: '/usr/local/bin/backup_wiki.sh'
+    user: root
+    cron_file: backup_wiki
+    hour: '3'
+    minute: '5'
+  become: true
+
+- name: configure backup rotation
+  include_role:
+    name: common
+    tasks_from: rotate_backups
+  vars:
+    - cron_user: root
+    - backup_path: '{{ wiki_backup_dir }}'

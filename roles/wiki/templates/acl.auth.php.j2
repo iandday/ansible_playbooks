@@ -1,0 +1,16 @@
+# acl.auth.php
+# <?php exit()?>
+# Don't modify the lines above
+# {{ ansible_managed }}
+#
+# Access Control Lists
+#
+*                   @ALL      {{ wiki_acl_all }}
+*                   @user     {{ wiki_acl_user }}
+user:%USER%    %USER%    16
+user:*         @ALL      0
+:userhomepage_private   @ALL    1
+:userhomepage_public    @ALL    1
+{%   for ad_group in wiki_user_group %}
+*                      @{{ ad_group.group }}         {{ ad_group.acl }}
+{%   endfor %}

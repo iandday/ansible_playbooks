@@ -1,0 +1,13 @@
+---
+#
+# roles/spotify_connect/defaults/main.yaml
+#
+
+spotify_connect_required_vars:
+  - ansible_host
+spotify_connect_apt_packages:
+  - rustc 
+  - cargo 
+  - libasound2-dev 
+  - libssl-dev 
+  - pkg-config

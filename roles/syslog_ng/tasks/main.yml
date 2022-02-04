@@ -1,0 +1,14 @@
+---
+#
+# roles/syslog_ng/tasks/main.yml
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ syslog_ng_required_vars }}'
+
+- name: load syslog_ng install tasks
+  include_tasks: syslog_ng_install.yml

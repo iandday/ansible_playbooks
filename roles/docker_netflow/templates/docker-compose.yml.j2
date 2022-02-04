@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  nfcap:
+    container_name: netflow_collector
+    image: netsage/nfdump-collector:1.6.23
+    command: /usr/local/bin/nfcapd -T all -l /data -S 1 -w -z -p 9999
+    restart: on-failure
+    volumes:
+      - {{ docker_netflow_data_volume }}:/data
+    ports:
+      - "9999:9999/udp"
+    networks:
+      - default
+    labels:
+      - "traefik.enable=false"
+  nfdump:
+    container_name: netflow_dump
+    build:
+      context: . 
+    restart: on-failure
+    volumes:
+      - {{ docker_netflow_data_volume }}:/data
+      - {{ docker_netflow_log_volume_path }}:/log
+    networks:
+      - default
+    labels:
+      - "traefik.enable=false"
+volumes:
+  {{ docker_netflow_data_volume }}:
+    external: true
+networks:
+  default:
+    driver: bridge

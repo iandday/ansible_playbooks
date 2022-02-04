@@ -1,0 +1,21 @@
+---
+#
+# roles/mysql/defaults/main.yml
+#
+
+mysql_required_vars:
+  - mysql_root_password
+  - mysql_user
+  - mysql_password
+  - mysql_database
+mysql_hosts:
+  - '{{ ansible_default_ipv4.address }}'
+  - 127.0.0.1
+  - ::1
+  - localhost
+mysql_repo_key: 'F1656F24C74CD1D8'
+mysql_repo: 'deb [arch=amd64,arm64,ppc64el] http://sfo1.mirrors.digitalocean.com/mariadb/repo/10.3/ubuntu bionic main'
+mysql_apt_packages:
+  - mariadb-server
+  - mariadb-client
+  - python3-mysqldb

@@ -1,0 +1,35 @@
+---
+#
+# roles/dokuwiki/tasks/dokuwiki_restore.yml
+#
+
+- name: stop nginx & php-fpm
+  service:
+    name: '{{ item }}'
+    state: stopped 
+  with_items:
+    - nginx
+    - '{{ wiki_php }}'
+  become: True
+
+- name: inflate backup
+  unarchive:
+    src: '{{ wiki_backup }}'
+    dest: '/'
+    remote_src: true
+  become: True
+
+- name: purge cache
+  shell: '/bin/rm -rf {{ wiki_content }}/cache/*'
+  args:
+    warn: no
+  become: True
+
+- name: start nginx & php-fpm
+  service:
+    name: '{{ item }}'
+    state: started 
+  with_items:
+    - nginx
+    - '{{ wiki_php }}' 
+  become: True

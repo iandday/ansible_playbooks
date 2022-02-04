@@ -1,0 +1,45 @@
+---
+#
+# roles/common/tasks/create_lxc.yml
+#
+
+- name: create lxc from template
+  community.general.proxmox:
+    api_user: '{{ all_pve_api_user }}' 
+    api_password: '{{ all_pve_api_password }}' 
+    api_host: '{{ all_pve_api_host }}' 
+    node: '{{ lxc_node }}' 
+    hostname:  '{{ inventory_hostname }}'
+    ostemplate:  '{{ all_lxc_template_name }}' 
+    netif: '{{ lxc_net }}'
+    cores: '{{ lxc_cores | default("1") }}'
+    memory: '{{ lxc_memory | default("1024") }}' 
+    disk: '{{ lxc_disk }}'
+    storage: '{{ lxc_storage }}'
+    #mounts: '{{ lxc_mounts }}'
+    onboot: yes
+    state: present
+    timeout: 900
+  register: lxc_create
+
+- name: pause for creation to finish
+  pause:
+    seconds: 10
+  when: lxc_create.changed
+    
+- name: start lxc
+  community.general.proxmox:
+    hostname: '{{ inventory_hostname }}'
+    api_user: '{{ all_pve_api_user }}' 
+    api_password: '{{ all_pve_api_password }}' 
+    api_host: '{{ all_pve_api_host }}' 
+    state: started
+    timeout: 300
+  when: lxc_create.changed
+  
+- name: wait for host to respond
+  wait_for_connection:
+    delay: 10
+    sleep: 10
+    connect_timeout: 10
+  when: lxc_create.changed

@@ -1,0 +1,145 @@
+---
+#
+# roles/docker/tasks/main.yml
+#
+
+- name: add package repo key(s)
+  apt_key:
+    url: '{{ item }}'
+    state: present
+  loop: '{{ docker_repo_key }}'    
+  become: true
+
+- name: add package repo source(s)
+  apt_repository:
+    repo: '{{ item }}'
+    state: present
+  loop: '{{ docker_package_repo }}'
+  become: true
+
+- name: install packages
+  apt:
+    name: '{{ item }}'
+    update-cache: true
+  loop: '{{ docker_apt_packages }}'
+  become: true
+
+- name: install python packages
+  pip:
+    name: '{{ docker_python_packages }}'
+    state: present
+  become: true
+
+- name: change docker group id
+  group:
+    name: docker
+    state: present
+    gid: '{{ docker_gid }}'
+  become: true
+
+- name: create docker user
+  user: 
+    name: '{{ docker_user }}'
+    group: '{{ docker_gid }}' 
+    system: yes
+    append: yes
+  become: true
+
+- name: start docker at boot  
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: true
+
+- name: download docker compose
+  get_url:
+    url: '{{ docker_compose_url }}'
+    dest: /usr/local/bin/docker-compose
+    mode: a+x
+  become: true
+
+- name: symlink docker compose
+  file:
+    src: /usr/local/bin/docker-compose
+    dest: /usr/bin/docker-compose
+    state: link
+    owner: '{{ docker_user }}'
+    group: '{{ docker_gid }}' 
+  become: true
+
+- name: create docker networks
+  docker_network:
+    name: '{{ item }}'
+  with_items: '{{ docker_networks }}'
+  when: docker_networks is defined
+  become: true
+
+- name: create docker directories
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group:  '{{ docker_gid }}'
+  become: true
+  with_items:
+    - '{{ all_docker_builds }}'
+    - '{{ all_docker_storage }}'
+
+- name: install systemd file
+  template:
+    src: docker-compose@.service.j2
+    dest: /etc/systemd/system/docker-compose@.service
+  become: true
+
+- name: Reload docker-compose@.service
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  become: true
+
+- name: mount backup share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ all_nas_backup }}' 
+    mount_dest: '{{ all_backup_root }}'
+    mount_username: '{{ docker_backup_username }}'
+    mount_password: '{{ docker_backup_password }}'
+    mount_uid: '{{ docker_uid }}'
+    mount_gid: '{{ docker_gid }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'
+
+- name: create backup directory
+  file:
+    path: '{{ docker_backup_dir }}'
+    state: directory 
+    mode: 0700
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+  become: true
+
+- name: copy backup script
+  template:
+    src: backup_docker_volumes.sh.j2
+    dest: /usr/local/bin/backup_docker_volumes.sh
+    mode: 'a+x'
+  become: true
+
+- name: setup backup cronjob
+  cron:
+    name: 'Backup docker volumes'
+    job: '/usr/local/bin/backup_docker_volumes.sh'
+    user: root
+    cron_file: backup_docker_volumes
+    hour: '2'
+    minute: '5'
+  become: true
+
+- name: configure backup rotation
+  include_role:
+    name: common
+    tasks_from: rotate_backups
+  vars:
+    - cron_user: root
+    - backup_path: '{{ docker_backup_dir }}'

@@ -1,0 +1,55 @@
+---
+#
+# roles/wiki/vars/main.yml
+#
+
+wiki_sitename: 'Daynet Wiki'
+wiki_shortname: 'Daynet'
+wiki_admin_password: '{{ vault_wiki_admin_password }}'
+wiki_server_name: '{{ ansible_host }}'
+base_dn: '{{ all_base_dn }}'
+domain_controllers: '{{ all_domain_controller }}'
+account_suffix: '@ianday.me'
+wiki_backup_dir: '/home/ansible/backup/wiki'
+wiki_tika_version: '1.22'
+wiki_user_group: 
+  - { group: 'sgWiki', acl: '{{ wiki_acl_user }}' }
+wiki_svc_account_username: 'svcWiki'
+wiki_svc_account_password: '{{ vault_wiki_svc_account_password }}'
+wiki_templates:
+  - { name: 'bootstrap3', src: 'https://github.com/LotarProject/dokuwiki-template-bootstrap3/archive/master.tar.gz'}
+wiki_plugins: 
+  - { name: 'bootswrapper', src: 'https://github.com/LotarProject/dokuwiki-plugin-bootswrapper/archive/master.tar.gz' }
+  - { name: 'acmenu', src: 'https://bitbucket.org/tormec/acmenu/get/master.tar.gz'}
+  - { name: 'indexmenu', src: 'https://github.com/samuelet/indexmenu/archive/master.tar.gz'}
+  - { name: 'sqlite', src: 'https://github.com/cosmocode/sqlite/tarball/master'}
+  - { name: 'tagging', src: 'https://github.com/cosmocode/tagging/tarball/master'}
+  - { name: 'addnewpage', src: 'https://github.com/samwilson/dokuwiki-plugin-addnewpage/archive/master.tar.gz'}
+  - { name: 'ckgedit', src: 'https://github.com/turnermm/ckgedit/archive/master.tar.gz' }
+  - { name: 'sortablejs', src: 'https://github.com/FyiurAmron/sortablejs/tarball/master'}
+  - { name: 'authchained', src: 'https://github.com/rztuc/dokuwiki-plugin-authchained/archive/master.tar.gz'}
+  - { name: 'icons', src: 'https://github.com/LotarProject/dokuwiki-plugin-icons/archive/master.tar.gz' }
+  - { name: 'edittable', src: 'https://github.com/cosmocode/edittable/archive/master.tar.gz' }
+  - { name: 'wrap', src: 'https://github.com/selfthinker/dokuwiki_plugin_wrap/archive/master.tar.gz' }
+  - { name: 'dw2pdf', src: 'https://github.com/splitbrain/dokuwiki-plugin-dw2pdf/tarball/master' }
+  - { name: 'bookcreator', src: 'https://github.com/Klap-in/dokuwiki-plugin-bookcreator/archive/master.tar.gz'}
+  - { name: 'move', src: 'https://github.com/michitux/dokuwiki-plugin-move/tarball/master'}
+  - { name: 'userhomepage', src: 'https://github.com/geekitude/dokuwiki-plugin-userhomepage/archive/master.tar.gz'} 
+  - { name: 'pagelist', src: 'https://github.com/dokufreaks/plugin-pagelist/archive/master.tar.gz'}  
+  - { name: 'changes', src: 'https://github.com/cosmocode/changes/tarball/master'}
+  - { name: 'newpagetemplate', src: 'https://github.com/turnermm/newpagetemplate/tarball/master'}
+  - { name: 'text', src: 'https://github.com/michitux/dokuwiki-plugin-text/tarball/master'}
+  - { name: 'docsearch', src: 'https://github.com/cosmocode/docsearch/tarball/master'}  
+  - { name: 'confmanager', src: 'https://github.com/cosmocode/confmanager/tarball/master'}
+  - { name: 'upgrade', src: 'https://github.com/splitbrain/dokuwiki-plugin-upgrade/tarball/master'}
+  - { name: 'vshare', src: 'https://github.com/splitbrain/dokuwiki-plugin-vshare/tarball/master'}
+  - { name: 'toolbox', src: 'https://github.com/splitbrain/dokuwiki-plugin-toolbox/tarball/master'}
+wiki_zip_plugins:
+  - { name: 'syntaxhighlighter4', src: 'https://github.com/crazy-max/dokuwiki-plugin-syntaxhighlighter4/releases/download/20180916/syntaxhighlighter4.zip'} 
+wiki_upload_extensions:
+  - { extension: 'oft', mime: 'application/vnd.ms-outlook'}
+  - { extension: 'pub', mime: 'application/x-mspublisher'}
+wiki_namespaces:
+  - {dir: 'lab', name: 'Homelab'}
+  - {dir: 'home', name: 'Home'}
+  - {dir: 'recipe', name: 'Recipes'}

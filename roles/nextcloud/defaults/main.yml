@@ -1,0 +1,105 @@
+---
+#
+# roles/nextcloud/defaults/main.yml
+#
+
+nextcloud_required_vars:
+  - nextcloud_version
+  - mysql_database
+  - mysql_user
+  - mysql_password
+  - mysql_root_password
+  - server_name
+  - nextcloud_install_path
+  - nextcloud_admin_password
+  - nextcloud_network_path
+  - nextcloud_apps
+  - nextcloud_bookmarks_version
+  - nextcloud_contacts_version
+  - nextcloud_calendar_version
+  - nextcloud_totp_version
+  - nextcloud_external_share_config
+  - nextcloud_ldap_member_filter
+  - nextcloud_ldap_bind_name
+  - nextcloud_ldap_bind_password
+  - nextcloud_ldap_base_dn
+  - nextcloud_ldap_base_groups
+  - nextcloud_ldap_base_users
+  - nextcloud_ldap_group_filter
+  - nextcloud_ldap_host
+  - nextcloud_ldap_login_filter
+  - nextcloud_ldap_filter_email
+  - nextcloud_ldap_port
+  - nextcloud_ldap_display_name
+  - nextcloud_ldap_display_name2
+  - nextcloud_ldap_user_filter
+  - nextcloud_ldap_user_filter_class
+  - nextcloud_trusted_proxy
+nextcloud_apt_packages: 
+    - php
+    - php-fpm
+    - php-cli
+    - php-dev
+    - php-bz2
+    - php-memcached    
+    - php-common
+    - php-curl 
+    - php-gd 
+    - php-imap
+    - php-imagick  
+    - php-mbstring 
+    - php-intl
+    - php-xml 
+    - php-zip
+    - php-json
+    - php-pear
+    - php-mysql
+    - php-apcu
+    - php-redis
+    - php-dompdf
+    - smbclient
+    - php-ldap
+    - php-bcmath
+    - php-gmp
+    - curl
+    - memcached
+    - unzip
+    - nfs-common
+    - python3-mysqldb
+    - libmysqlclient-dev
+    - software-properties-common
+    - python3-pip
+    - openjdk-8-jdk
+    - tesseract-ocr
+    - rng-tools
+    - nginx-extras
+    - cifs-utils
+    - redis-server
+    - libbz2-dev 
+    - libc-client-dev
+    - libkrb5-dev
+    - libsmbclient-dev
+nextcloud_python_packages:
+  - PyMySQL
+nextcloud_pecl_packages:
+  - smbclient
+nextcloud_admin_username: admin
+nextcloud_data_dir: /mnt/nextcloud
+nextcloud_tar_url: https://download.nextcloud.com/server/releases/nextcloud-{{ nextcloud_version }}.tar.bz2
+nextcloud_tar_hash_url: https://download.nextcloud.com/server/releases/nextcloud-{{ nextcloud_version }}.tar.bz2.md5
+nextcloud_tar_hash_path: /tmp/nextCloud.md5
+nextcloud_tar_path: /tmp/nextCloud.tar.bz2
+nextcloud_php_config_path: '/etc/php/{{ nextcloud_php_version }}/fpm/php.ini'
+nextcloud_php_apcu_path: /etc/php/{{ nextcloud_php_version }}/mods-available/apcu.ini
+nextcloud_php_pool_path: '/etc/php/{{ nextcloud_php_version }}/fpm/pool.d/www.conf'
+nextcloud_php_confd_path: '/etc/php/{{ nextcloud_php_version }}/fpm/conf.d/'
+nextcloud_www_path: /var/www/
+nextcloud_install_path: '{{ nextcloud_www_path }}/nextcloud'
+nextcloud_redis_config_path: '/etc/redis/redis.conf'
+nextcloud_config_path: '{{ nextcloud_install_path }}/config/config.php'
+nextcloud_php_mem_limit: 512M
+nextcloud_user: www-data
+nextcloud_ldap_member_filter: 1
+nextcloud_index_name: nextcloud
+www_data_uid: 33
+www_data_gid: 33

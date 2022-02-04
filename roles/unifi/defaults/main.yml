@@ -1,0 +1,24 @@
+---
+#
+# roles/unifi/defaults/main.yaml
+#
+
+unifi_required_vars:
+  - ansible_host
+unifi_apt_packages:
+  - openjdk-8-jre-headless
+  - unifi
+  - mongodb-org-tools
+  - mongodb-org-mongos
+  - mongodb-org-server
+  - mongodb-org-shell
+  - mongodb-org
+
+unifi_mongoDB_ver: 3.4
+unifi_libssl_url: "http://security.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5.7_amd64.deb"
+unifi_libssl_tmp: '/tmp/libssl1.0.0.deb'
+
+
+
+
+

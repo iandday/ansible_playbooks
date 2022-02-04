@@ -1,0 +1,6 @@
+===== Wiki Acronyms =====
+
+# Acroymns and their defintion should be joined with a pipe (|) character with a comma after each pair as shown below
+
+
+AC|Alternating Current,DC|Direct Current

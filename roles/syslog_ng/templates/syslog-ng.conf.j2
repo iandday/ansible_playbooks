@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+
+@version: 3.25
+###
+# Include all config files in /etc/syslog-ng/conf.d/
+###
+@include "{{ syslog_ng_conf_dir }}/*.conf"

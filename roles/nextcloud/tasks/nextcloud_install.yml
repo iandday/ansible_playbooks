@@ -1,0 +1,561 @@
+---
+#
+# roles/nextcloud/tasks/hass_install.yml
+#
+
+- name: update apt cache and install required packages
+  apt: 
+    name: '{{ item }}'
+    state: present
+    update_cache: yes
+  loop: '{{ nextcloud_apt_packages }}'
+  become: true
+
+- name: Install pip dependencies
+  pip:
+    name: '{{ item }}'
+    state: present
+  loop: '{{ nextcloud_python_packages }}'
+  become: true
+- name: remove apache
+  apt:
+    name: apache*
+    state: absent
+  become: true
+
+- name: Installing pecl packges
+  pear:
+    name: 'pecl/{{ item }}'
+    state: present
+  loop: '{{ nextcloud_pecl_packages }}'
+  become: true
+
+- name: remove apache
+  apt:
+    name: apache*
+    state: absent
+  become: true
+
+- name: start redis
+  service:
+    name: redis-server
+    state: started
+    enabled: yes
+  become: true
+
+- name: mount nextcloud share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ nextcloud_network_path }}' 
+    mount_dest: '{{ nextcloud_data_dir }}'
+    mount_username: '{{ nextcloud_service_username }}'
+    mount_password: '{{ nextcloud_service_password }}'
+    mount_uid: '{{ nextcloud_user }}'
+    mount_gid: '{{ nextcloud_user }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'
+  #become: true
+  no_log: true
+
+- name: enable shell for nextcloud user
+  user: 
+    name: '{{ nextcloud_user }}'
+    shell: /bin/bash
+    password: '{{ vault_nextcloud_user_password }}'
+  become: true
+
+- name: download tarball hash file
+  get_url:
+    url: '{{ nextcloud_tar_hash_url }}'
+    dest: '{{ nextcloud_tar_hash_path }}'
+
+- name: extract hash value from downloaded file
+  slurp:
+    src: '{{ nextcloud_tar_hash_path }}'
+  register: hash
+
+- name: download and verify NextCloud tarball
+  get_url:
+    url: '{{ nextcloud_tar_url }}'
+    dest: '{{ nextcloud_tar_path }}'
+    checksum: "md5:{{ (hash.content | b64decode).split(' ')[0] }}"
+
+- name: unpack NextCloud tarball
+  unarchive:
+    remote_src: True
+    src: '{{ nextcloud_tar_path }}'
+    dest: '{{ nextcloud_www_path }}'
+    group: www-data
+    owner: www-data   
+  become: true
+
+- name: enable binary logging in mariadb
+  blockinfile:
+    dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+    insertafter: EOF
+    block: |
+      [mysqld]
+      log-bin        = /var/log/mysql/mariadb-bin
+      log-bin-index  = /var/log/mysql/mariadb-bin.index
+      binlog_format  = mixed
+    owner: root
+    group: root
+    mode: 0644
+    create: yes
+  become: true
+
+- name: copy nginx config
+  template:
+    src: roles/nextcloud/templates/nextcloud.j2
+    dest: /etc/nginx/sites-available/nextcloud
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart nginx
+  become: true
+
+- name: link nginx config
+  file:
+    src: /etc/nginx/sites-available/nextcloud
+    dest: /etc/nginx/sites-enabled/nextcloud
+    state: link
+  notify:
+    - restart nginx
+  become: true
+
+- name: remove default site
+  file:
+    state: absent
+    path: /etc/nginx/sites-enabled/default
+  notify:
+    - restart nginx
+  become: true
+
+- name: configure redis
+  lineinfile:
+    path: '{{ nextcloud_redis_config_path }}'
+    regexp: '{{ item.r }}'
+    line: '{{ item.l }}'
+  loop:
+    -  {r: 'port\s6739', l: 'port 0'}
+    -  {r: '#\sunixsocket\s\/var\/run\/redis\/redis-server\.sock', l: 'unixsocket /var/run/redis/redis-server.sock'}
+    -  {r: '# unixsocketperm 700', l: 'unixsocketperm 770'}
+  become: true
+
+- name: add web user to redis
+  user:
+    name: '{{ nextcloud_user }}'
+    groups: redis
+    append: yes
+  notify: reboot LXC
+  become: true
+
+- name: reboot now for redis changes to apply
+  meta: flush_handlers
+
+- name: touch redis sock
+  copy:
+    content: ''
+    dest: '/var/run/redis/redis-server.sock'
+    force: no
+    group: redis
+    owner: redis
+    mode: 0770
+  become: true
+
+- name: start redis
+  service:
+    name: redis-server
+    state: restarted
+    enabled: true
+  become: true
+
+- name: enable PHP opcache
+  lineinfile:
+    path: '{{ nextcloud_php_config_path }}'
+    line: '{{ item }}'
+    state: present
+  loop:
+    - 'opcache.enable=1'
+    - 'opcache.enable_cli=1'
+    - 'opcache.interned_strings_buffer=8'
+    - 'opcache.max_accelerated_files=10000'
+    - 'opcache.memory_consumption=128'
+    - 'opcache.save_comments=1'
+    - 'opcache.revalidate_freq=1'
+  become: true
+
+- name: configure php apcu module
+  copy:
+    dest: '{{ nextcloud_php_apcu_path }}'
+    content: |
+      extension=apcu.so
+      apc.enable_cli=1
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: tune php-fpm
+  lineinfile:
+    path: '{{ nextcloud_php_config_path }}'
+    line: '{{ item.l }}'
+    regexp: '{{ item.r }}'
+    state: present
+  loop:
+    - {l: 'pm.max_children = 120', r: 'pm\.max_children'}
+    - {l: 'pm.start_servers = 12', r: 'pm\.start_servers'}
+    - {l: 'pm.min_spare_servers = 6', r: 'pm\.min_spare_servers'}
+    - {l: 'pm.max_spare_servers = 18', r: 'pm\.max_spare_servers'}
+  become: true
+  
+- name: increase php memory limit
+  template:
+    src: php_mem.ini.j2
+    dest: '{{ nextcloud_php_confd_path }}/26-memlimit.ini'
+  notify: restart php
+  become: true
+
+- name: add environment variables and php-fpm pool
+  lineinfile:
+    path: '{{ nextcloud_php_pool_path }}'
+    line: '{{ item }}'
+    state: present
+  loop:
+    - 'env[HOSTNAME] = $HOSTNAME'
+    - 'env[PATH] = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+    - 'env[TMP] = /tmp'
+    - 'env[TMPDIR] = /tmp'
+    - 'env[TEMP] = /tmp'
+  notify: restart php
+  become: true
+
+- name: download additional nextcloud apps
+  get_url:
+    url: '{{ item.url }}'
+    dest: '{{ item.path }}'
+  with_items:
+    - '{{ nextcloud_apps }}'
+  become: true
+
+- name: extract downloaded nextcloud apps
+  unarchive:
+      remote_src: True
+      src: '{{ item.path }}'
+      dest: '{{ nextcloud_install_path }}/apps'
+      group: www-data
+      owner: www-data
+  with_items:
+    - '{{ nextcloud_apps }}'  
+  become: true
+
+- name: check if nextcloud is installed
+  shell: su -c "php occ status | grep -c 'installed:\ false'" www-data
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  become: true
+  register: installStatus
+  failed_when: installStatus.rc == 2
+
+- name: create install data directory
+  file:
+    path: '{{ nextcloud_data_dir }}/{{ inventory_hostname }}'
+    state: directory
+    owner: www-data
+    group: www-data
+  become: true
+
+- name: configure nextcloud
+  command: '{{ item }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  with_items:
+      - 'php occ maintenance:install --database mysql --database-name "{{ mysql_database }}" --database-user "{{ mysql_user }}" --database-pass "{{ mysql_password }}" --admin-user "{{ nextcloud_admin_username }}" --admin-pass "{{ nextcloud_admin_password }}" --data-dir "{{ nextcloud_data_dir }}/{{ inventory_hostname }}"'
+      - 'php occ config:system:set trusted_domains 1 --value={{ server_name }}'
+      - 'php occ config:system:set trusted_domains 2 --value={{ inventory_hostname }}'
+      - 'php occ config:system:set trusted_domains 3 --value={{ hostvars[inventory_hostname]["ansible_default_ipv4"]["address"] }}'
+      - 'php occ config:system:set trusted_proxies 1 --value={{ nextcloud_trusted_proxy }}'
+      - 'php occ config:system:set memcache.local --value=\\OC\\Memcache\\APCu'
+      - 'php occ config:system:set memcache.locking --value=\\OC\\Memcache\\Redis'
+      - 'php occ app:disable firstrunwizard'
+      - 'php occ background:cron'
+      - 'php occ db:add-missing-indices'
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+  notify: restart php
+  when: installStatus.stdout == "1"
+
+- name: add additional nextcloud configuration settings
+  blockinfile:
+    dest: '{{ nextcloud_config_path }}'
+    insertbefore: \);
+    block: | 
+      'redis' =>
+      array (
+      'host' => '/var/run/redis/redis-server.sock',
+      'port' => 0,
+      'timeout' => 0.0,
+      ),
+      'activity_expire_days' => 14,
+      'auth.bruteforce.protection.enabled' => true,
+      'blacklisted_files' => 
+      array (
+      0 => '.htaccess',
+      1 => 'Thumbs.db',
+      2 => 'thumbs.db',
+      ),
+      'cron_log' => true,
+      'enable_previews' => true,
+      'enabledPreviewProviders' => 
+      array (
+      0 => 'OC\\Preview\\PNG',
+      1 => 'OC\\Preview\\JPEG',
+      2 => 'OC\\Preview\\GIF',
+      3 => 'OC\\Preview\\BMP',
+      4 => 'OC\\Preview\\XBitmap',
+      5 => 'OC\\Preview\\Movie',
+      6 => 'OC\\Preview\\PDF',
+      7 => 'OC\\Preview\\MP3',
+      8 => 'OC\\Preview\\TXT',
+      9 => 'OC\\Preview\\MarkDown',
+      ),
+      'filesystem_check_changes' => 0,
+      'htaccess.RewriteBase' => '/',
+      'integrity.check.disabled' => false,
+      'knowledgebaseenabled' => false,
+      'preview_max_x' => 1024,
+      'preview_max_y' => 768,
+      'preview_max_scale_factor' => 1,
+      'quota_include_external_storage' => false,
+      'updater.release.channel' => 'stable',
+      'overwriteprotocol' => 'https',
+  notify: restart php
+  become: true
+
+- name: update default nextcloud apps
+  command: 'php console.php app:update {{ item }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  loop:
+    - user_ldap
+    - files_external
+    - admin_audit
+    - files_pdfviewer
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+
+- name: enable default nextcloud apps
+  command: 'php console.php app:enable {{ item }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  loop:
+    - user_ldap
+    - files_external
+    - admin_audit
+    - files_pdfviewer
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+
+- name: enable downloaded nextcloud apps
+  command: 'php console.php app:enable {{ item.name }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  with_items:
+    - '{{ nextcloud_apps }}'
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+
+- name: update nextcloud apps
+  command: 'php console.php app:update {{ item.name }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  with_items:
+    - '{{ nextcloud_apps }}'
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+
+- name: upgrade if required
+  become: true
+  become_user: www-data
+  command: '{{ item }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  with_items:
+      - 'php occ upgrade' 
+  vars:
+    ansible_ssh_pipelining: true
+
+- name: configure ldap connection
+  command: '{{ item }}'
+  args:
+    chdir: '{{ nextcloud_install_path }}'
+  with_items:
+      - 'php occ ldap:create-empty-config'
+      - 'php occ ldap:set-config s01  hasMemberOfFilterSupport "{{ nextcloud_ldap_member_filter }}"'
+      - 'php occ ldap:set-config s01  ldapAgentName "{{ nextcloud_ldap_bind_name }}"'
+      - 'php occ ldap:set-config s01  ldapAgentPassword "{{ nextcloud_ldap_bind_password }}"'
+      - 'php occ ldap:set-config s01  ldapBase "{{ nextcloud_ldap_base_dn }}"'
+      - 'php occ ldap:set-config s01  ldapBaseGroups "{{ nextcloud_ldap_base_groups }}"'
+      - 'php occ ldap:set-config s01  ldapBaseUsers "{{ nextcloud_ldap_base_users }}"'
+      - 'php occ ldap:set-config s01  ldapGroupFilter "{{ nextcloud_ldap_group_filter }}"'
+      - 'php occ ldap:set-config s01  ldapHost "{{ nextcloud_ldap_host }}"'
+      - 'php occ ldap:set-config s01  ldapLoginFilter "{{ nextcloud_ldap_login_filter }}"'
+      - 'php occ ldap:set-config s01  ldapLoginFilterEmail "{{ nextcloud_ldap_filter_email }}"'
+      - 'php occ ldap:set-config s01  ldapPort "{{ nextcloud_ldap_port }}"'
+      - 'php occ ldap:set-config s01  ldapUserDisplayName "{{ nextcloud_ldap_display_name }}"'
+      - 'php occ ldap:set-config s01  ldapUserDisplayName2 "{{ nextcloud_ldap_display_name2 }}"'
+      - 'php occ ldap:set-config s01  ldapUserFilter "{{ nextcloud_ldap_user_filter }}"'
+      - 'php occ ldap:set-config s01  ldapUserFilterObjectclass "{{ nextcloud_ldap_user_filter_class }}"'
+      - 'php occ ldap:set-config s01  ldapExpertUsernameAttr SAMAccountName'
+      - 'php occ ldap:test-config s01'
+      - 'php occ ldap:set-config s01  ldapConfigurationActive 1' 
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+
+- name: copy external share config
+  copy:
+    src: externalShares.json
+    dest: '{{ nextcloud_external_share_config }}'
+  become: true
+
+- name: configure external shares
+  command: '{{ item }}' 
+  with_items:
+    - 'php occ config:app:set --value  ftp,dav,owncloud,sftp,amazons3,dropbox,googledrive,swift,smb,\OC\Files\Storage\SFTP_Key,\OC\Files\Storage\SMB_OC files_external user_mounting_backends'
+    - 'php occ files_external:import  {{ nextcloud_external_share_config }}'
+  args:
+    chdir: /var/www/nextcloud
+  ignore_errors: yes  
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data
+
+- name: remove downloaded files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - '{{ nextcloud_tar_hash_path }}'
+    - '{{ nextcloud_tar_path }}'
+    - '{{ nextcloud_external_share_config }}'
+  become: true
+
+- name: remove downloaded apps
+  file: 
+    path: '{{ item.path }}'
+    state: absent
+  with_items:
+    - '{{ nextcloud_apps }}'
+  become: true
+
+- name: check permissions for nextcloud install
+  file:
+    path: '{{ nextcloud_install_path }}/apps'
+    recurse: yes
+    group: www-data
+    owner: www-data
+  become: true
+
+- name: set cron job
+  cron:
+    name: nextcloud cron
+    minute: '*/5'
+    job: php -f {{ nextcloud_install_path }}/cron.php > /dev/null 2>&1
+  vars:
+    ansible_ssh_pipelining: true
+  become: true
+  become_user: www-data  
+
+- name: disable shell for nextcloud user
+  user: 
+    name: '{{ nextcloud_user }}'
+    shell: /bin/false
+    password: '*'
+  become: true
+
+- name: copy cron file
+  template:
+    src: nextcloud_cron.sh.j2
+    dest: /root/nextcloud_cron.sh
+    mode: +x
+  become: true
+    
+- name: set optimization job
+  cron:
+    name: nextcloud optimization
+    minute: '5'
+    hour: '2'
+    job: /root/nextcloud_cron.sh > /dev/null 2>&1
+  become: true
+
+- name: create root backup directory
+  file:
+    path: '{{ all_backup_root }}'
+    state: directory
+    owner: '{{ nextcloud_user }}'
+    group: '{{ nextcloud_user }}'
+    mode: 0700
+  become: true
+
+- name: mount backup share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ all_nas_backup }}' 
+    mount_dest: '{{ all_backup_root }}'
+    mount_username: '{{ nextcloud_service_username }}'
+    mount_password: '{{ nextcloud_service_password }}'
+    mount_uid: '{{ www_data_uid }}'
+    mount_gid: '{{ www_data_gid }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'
+
+- name: create nextcloud backup directory
+  file:
+    path: '{{ nextcloud_backup_dir }}'
+    state: directory
+    owner: '{{ www_data_uid }}'
+    group: '{{ www_data_gid }}'
+    mode: 0700
+  become: true
+
+- name: copy backup script
+  template:
+    src: backup_nextcloud.sh.j2
+    dest: /usr/local/bin/backup_nextcloud.sh
+    mode: 'a+x'
+  become: true
+
+- name: setup backup cronjob
+  cron:
+    name: 'Backup nc database'
+    job: '/usr/local/bin/backup_nextcloud.sh'
+    user: root
+    cron_file: backup_nextcloud
+    hour: '3'
+    minute: '5'
+  become: true
+
+- name: configure backup rotation
+  include_role:
+    name: common
+    tasks_from: rotate_backups
+  vars:
+    - cron_user: root
+    - backup_path: '{{ nextcloud_backup_dir }}'
+

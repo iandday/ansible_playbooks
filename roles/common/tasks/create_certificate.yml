@@ -1,0 +1,86 @@
+---
+#
+# roles/certificate_authority/tasks/create_certificate.yml
+#
+# Call with the following variables
+#  certificate_key: path to certificate private key file
+#  certificate_csr: path to certifcate CSR file
+#  certificate: path to certificate
+#  certificate_cn: certificate common name
+#  certificate_san: list of SAN entries
+
+
+- name: check if signed CA certificate exists
+  stat:
+    path: '{{ common_root_ca_cert }}'
+  register: ca_cert_check
+
+- name: create CA key
+  openssl_privatekey:
+    path: '{{ common_root_ca_key }}'
+    force: false
+  when: not ca_cert_check.stat.exists
+
+- name: create the CA CSR
+  openssl_csr:
+    path: '{{ common_root_ca_csr }}'
+    privatekey_path: '{{ common_root_ca_key }}'
+    common_name: Daynet CA
+    force: false
+    basic_constraints: 'CA:TRUE'
+    key_usage:
+      - keyCertSign
+  when: not ca_cert_check.stat.exists
+
+- name: sign the CA CSR
+  openssl_certificate:
+    path: '{{ common_root_ca_cert }}'
+    csr_path: '{{ common_root_ca_csr }}'
+    privatekey_path: '{{ common_root_ca_key }}'
+    provider: selfsigned
+    force: false
+  when: not ca_cert_check.stat.exists
+
+- name: delete the CA CSR
+  file:
+    path: '{{ common_root_ca_csr }}'
+    state: absent
+
+- name: check if signed certificate exists
+  stat:
+    path: '{{ certificate }}'
+  register: cert_check
+
+- name: create CSR signing key
+  openssl_privatekey:
+    path: '{{ certificate_key }}'
+  when: not cert_check.stat.exists
+
+- name: create the CSR
+  openssl_csr:
+    path: '{{ certificate_csr }}'
+    privatekey_path: '{{ certificate_key }}'
+    common_name: '{{ certificate_cn }}'
+    subject_alt_name: '{{ certificate_san }}'
+    key_usage:
+      - keyAgreement
+      - digitalSignature
+      - keyEncipherment
+    extended_key_usage:
+      - clientAuth
+      - serverAuth
+  when: not cert_check.stat.exists
+
+- name: generate cert
+  openssl_certificate:
+    path: '{{ certificate }}'
+    csr_path: '{{ certificate_csr }}'
+    provider: ownca
+    ownca_path: '{{ common_root_ca_cert }}'
+    ownca_privatekey_path: '{{ common_root_ca_key }}'
+  when: not cert_check.stat.exists
+
+- name: delete the csr
+  file:
+    path: '{{ certificate_csr }}'
+    state: absent

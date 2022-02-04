@@ -1,0 +1,54 @@
+---
+#
+# roles/unifi/tasks/unifi_install.yml
+# stolen from https://kalfeher.com/unifi-controller-software-ansible/
+#
+
+- name: Install APT key for Unifi
+  apt_key:
+    url: https://dl.ui.com/unifi/unifi-repo.gpg
+  become: true
+
+- name: Install repo for Unifi controller
+  apt_repository:
+    repo: deb https://www.ui.com/downloads/unifi/debian stable ubiquiti
+    state: present
+    filename: '100-ubnt-unifi'
+  become: true
+
+- name: Install latest MongoDB APT key.
+  apt_key:
+    url: "https://www.mongodb.org/static/pgp/server-{{ unifi_mongoDB_ver }}.asc"
+  become: true
+
+- name: Install MongoDB Repo
+  apt_repository:
+    repo: "deb https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/{{ unifi_mongoDB_ver }} multiverse"
+    state: present
+    filename: "mongodb-org-{{ unifi_mongoDB_ver }}"
+  become: true
+
+- name: Download libssl
+  get_url:
+    url: "{{ unifi_libssl_url }}"
+    dest: "{{ unifi_libssl_tmp }}"
+  become: true
+
+- name: install libssl
+  apt:
+    deb: "{{ unifi_libssl_tmp}}"
+  become: true
+
+- name: update apt cache and install required packages
+  apt: 
+    name: '{{ unifi_apt_packages }}'
+    state: present
+    update_cache: yes
+  notify: Start Unifi Service
+  become: true
+
+- name: Remove temporary libssl file
+  file:
+    path: "{{ unifi_libssl_tmp}}"
+    state: absent
+  become: true

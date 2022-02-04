@@ -1,0 +1,15 @@
+<?php
+/*
+ * Dokuwiki's Main Configuration File - Local Settings
+ * {{ ansible_managed }}
+ */
+
+{% if wiki_template is defined %}
+$conf['template'] = '{{ wiki_template}}';
+{% endif %}
+{% if wiki_local is defined %}
+{%   for conf in wiki_local %}
+$conf{{ conf.name }} = '{{ conf.value }}';
+{%   endfor %}
+{% endif %}
+// End Ansible generated config

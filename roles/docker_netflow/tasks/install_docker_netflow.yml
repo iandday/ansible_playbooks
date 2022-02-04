@@ -1,0 +1,35 @@
+---
+#
+# roles/docker_netflow/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_netflow_docker_builds }}/netflow'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_netflow_docker_builds }}/netflow/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+    - Dockerfile
+    - crontab
+    - netflow_dump.py
+
+- name: create docker volumes
+  become: true
+  docker_volume:
+    name: '{{ item }}'
+  with_items:
+    - '{{ docker_netflow_data_volume }}'

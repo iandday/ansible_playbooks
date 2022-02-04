@@ -1,0 +1,27 @@
+---
+#
+# roles/common/tasks/change_hostname.yml
+#
+
+
+- name: remove template hostname
+  lineinfile: 
+    path: /etc/hosts    
+    regexp: '{{ all_template_hostname }}'
+    state: absent
+  notify: '{{ reboot_handler }}'
+  become: true
+
+- name: change hostname part A
+  lineinfile: 
+    path: /etc/hosts
+    line: '127.0.1.1       {{ inventory_hostname }}'
+    insertafter: '127.0.0.1       localhost'
+  notify: '{{ reboot_handler }}'
+  become: true
+
+- name: change hostname part B
+  hostname:
+    name: '{{ inventory_hostname }}'
+  notify: '{{ reboot_handler }}'
+  become: true

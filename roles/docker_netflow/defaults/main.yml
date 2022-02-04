@@ -1,0 +1,13 @@
+---
+#
+# roles/docker_netflow/defaults/main.yml
+#
+
+docker_netflow_required_vars:
+  - docker_uid
+  - docker_gid
+  - docker_netflow_log_volume_path
+docker_netflow_docker_builds: '{{ all_docker_builds }}'
+docker_netflow_docker_storage: '{{ all_docker_storage }}'
+docker_netflow_data_volume: netflow_data
+

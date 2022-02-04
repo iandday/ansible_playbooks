@@ -1,0 +1,87 @@
+---
+#
+# roles/handlers/handlers/main.yml
+#
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+  become: true
+
+- name: restart php
+  service:
+    name: php7.4-fpm
+    state: restarted
+  become: true
+
+- name: reboot
+  reboot:
+    msg: 'Reboot initiated by Ansible'
+  become: true
+
+- name: reboot LXC
+  reboot:
+    boot_time_command: uptime --since ; cat /proc/sys/kernel/random/boot_id
+  become: true
+
+- name: restart elasticsearch
+  service: 
+    name: elasticsearch
+    state: restarted
+  become: true
+
+- name: restart hass
+  service:
+    name: home-assistant@homeassistant.service
+    state: restarted
+  notify: restart appdaemon
+  become: true
+
+- name: restart appdaemon
+  service:
+    name: appdaemon@appdaemon.service
+    state: restarted
+  become: true
+
+- name: restart syslog
+  service:
+    name: syslog-ng
+    state: restarted
+  become: true
+
+- name: restart cifs
+  service:
+    name: smbd
+    state: restarted
+  become: true
+
+- name: restart mopidy
+  service:
+    name: mopidy
+    state: restarted
+  become: true
+
+- name: Start Unifi Service
+  systemd:
+    name: 'unifi'
+    state: started
+  become: true
+
+- name: restart pihole
+  service:
+    name: pihole-FTL
+    state: restarted
+  become: true
+
+- name: restart rsyslog
+  service:
+    name: rsyslog
+    state: restarted
+  become: true
+
+- name: restart splunk
+  service:
+    name: splunk
+    state: restarted
+  become: true

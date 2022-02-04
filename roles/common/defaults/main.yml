@@ -1,0 +1,31 @@
+---
+#
+# roles/common/defaults/main.yml
+#
+
+#vcenter_validate: false
+#vcenter_vmtemplate: 18.04.01Template
+#vcenter_datacenter: Datacenter
+#vcenter_folder: '{{ vcenter_datacenter }}/vm'
+#vcenter_lan_network: 
+  #- {"name": "dpLAN", "start_connected": true, "allow_guest_control": true}
+#vcenter_datastore: NAS-VM
+#vcenter_template_disk_size: 32
+#vcenter_esxi_hostname: 10.168.1.117
+#vcenter_memory_mb: 2048
+#snapshot_details: 
+#common_packages: python2.7 python-simplejson python3-apt python3-pip python-apt aptitude ntp libopts25 sntp cifs-utils
+backup_days: 14
+domain: IANDAY.ME
+ad_packages:
+  - python3-pip
+  - sssd
+  - adcli
+  - realmd
+mount_options: ''
+common_apt_poackages:
+  - python3-pip
+  - python-pexpect
+  - acl
+common_pip_packages:
+  - pexpect

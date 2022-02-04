@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+
+###########
+# Options #
+###########
+
+##########
+# Source #
+##########
+
+source s_pihole_ftl_file {
+    file("/var/log/pihole-FTL.log");
+};
+
+############
+# Template #
+############
+
+
+###############
+# Destination #
+###############
+destination d_pihole_ftl_tcp { 
+    network(
+        "{{ pihole_FTL_syslog_receiver }}" 
+        transport(tcp) 
+        port({{ pihole_FTL_syslog_receiver_port }})
+        ); 
+};
+
+##############
+# Log Action #
+##############
+
+log {
+ source(s_pihole_ftl_file);
+  destination(d_pihole_ftl_tcp);
+};

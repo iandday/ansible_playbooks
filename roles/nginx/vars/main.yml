@@ -1,0 +1,7 @@
+---
+#
+# roles/nginx/vars/main.yml
+
+nginx_apt_packages:
+  - nginx
+  - nginx-extras

@@ -1,0 +1,13 @@
+# users.auth.php
+# <?php exit()?>
+# Don't modify the lines above
+# {{ ansible_managed }}
+#
+# Userfile
+#
+# Format:
+#
+# login:passwordhash:Real Name:email:groups,comma,seperated
+
+
+admin:{{ admin_hash.stdout }}:admin:admin@admin:admin,user

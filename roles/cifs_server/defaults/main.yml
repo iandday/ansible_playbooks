@@ -1,0 +1,12 @@
+---
+#
+# roles/cifs_server/defaults/main.yml
+#
+
+cifs_server_required_vars:
+  - cifs_shares
+cifs_server_apt_packages:
+  - samba
+  - samba-common
+  - libpam-winbind
+

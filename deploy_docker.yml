@@ -1,0 +1,20 @@
+---
+#
+#  Docker KVM: utility, media, and automation stack
+#
+
+- name: Deploy and configure KVMkvm
+  hosts: docker
+  gather_facts: false
+  pre_tasks:
+  - name: create kvm
+    include_role:
+      name: common
+      tasks_from: create_kvm.yml
+  - name: gather KVM facts
+    gather_facts:
+  roles:
+   - docker
+   - docker_utility
+   - docker_netflow
+   - cifs_server

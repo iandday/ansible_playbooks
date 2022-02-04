@@ -1,0 +1,58 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ee:14.6.1-ee.0'
+    container_name: gitlab
+    restart: on-failure
+    hostname: gitlab
+    volumes:
+      - {{ docker_gitlab_docker_storage }}/gitlab_config:/etc/gitlab
+      - {{ docker_gitlab_docker_storage }}/gitlab_data:/var/opt/gitlab
+      - {{ docker_gitlab_docker_storage }}/logs/gitlab:/var/log/gitlab
+    shm_size: '256m'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.{{ all_ext_domain }}'
+        nginx['listen_https'] = true
+        nginx['redirect_http_to_https'] = true
+        nginx['ssl_certificate'] = "/etc/gitlab/ssl/{{ inventory_hostname }}.crt"
+        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/{{ inventory_hostname }}.pem"
+        gitlab_rails['smtp_address'] = "{{ all_internal_mail_server }}"
+        gitlab_rails['smtp_port'] = {{ all_internal_mail_port }}
+        gitlab_rails['smtp_domain'] = "{{ all_ext_domain }}"
+        gitlab_rails['smtp_tls'] = false
+        gitlab_rails['smtp_openssl_verify_mode'] = 'none'
+        gitlab_rails['smtp_enable_starttls_auto'] = false
+        gitlab_rails['smtp_ssl'] = false
+        gitlab_rails['smtp_force_ssl'] = false
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['ldap_enabled'] = true
+        gitlab_rails['prevent_ldap_sign_in'] = false
+        gitlab_rails['ldap_host'] = '{{ all_domain_controller }}'
+        gitlab_rails['ldap_port'] = '636'
+        gitlab_rails['ldap_method'] = 'simple_tls'
+        gitlab_rails['ldap_ca_file'] = '/etc/gitlab/ssl/ca.crt'
+        gitlab_rails['ldap_active_directory'] = true
+        gitlab_rails['ldap_base'] = '{{ all_base_dn }}'
+        gitlab_rails['ldap_bind_dn'] = '{{ docker_gitlab_ad_account }}'
+        gitlab_rails['ldap_password'] = '{{ docker_gitlab_ad_password }}'
+        gitlab_rails['ldap_allow_username_or_email_login'] = false  
+        gitlab_rails['ldap_base'] = 'CN=Users,{{ all_base_dn }}'
+        gitlab_rails['ldap_uid'] = 'sAMAccountName'   
+    ports:
+      - '80:80'
+      - '443:443'
+      - '2222:22'
+  gitlab-runner:
+    image: 'gitlab/gitlab-runner:v14.6.0'
+    container_name: gitlab-runner
+    restart: on-failure
+    hostname: gitlab-runner
+    volumes:
+      - {{ docker_gitlab_docker_storage }}/gitlab_runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+networks:
+  default:
+    driver: bridge

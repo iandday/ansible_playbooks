@@ -1,0 +1,15 @@
+---
+#
+# roles/wiki/tasks/main.yml
+# Ubuntu 18.04.01
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ wiki_required_vars }}'
+
+- name: load dokuwiki install tasks
+  include_tasks: wiki_install.yml

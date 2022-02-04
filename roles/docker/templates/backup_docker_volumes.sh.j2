@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+systemctl stop docker-compose@utility
+tar --exclude {{ all_docker_storage }}/logs -czf {{ docker_backup_dir }}/docker_volumes_`date +"%Y%m%d"`.tar.gz   {{ all_docker_storage }}
+systemctl start docker-compose@utility

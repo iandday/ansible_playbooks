@@ -1,0 +1,6 @@
+base    anchor
+author  Eli Fenton
+date    2013-08-16
+name    anchor
+desc    Add HTML anchors to a page. 
+url     https://www.dokuwiki.org/plugin:anchor

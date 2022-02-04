@@ -1,0 +1,77 @@
+---
+# {{ ansible_managed }}
+http:
+  routers:
+    cloud-https:
+      rule: "Host(`cloud.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - nextcloud_redirect
+        - nextcloud_headers
+      service: cloud-service
+      tls:
+        certresolver: godaddy
+    media-https:
+      rule: "Host(`media.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: media-service
+      tls:
+        certresolver: godaddy
+    hass-https:
+      rule: "Host(`hass.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: hass-service
+      tls:
+        certresolver: godaddy
+    splunk-https:
+      rule: "Host(`splunk.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: splunk-service
+      tls:
+        certresolver: godaddy
+    git-https:
+      rule: "Host(`gitlab.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: git-service
+      tls:
+        certresolver: godaddy
+  services:
+    cloud-service:
+      loadBalancer:
+        servers:
+          - url: http://10.168.1.5
+    media-service:
+      loadBalancer:
+        servers:
+          - url: http://10.168.1.15:32400/web
+    hass-service:
+      loadBalancer:
+        servers:
+          - url: http://10.168.1.14:8123
+    splunk-service:
+      loadBalancer:
+        servers:
+          - url: http://10.168.1.40:8000
+    git-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: https://10.168.1.16:443
+  middlewares:
+    nextcloud_redirect:
+      redirectRegex:
+        permanent: true
+        regex: "https://(.*)/.well-known/(card|cal)dav"
+        replacement: "https://${1}/remote.php/dav/"
+    nextcloud_headers:
+      headers:
+        stsSeconds: 15552011
+        stsPreload: true
+  serversTransports:
+    mytransport:
+      insecureSkipVerify: true

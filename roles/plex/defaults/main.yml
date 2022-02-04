@@ -1,0 +1,20 @@
+---
+#
+# roles/plex/defaults/main.yaml
+#
+
+plex_required_vars:
+  - plex_movies_path
+  - plex_music_path
+  - plex_tv_path
+  - plex_movies_dest
+  - plex_music_dest
+  - plex_tv_dest
+plex_apt_packages:
+  - cifs-utils
+  - xz-utils
+  - plexmediaserver
+plex_user: 998
+plex_group: 998
+plex_data_dir: '/var/lib/plex/'
+plex_backup_dir: '/home/ansible/backup/plex'

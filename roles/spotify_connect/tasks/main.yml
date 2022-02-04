@@ -1,0 +1,14 @@
+---
+#
+# roles/spotify_connect/tasks/main.yml
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ spotify_connect_required_vars }}'
+
+- name: load spotify_connect install tasks
+  include_tasks: spotify_connect_install.yml

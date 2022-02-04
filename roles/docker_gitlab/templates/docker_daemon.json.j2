@@ -1,0 +1,7 @@
+{
+    "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+    "tls": true,
+    "tlscert": "{{ docker_gitlab_docker_storage }}/gitlab_config/ssl/{{ inventory_hostname }}.crt",
+    "tlskey": "{{ docker_gitlab_docker_storage }}/gitlab_config/ssl/{{ inventory_hostname }}.pem",
+    "tlscacert": "{{ docker_gitlab_docker_storage }}/gitlab_config/ssl/ca.crt"
+  }

@@ -1,0 +1,36 @@
+---
+# {{ ansible_managed }}
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: web-secure
+          scheme: https
+  web-secure:
+    address: ":443"
+
+certificatesResolvers:
+  godaddy:
+    acme:
+      email: admin@ianday.me
+      storage: /etc/traefik/acme.json
+      dnsChallenge:
+        provider: godaddy
+        delayBeforeCheck: 600
+log:
+  level: INFO
+  filePath: "/logs/traefik.log"
+accessLog:
+  filePath: "/logs/access.log"
+api:
+  dashboard: true
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+  file:
+    filename: /etc/traefik/routes.yml
+    watch: true

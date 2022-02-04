@@ -1,0 +1,13 @@
+---
+#
+# roles/mysql/tasks/main.yml
+#
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ mysql_required_vars }}'
+  
+- name: load mysql install tasks
+  include_tasks: mysql_install.yml

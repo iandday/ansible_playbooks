@@ -1,0 +1,213 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: always
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - target: 9000
+        published: 9000
+        protocol: tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - {{ all_docker_storage }}/portainer/:/data
+    environment:
+      - TZ={{ docker_utility_timezone }}
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer-secure.entrypoints=web-secure"
+      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.portainer-secure.tls=true"
+      - "traefik.http.routers.portainer-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.portainer-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.portainer-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
+  mail:
+    container_name: mail
+    restart: always
+    image: juanluisbaptiste/postfix:latest
+    environment:
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP-PORT=465
+      - SMTP_USERNAME={{ docker_utility_mail_username }}
+      - SMTP_PASSWORD={{ docker_utility_mail_password }}
+      - SERVER_HOSTNAME={{ docker_utility_mail_hostname }}
+      - SMTP_NETWORKS={{ docker_utility_mail_networks }}
+    networks:
+      - default
+    ports:
+    - "25:25"
+    labels:
+      - "traefik.enable=false"
+  dashy:
+    container_name: dashy
+    restart: always
+    image: lissy93/dashy:latest
+    volumes:
+      - {{ all_docker_storage }}/dashy/dashy-config.yml:/app/public/conf.yml
+    environment:
+      - UID={{ docker_uid }}
+      - GID={{ docker_gid }}
+    healthcheck:
+      test: ['CMD', 'node', '/app/services/healthcheck']
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashy-secure.entrypoints=web-secure"
+      - "traefik.http.routers.dashy-secure.rule=Host(`start.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.dashy-secure.tls=true"
+      - "traefik.http.routers.dashy-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.dashy-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.dashy-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.dashy-secure.loadbalancer.server.port=80"
+  secrets:
+    container_name: secrets
+    restart: always
+    image: samueldg/snappass:latest
+    user: "{{ docker_uid }}"
+    stop_signal: SIGINT
+    environment:
+      - REDIS_HOST=redis
+      - NO_SSL=True
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.secrets-secure.entrypoints=web-secure"
+      - "traefik.http.routers.secrets-secure.rule=Host(`secrets.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.secrets-secure.tls=true"
+      - "traefik.http.routers.secrets-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.secrets-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.secrets-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.secrets-secure.loadbalancer.server.port=5000"
+  redis:
+    container_name: redis
+    restart: always
+    image: redis:latest
+    command: sh -c "rm -f /data/dump.rdb && redis-server"
+    user: "{{ docker_uid }}"
+    networks:
+      - traefik_proxy
+  watchtower:
+    container_name: watchtower
+    hostname: watchtower
+    restart: always
+    image: v2tec/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --schedule "0 0 4 * * *" --cleanup
+  duo_auth:
+    container_name: duo_auth
+    restart: always
+    image: jumanjiman/duoauthproxy:latest
+    volumes:
+      - {{ all_docker_storage }}/duo:/opt/duoauthproxy/conf/
+      - {{ all_docker_storage }}/logs/duo:/opt/duoauthproxy/log/
+    ports:
+      - 1812
+      - 18120
+    user: "{{ docker_uid }}"
+    networks:
+      - traefik_proxy
+  bitwarden:
+    hostname: bitwarden
+    image: vaultwarden/server:latest
+    container_name: bitwarden
+    restart: always
+    volumes:
+      - {{ all_docker_storage }}/bitwarden:/data/
+      - {{ all_docker_storage }}/logs/bitwarden:/log/
+    environment:
+      - uid={{ docker_uid }}
+      - gid={{ docker_gid }}
+      - WEBSOCKET_ENABLED=true
+      - EXTENDED_LOGGING=false
+      - LOG_FILE=/log/bitwarden.log
+      - SIGNUPS_ALLOWED=false
+      - ADMIN_TOKEN={{ docker_utility_bitwarden_admin_token }}
+      - DOMAIN=https://vault.{{ all_ext_domain }}
+      - DUO_IKEY={{ docker_utility_bitwarden_duo_ikey }}
+      - DUO_SKEY={{ docker_utility_bitwarden_duo_skey }}
+      - DUO_HOST={{ docker_utility_bitwarden_duo_api }}
+      - DUO_ENABLED=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bitwarden-ui.entrypoints=web-secure"
+      - "traefik.http.routers.bitwarden-ui.rule=Host(`vault.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.bitwarden-ui.tls=true"
+      - "traefik.http.routers.bitwarden-ui.tls.certresolver=godaddy"
+      - "traefik.http.routers.bitwarden-ui.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.bitwarden-ui.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.routers.bitwarden-ui.service=bitwarden-ui"
+      - "traefik.http.services.bitwarden-ui.loadbalancer.server.port=80"
+      - "traefik.http.routers.bitwarden-ws.entrypoints=web-secure"
+      - "traefik.http.routers.bitwarden-ws.rule=Host(`vault.{{ all_ext_domain }}`) && Path(`/notifications/hub`)"
+      - "traefik.http.routers.bitwarden-ws.tls=true"
+      - "traefik.http.routers.bitwarden-ws.tls.certresolver=godaddy"
+      - "traefik.http.routers.bitwarden-ws.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.bitwarden-ws.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.routers.bitwarden-ws.service=bitwarden-ws"
+      - "traefik.http.services.bitwarden-ws.loadbalancer.server.port=3012"
+    networks:
+      - traefik_proxy
+  godaddy-ddns:
+    image: parkerhemphill/godaddy-dns-updater
+    container_name: godaddy-ddns
+    restart: unless-stopped
+    environment:
+      - DOMAIN={{ all_ext_domain }}
+      - API_KEY={{ docker_utility_godaddy_key }}:{{ docker_utility_godaddy_secret }}
+      - DNS_CHECK=600
+      - TIME_ZONE=America/New_York
+    volumes:
+      - {{ all_docker_storage }}/logs/godaddy-dns:/tmp
+    networks:
+      - traefik_proxy
+  traefik:
+    hostname: traefik
+    image: traefik:latest
+    container_name: traefik
+    restart: always
+    domainname: {{ all_ext_domain }}
+    networks:
+      - default
+      - traefik_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3012:3012"
+    environment:
+      - DOMAINNAME={{ all_ext_domain }}
+      - GODADDY_API_KEY={{ docker_utility_godaddy_key }} 
+      - GODADDY_API_SECRET={{ docker_utility_godaddy_secret }}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=web-secure"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=godaddy"
+      - "traefik.http.routers.traefik.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.traefik.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users={{ docker_utility_trafik_dashboard_auth }}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - {{ all_docker_storage }}/traefik:/etc/traefik
+      - {{ all_docker_storage }}/logs/traefik:/logs/
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

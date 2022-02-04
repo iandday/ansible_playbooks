@@ -1,0 +1,115 @@
+# {{ ansible_managed }}
+
+###########
+# Options #
+###########
+
+options {
+        create_dirs(yes);
+        owner({{ syslog_ng_log_user }});
+        group({{ syslog_ng_log_group }});
+        perm(0640);
+        dir_owner({{ syslog_ng_log_user }});
+        dir_group({{ syslog_ng_log_group }});
+        dir_perm(0750);
+};
+
+##########
+# Source #
+##########
+
+source s_tcp_opnsense {
+    network(
+        ip(0.0.0.0)
+        transport("tcp")
+        port({{ syslog_ng_opnsense_receive_port }})
+    );
+};
+
+############
+# Filter   #
+############
+
+filter f_filterlog { program("filterlog")};
+filter f_suricata { program("suricata")};
+filter f_openvpn { program("openvpn")};
+filter f_cron { program("cron")};
+filter f_squid { program("squid")};
+filter f_lighttpd { program("lighttpd")};
+filter f_dhcpd { program("dhcpd")};
+
+###############
+# Destination #
+###############
+destination d_file_opnsense_filterlog {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/filterlog-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_suricata {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/suricata-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_openvpn {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/openvpn-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_cron {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/cron-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_squid {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/squid-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_lighttpd {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/lighttpd-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_dhcpd {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/dhcpd-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+destination d_file_opnsense_catchall {
+ file(
+         "{{ syslog_ng_log_dest }}/opnsense/${HOST}/${YEAR}/${MONTH}/catchall-${YEAR}${MONTH}${DAY}.log"
+     );
+};
+
+##############
+# Log Action #
+##############
+
+log {
+    source(s_tcp_opnsense);
+    if  (filter(f_filterlog)) {
+        destination(d_file_opnsense_filterlog);
+    }
+    elif (filter(f_suricata)) {
+        destination(d_file_opnsense_suricata);
+    }
+    elif (filter(f_openvpn))  {
+        destination(d_file_opnsense_openvpn);
+    }
+    elif (filter(f_cron)) {
+        destination(d_file_opnsense_cron);
+    }
+    elif (filter(f_squid)) {
+        destination(d_file_opnsense_squid);
+    }
+    elif (filter(f_lighttpd)) {
+        destination(d_file_opnsense_lighttpd);
+    }
+    elif (filter(f_dhcpd)) {
+        destination(d_file_opnsense_dhcpd);
+    }
+    else {
+        destination(d_file_opnsense_catchall);
+    };
+};

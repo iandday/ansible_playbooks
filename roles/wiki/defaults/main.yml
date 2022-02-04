@@ -1,0 +1,140 @@
+---
+#
+# roles/wiki/defaults/main.yaml
+#
+
+wiki_required_vars:
+  - wiki_sitename
+  - wiki_shortname
+  - wiki_admin_password
+  - wiki_backup_dir
+  - wiki_plugins
+  - wiki_svc_account_password
+  - wiki_svc_account_username
+  - wiki_user_group
+  - wiki_upload_size
+wiki_tar_url: "https://download.dokuwiki.org/src/dokuwiki/dokuwiki-stable.tgz"
+wiki_server_url: 'http://{{ wiki_server_name }}'
+wiki_admin_password: admin
+wiki_acl_all: 0
+wiki_acl_user: 16
+wiki_php_ini: '/etc/php/7.2/fpm/php.ini'
+wiki_web_root: /var/www/html/
+wiki_root_path: '{{ wiki_web_root }}/dokuwiki'
+wiki_content: '/etc/wiki/'
+wiki_plugin_path: '{{ wiki_root_path }}/lib/plugins'
+wiki_tpl_path: '{{ wiki_root_path }}/lib/tpl'
+wiki_web_user: 'www-data'
+wiki_content_dirs:
+  - '{{ wiki_content }}'
+  - '{{ wiki_content }}/attic'
+  - '{{ wiki_content }}/cache'
+  - '{{ wiki_content }}/index'
+  - '{{ wiki_content }}/locks'
+  - '{{ wiki_content }}/media'
+  - '{{ wiki_content }}/media/wiki'
+  - '{{ wiki_content }}/media_attic'
+  - '{{ wiki_content }}/media_meta'
+  - '{{ wiki_content }}/meta'
+  - '{{ wiki_content }}/pages'
+  - '{{ wiki_content }}/pages/pagetemplates'
+  - '{{ wiki_content }}/pages/wiki'
+  - '{{ wiki_content }}/pages/wiki/ebook' 
+  - '{{ wiki_content }}/pages/user'
+  - '{{ wiki_content }}/tmp'
+wiki_template_conf_directory: '{{ wiki_web_root }}/conf/tpl/dokuwiki'
+navbar_width: 14
+wiki_apt_packages:
+  - php
+  - php-curl 
+  - php-apcu 
+  - php-fpm 
+  - php-bcmath
+  - php-gd 
+  - php-intl 
+  - php-pear 
+  - php-imap 
+  - php-memcache 
+  - php-pspell 
+  - php-recode 
+  - php-tidy 
+  - php-xmlrpc
+  - php-mbstring 
+  - php-gettext 
+  - php-gmp 
+  - php-json 
+  - php-xml 
+  - php-common
+  - php-sqlite3
+  - php-ldap
+  - libapache2-mod-php
+  - unzip
+  - whois
+  - aptitude
+  - cifs-utils
+wiki_local:
+  - { name: "['passcrypt']", value: 'sha512' }
+  - { name: "['template']",  value: 'bootstrap3' }
+  - { name: "['useheading']", value: '1' }
+  - { name: "['updatecheck']", value: '0' }
+  - { name: "['dnslookups']", value: '0' }
+  - { name: "['disableactions']", value: 'register' }
+  - { name: "['maxseclevel']", value: '0' }
+  - { name: "['maxtoclevel']", value: '4' }
+  - { name: "['breadcrumbs']", value: '0' }
+  - { name: "['youarehere']", value: '1' }
+  - { name: "['showuseras']", value: 'username'}
+  - { name: "['title']", value: '{{ wiki_sitename }}' }
+  - { name: "['lang']", value:  'en' }
+  - { name: "['license']", value: 'cc-by-sa' }
+  - { name: "['savedir']", value: '/etc/wiki/' }
+  - { name: "['plugin']['indexmenu']['skip_file']", value: '/sidebar/' }
+  - { name: "['plugin']['indexmenu']['skip_index']", value: '/(pagetemp|wiki|user)/' }
+  - { name: "['plugin']['indexmenu']['headpage']", value: ':start:' }
+  - { name: "['plugin']['ckgdoku']['dblclk']", value: 'off' }
+  - { name: "['plugin']['ckgdoku']['rel_links']", value: '1' }
+  - { name: "['plugin']['ckgdoku']['allow_ckg_filebrowser']", value: 'dokuwiki' }
+  - { name: "['plugin']['ckgdoku']['default_ckg_filebrowser']", value: 'dokuwiki' }
+  - { name: "['plugin']['tagging']['cloudlimit']", value: '0' }
+  - { name: "['plugin']['tagging']['singleusermode']", value: '1' }
+  - { name: "['plugin']['userhomepage']['users_namespace']", value: 'user' }
+  - { name: "['plugin']['userhomepage']['edit_before_create']", value: '1' }
+  - { name: "['plugin']['userhomepage']['acl_all_public']", value: '0' }
+  - { name: "['plugin']['userhomepage']['acl_user_public']", value: '0' }
+  - { name: "['plugin']['userhomepage']['templates_path']", value: './pages/pagetemplates/' }
+  - { name: "['plugin']['userhomepage']['templatepath']", value: './pages/pagetemplates/userhomepage_private.txt' }
+  - { name: "['plugin']['userhomepage']['create_private_ns']", value: '1' }
+  - { name: "['tpl']['bootstrap3']['bootstrapTheme']", value: 'default' }
+  - { name: "['tpl']['bootstrap3']['showThemeSwitcher']", value: '1' }
+  - { name: "['tpl']['bootstrap3']['showHomePageLink']", value: '1' }
+  - { name: "['tpl']['bootstrap3']['showEditBtn']", value: 'logged' }
+  - { name: "['tpl']['bootstrap3']['showAddNewPage']", value: 'logged' }
+  - { name: "['tpl']['bootstrap3']['fluidContainer']", value: '1' }
+  - { name: "['tpl']['bootstrap3']['fluidContainerBtn']", value: '1' }
+  - { name: "['tpl']['bootstrap3']['showPageId']", value: '0' }
+  - { name: "['tpl']['bootstrap3']['showBadges']", value: '0' }
+  - { name: "['tpl']['bootstrap3']['showPurgePageCache']", value: 'logged' }
+  - { name: "['tpl']['bootstrap3']['showPageIcons']", value: '1' }
+  - { name: "['tpl']['bootstrap3']['collapsibleSections']", value: '1' }
+wiki_local_protected:
+  - { name: "['authtype']", value: 'authchained'}
+  - { name: "['plugin']['authchained']['authtypes']", value: 'authad:authplain'}
+  - { name: "['plugin']['authchained']['usermanager_authtype']", value: 'authplain'}
+  - { name: "['useacl']", value: '1'}
+  - { name: "['superuser']", value: '@admin'}
+  - { name: "['plugin']['authad']['account_suffix']", value: '{{ account_suffix }}'}
+  - { name: "['plugin']['authad']['base_dn']", value: '{{ base_dn }}'}
+  - { name: "['plugin']['authad']['domain_controllers']", value: '{{ domain_controllers }}'}
+  - { name: "['plugin']['authad']['admin_username']", value: '{{ wiki_svc_account_username }}'}
+  - { name: "['plugin']['authad']['admin_password']", value: '{{ wiki_svc_account_password }}'}
+  - { name: "['plugin']['authad']['use_ssl']", value: '0'}
+  - { name: "['plugin']['authad']['debug']", value:  '0'}
+  - { name: "['plugin']['authad']['update_name']", value: '0'}
+  - { name: "['plugin']['authad']['update_mail']", value:  '0'}
+wiki_upload_size: 75
+wiki_php_sock: '/var/run/php/php7.2-fpm.sock'
+wiki_tika_url: 'http://archive.apache.org/dist/tika/tika-app-{{ wiki_tika_version }}.jar'
+wiki_tika_path: '/usr/local/apache-tika'
+wiki_backup_path: '//freenas/backup/wiki'
+wiki_php: 'php7.2-fpm'
+cron_user: root

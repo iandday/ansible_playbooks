@@ -1,0 +1,14 @@
+---
+#
+# roles/mopidy/tasks/main.yml
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ mopidy_required_vars }}'
+
+- name: load mopidy install tasks
+  include_tasks: mopidy_install.yml

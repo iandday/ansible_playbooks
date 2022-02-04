@@ -1,0 +1,13 @@
+---
+#
+# roles/nextcloud/tasks/main.yml
+#
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ nextcloud_required_vars }}'
+  
+- name: load nextcloud install tasks
+  include_tasks: nextcloud_install.yml
