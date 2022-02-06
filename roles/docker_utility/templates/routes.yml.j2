@@ -12,6 +12,10 @@ http:
       service: cloud-service
       tls:
         certresolver: godaddy
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
     media-https:
       rule: "Host(`media.{{ all_ext_domain }}`)"
       entryPoints:
@@ -19,6 +23,10 @@ http:
       service: media-service
       tls:
         certresolver: godaddy
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
     hass-https:
       rule: "Host(`hass.{{ all_ext_domain }}`)"
       entryPoints:
@@ -26,6 +34,10 @@ http:
       service: hass-service
       tls:
         certresolver: godaddy
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
     splunk-https:
       rule: "Host(`splunk.{{ all_ext_domain }}`)"
       entryPoints:
@@ -33,6 +45,10 @@ http:
       service: splunk-service
       tls:
         certresolver: godaddy
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
     git-https:
       rule: "Host(`gitlab.{{ all_ext_domain }}`)"
       entryPoints:
@@ -40,6 +56,10 @@ http:
       service: git-service
       tls:
         certresolver: godaddy
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
   services:
     cloud-service:
       loadBalancer:
