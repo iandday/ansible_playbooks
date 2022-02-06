@@ -1,0 +1,25 @@
+---
+#
+#  Downloader KVM: 
+
+- name: Deploy and configure KVM
+  hosts: downloader
+  gather_facts: false
+  pre_tasks:
+  - name: create kvm
+    include_role:
+      name: common
+      tasks_from: create_kvm.yml
+  - name: gather KVM facts
+    gather_facts:
+  - name: create  cert
+    include_role:
+      name: common
+      tasks_from: create_certificate.yml
+      apply:
+        delegate_to: localhost
+    
+
+  roles:
+  #- docker
+  - docker_media

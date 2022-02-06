@@ -1,0 +1,19 @@
+---
+#
+# roles/docker_media/defaults/main.yml
+#
+
+docker_media_required_vars:
+  - docker_uid
+  - docker_gid
+  - docker_media_openvpn_passwd
+  - docker_media_lan_cidr
+  - docker_media_nas_staging
+  - docker_media_staging_path
+  - docker_media_nas_staging
+  - docker_media_service_account
+  - docker_media_service_password
+
+docker_media_docker_network_name: media
+docker_media_docker_storage: '{{ all_docker_storage }}'
+docker_media_docker_builds: '{{ all_docker_builds }}'

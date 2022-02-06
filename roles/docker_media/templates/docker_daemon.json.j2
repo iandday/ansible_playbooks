@@ -1,0 +1,7 @@
+{
+    "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+    "tls": true,
+    "tlscert": "{{ docker_media_docker_storage }}/certs/{{ inventory_hostname }}.crt",
+    "tlskey": "{{ docker_media_docker_storage }}/certs/{{ inventory_hostname }}.pem",
+    "tlscacert": "{{ docker_media_docker_storage }}/certs/ca.crt"
+  }

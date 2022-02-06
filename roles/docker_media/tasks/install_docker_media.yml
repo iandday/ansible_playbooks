@@ -1,0 +1,153 @@
+---
+#
+# roles/docker_media/tasks/main.yml
+#
+
+# configure for remote portainer access
+
+- name: create docker.service.d directory
+  become: true
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: copy docker config override file
+  become: true
+  template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/docker.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0600
+  register: override_file
+
+- name: reload docker systemd
+  become: true
+  ansible.builtin.systemd:
+    name: docker.service
+    state: reloaded
+  when: override_file.changed
+  tags: 
+  - skip_ansible_lint
+
+- name: copy docker config
+  become: true
+  template:
+    src: 'docker_daemon.json.j2'
+    dest: '/etc/docker/daemon.json'
+    owner: root
+    group: root
+    mode: 0600
+    
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_media_docker_builds }}/media'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_media_docker_builds }}/media/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create storage directories
+  become: true
+  file:
+    path: '{{ docker_media_docker_storage }}/{{ item }}'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  with_items:
+    - openvpn
+    - certs
+
+- name: copy ssl cert
+  become: true
+  copy:
+    src: '{{ certificate }}' 
+    dest: '{{ docker_media_docker_storage }}/certs/{{ inventory_hostname }}.crt'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy SSL key
+  become: true
+  copy:
+    src: '{{ certificate_key }}' 
+    dest: '{{ docker_media_docker_storage }}/certs/{{ inventory_hostname }}.pem'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy CA cert
+  become: true
+  copy:
+    src: '{{ common_root_ca_cert }}' 
+    dest: '{{ docker_media_docker_storage }}/certs/ca.crt'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy openvpn config files
+  become: true
+  copy:
+    src: '{{ item  }}'
+    dest: '{{ docker_media_docker_storage }}/openvpn/{{ item }}'
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  with_items:
+    - ca.crt
+    - vpn_user.crt
+    - vpn_user.key
+    - vpn.conf
+
+- name: copy private key credential
+  become: true
+  template:
+    src: vpn.cert_auth.j2
+    dest: '{{ docker_media_docker_storage }}/openvpn/vpn.cert_auth'
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: create mount directories
+  become: true
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  with_items:
+    - '{{ docker_media_staging_path }}'
+
+- name: mount staging
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ docker_media_nas_staging }}' 
+    mount_dest: '{{ docker_media_staging_path }}'
+    mount_username: '{{ docker_media_service_account }}'
+    mount_password: '{{ docker_media_service_password }}'
+    mount_uid: '{{ docker_uid }}'
+    mount_gid: '{{ docker_gid }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'
