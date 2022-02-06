@@ -1,7 +1,7 @@
 ---
 #
 # roles/certificate_authority/tasks/create_certificate.yml
-#
+# decrypt CA key before running
 # Call with the following variables
 #  certificate_key: path to certificate private key file
 #  certificate_csr: path to certifcate CSR file
@@ -12,7 +12,7 @@
 
 - name: check if signed CA certificate exists
   stat:
-    path: '{{ common_root_ca_cert }}'
+    path: '{{ all_root_ca_cert }}'
   register: ca_cert_check
 
 - name: create CA key
