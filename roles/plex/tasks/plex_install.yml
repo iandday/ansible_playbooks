@@ -29,13 +29,13 @@
     state: started
     enabled: true
 
-- name: mount movies share
+- name: mount media share
   include_role:
     name: common
     tasks_from: mount_share
   vars:
-    mount_src:  '{{ plex_movies_path }}'
-    mount_dest: '{{ plex_movies_dest }}'
+    mount_src:  '{{ plex_media_path }}'
+    mount_dest: '{{ plex_media_dest }}'
     mount_username: '{{ plex_service_username }}'
     mount_password: '{{ plex_service_password }}'
     mount_uid: '{{ plex_user }}'
@@ -43,33 +43,6 @@
     mount_options: ',file_mode=0770,dir_mode=0770,nounix'
   no_log: true
 
-- name: mount music share
-  include_role:
-    name: common
-    tasks_from: mount_share
-  vars:
-    mount_src:  '{{ plex_music_path }}'
-    mount_dest: '{{ plex_music_dest }}'
-    mount_username: '{{ plex_service_username }}'
-    mount_password: '{{ plex_service_password }}'
-    mount_uid: '{{ plex_user }}'
-    mount_gid: '{{ plex_group }}'
-    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
-  no_log: true
-
-- name: mount tv share
-  include_role:
-    name: common
-    tasks_from: mount_share
-  vars:
-    mount_src:  '{{ plex_tv_path }}'
-    mount_dest: '{{ plex_tv_dest }}'
-    mount_username: '{{ plex_service_username }}'
-    mount_password: '{{ plex_service_password }}'
-    mount_uid: '{{ plex_user }}'
-    mount_gid: '{{ plex_group }}'
-    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
-  no_log: true
 
 # - name: create backup directory
 #   file:

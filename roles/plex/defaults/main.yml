@@ -4,12 +4,9 @@
 #
 
 plex_required_vars:
-  - plex_movies_path
-  - plex_music_path
-  - plex_tv_path
-  - plex_movies_dest
-  - plex_music_dest
-  - plex_tv_dest
+  - plex_media_path
+  - plex_media_dest
+
 plex_apt_packages:
   - cifs-utils
   - xz-utils
