@@ -60,6 +60,17 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
+    overseerr-https:
+      rule: "Host(`requests.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: overseerr-service
+      tls:
+        certresolver: godaddy
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
   services:
     cloud-service:
       loadBalancer:
@@ -82,6 +93,11 @@ http:
         serversTransport: mytransport
         servers:
           - url: https://10.168.1.16:443
+    overseerr-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.31:5055
   middlewares:
     nextcloud_redirect:
       redirectRegex:

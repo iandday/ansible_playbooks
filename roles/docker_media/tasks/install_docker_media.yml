@@ -138,6 +138,7 @@
     mode: 0700
   with_items:
     - '{{ docker_media_staging_path }}'
+    - '{{ docker_media_media_path }}'
 
 - name: mount staging
   include_role:
@@ -151,3 +152,17 @@
     mount_uid: '{{ docker_uid }}'
     mount_gid: '{{ docker_gid }}'
     mount_options: ',file_mode=0700,dir_mode=0700,nounix'
+
+- name: mount media
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ docker_media_nas_media }}' 
+    mount_dest: '{{ docker_media_media_path }}'
+    mount_username: '{{ docker_media_service_account }}'
+    mount_password: '{{ docker_media_service_password }}'
+    mount_uid: '{{ docker_uid }}'
+    mount_gid: '{{ docker_gid }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'
+    

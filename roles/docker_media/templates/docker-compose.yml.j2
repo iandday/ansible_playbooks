@@ -73,9 +73,149 @@ services:
       retries: 3    
     restart: unless-stopped
     depends_on:
-  #     #sabnzbd:
-  #     #  condition: service_healthy
       qbittorrent:
         condition: service_healthy
+  sonarr:
+      container_name: sonarr
+      image: linuxserver/sonarr:latest
+      restart: 'unless-stopped'
+      environment:
+        - PUID={{ docker_uid }}
+        - PGID={{ docker_gid }}
+        - TZ='EST5EDT'
+      volumes:
+        - {{ docker_media_docker_storage }}/sonarr:/config
+        - {{ docker_media_media_path }}:/media
+        - {{ docker_media_staging_path }}:/downloads
+      labels: 
+        - autoheal=true
+      healthcheck:
+        test: curl -fSs http://127.0.0.1:8989 || exit 1
+        start_period: 20s
+        timeout: 5s
+        interval: 5s
+        retries: 3
+      ports:
+        - 8989:8989
+      entrypoint:
+        - /init
+      depends_on:
+        qbittorrent:
+          condition: service_healthy
+  radarr:
+    container_name: radarr
+    image: linuxserver/radarr:nightly
+    restart: unless-stopped
+    environment:
+      - PUID={{ docker_uid }}
+      - PGID={{ docker_gid }}
+      - TZ='EST5EDT'
+    volumes:
+      - {{ docker_media_docker_storage }}/radarr:/config
+      - {{ docker_media_media_path }}:/media
+      - {{ docker_media_staging_path }}:/downloads
+    ports:
+      - 7878:7878
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:7878 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    entrypoint:
+      - /init
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+  lidarr:
+    container_name: lidarr
+    image: linuxserver/lidarr:nightly
+    environment:
+      - PUID={{ docker_uid }}
+      - PGID={{ docker_gid }}
+      - TZ='EST5EDT'
+    volumes:
+      - {{ docker_media_docker_storage }}/lidarr:/config
+      - {{ docker_media_media_path }}:/media
+      - {{ docker_media_staging_path }}:/downloads
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8686 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    environment:
+      - LOG_LEVEL=info
+      - TZ='EST5EDT'
+    ports:
+      - 5055:5055
+    volumes:
+      - {{ docker_media_docker_storage }}/overseerr:/app/config
+    restart: unless-stopped
+
+  # readarr:
+  #   container_name: readarr
+  #   ports:
+  #     - 8787:8787
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #   volumes:
+  #     - {{ docker_media_docker_storage }}/readarr:/config
+  #     - {{ docker_media_media_path }}:/media
+  #     - {{ docker_media_staging_path }}:/downloads
+  #   image: hotio/readarr:nightly    
+  #   restart: unless-stopped
+  #   labels: 
+  #     - autoheal=true
+  #   healthcheck:
+  #     test: curl -fSs http://127.0.0.1:8787 > /dev/null || exit 1
+  #     start_period: 20s
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 3
+  #   depends_on:
+  #     sabnzbd:
+  #       condition: service_healthy
+  #     qbittorrent:
+  #       condition: service_healthy
+  # sabnzbd:
+  #   image: linuxserver/sabnzbd
+  #   container_name: sabnzbd
+  #   environment:
+  #     - PUID=$PUID
+  #     - PGID=$PGID
+  #     - TZ=$TZ
+  #   labels: 
+  #     - autoheal=true
+  #   healthcheck:
+  #     test: curl -fSs 127.0.0.1:8080 > /dev/null || exit 1
+  #     start_period: 20s
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 3
+  #   volumes:
+  #     - {{ docker_media_docker_storage }}/sabnzbd:/config
+  #     - {{ docker_media_staging_path }}:/downloads
+  #     - $INCOMPLETE:/incomplete-downloads:rw
+  #   ports:
+  #     - 8080:8080
+  #     - 9090:9090
+  #   restart: unless-stopped 
+
 networks:
   default:

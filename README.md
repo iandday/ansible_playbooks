@@ -70,6 +70,17 @@ Clone Ubuntu 20.04 LXC template, install Splunk Enterprise using a NFS bind moun
 ### deploy_unifi.yml
 Clone Ubuntu 20.04 LXC template, install UniFi controller
 
+### deploy_downloader.yml
+Clone Ubuntu 20.04 LXC KVM template, install docker with remote portainer support hosting the services:
+
+* OpenVPN client
+* qBittorrent
+* Prowlarr
+* Sonarr
+* Lidarr
+* Radarr
+* Overseerr
+
 
 ## TODO
 * Guacamole
