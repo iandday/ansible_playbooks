@@ -1,0 +1,51 @@
+---
+#
+# roles/docker_photos/tasks/main.yml
+#
+
+
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_photos_docker_builds }}/photos'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_photos_docker_builds }}/photos/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create config storage directory
+  become: true
+  file:
+    path: '{{ docker_photos_docker_storage }}/gitlab_config'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  with_items:
+    - '{{ docker_photos_docker_storage }}/photoprisim'
+    - ' {{ docker_photos_docker_storage }}/photoprisim_db'
+
+- name: mount photo
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: '{{ docker_photos_originals_nas }}' 
+    mount_dest: '{{ docker_photos_originals_path }}'
+    mount_username: '{{ docker_backup_username }}'
+    mount_password: '{{ docker_backup_password }}'
+    mount_uid: '{{ docker_uid }}'
+    mount_gid: '{{ docker_gid }}'
+    mount_options: ',file_mode=0700,dir_mode=0700,nounix'

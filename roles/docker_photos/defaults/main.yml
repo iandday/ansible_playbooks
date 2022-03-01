@@ -1,0 +1,14 @@
+---
+#
+# roles/docker_photos/defaults/main.yml
+#
+
+docker_photos_required_vars:
+  - docker_uid
+  - docker_gid
+  - docker_photos_sql_user_password
+  - docker_photos_sql_root_password
+  - docker_photos_admin_password
+  - docker_photos_originals_path
+docker_photos_docker_builds: '{{ all_docker_builds }}'
+docker_photos_docker_storage: '{{ all_docker_storage }}'
