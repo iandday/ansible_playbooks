@@ -1,0 +1,76 @@
+# {{ ansible_managed }}
+version: '3'
+
+services:
+  redis:
+    image: redis
+  api:
+    image: vikunja/api
+    restart: unless-stopped
+    environment:
+      VIKUNJA_DATABASE_HOST: db
+      VIKUNJA_DATABASE_PASSWORD: {{ docker_tasks_database_pw }}
+      VIKUNJA_DATABASE_TYPE: mysql
+      VIKUNJA_DATABASE_USER: vikunja
+      VIKUNJA_DATABASE_DATABASE: vikunja
+      VIKUNJA_REDIS_ENABLED: 1
+      VIKUNJA_REDIS_HOST: redis:6379
+      VIKUNJA_CACHE_ENABLED: 1
+      VIKUNJA_CACHE_TYPE: redis
+      VIKUNJA_SERVICE_FRONTENDURL:
+      VIKUNJA_SERVICE_TIMEZONE: America/New_York
+      VIKUNJA_MAILER_ENABLED: 'true'
+      VIKUNJA_MAILER_HOST: {{ vault_docker_utility_mail_hostname }}
+      VIKUNJA_MAILER_PORT: {{ all_internal_mail_port }}
+      VIKUNJA_MAILER_FROMEMAIL: {{ vault_docker_utility_mail_username }}
+      VIKUNJA_MAILER_SKIPTLKVERIFY: 'true'
+      VIKUNJA_METRICS_ENABLED: 'true'
+    volumes: 
+      - {{ docker_tasks_docker_storage }}/tasks_files:/app/vikunja/files
+    networks:
+      - traefik_proxy
+    depends_on:
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.task-api-secure.entrypoints=web-secure"
+      - "traefik.http.routers.task-api-secure.rule=Host(`tasks.{{ all_ext_domain }}`) && PathPrefix(`/api/v1`, `/dav/`, `/.well-known/`)"
+      - "traefik.http.routers.task-api-secure.tls=true"
+      - "traefik.http.routers.task-api-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.task-api-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.task-api-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.task-api-secure.loadbalancer.server.port=3456"
+  frontend:
+    image: vikunja/frontend
+    restart: unless-stopped
+    networks:
+      - traefik_proxy
+    environment:
+      VIKUNJA_API_URL: https://tasks.{{ all_ext_domain }}/api/v1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.task-frontend-secure.entrypoints=web-secure"
+      - "traefik.http.routers.task-frontend-secure.rule=Host(`tasks.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.task-frontend-secure.tls=true"
+      - "traefik.http.routers.task-frontend-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.task-frontend-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.task-frontend-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+  db:
+    image: mariadb:10
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: {{ docker_tasks_database_root_pw }} 
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: {{ docker_tasks_database_pw }}
+      MYSQL_DATABASE: vikunja
+    volumes:
+      - {{ docker_tasks_docker_storage }}/tasks_db:/var/lib/mysql
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy

@@ -1,0 +1,37 @@
+---
+#
+# roles/docker_tasks/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_tasks_docker_builds }}/tasks'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_tasks_docker_builds }}/tasks/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create config storage directories
+  become: true
+  file:
+    path: '{{ docker_tasks_docker_storage }}/{{ item }}'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  with_items:
+    - 'tasks_files'
+    - 'tasks_db'
