@@ -17,3 +17,5 @@
    - docker
    - docker_utility
    - docker_netflow
+   - docker_photos
+   - docker_tasks

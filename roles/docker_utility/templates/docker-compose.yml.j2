@@ -33,7 +33,7 @@ services:
     image: juanluisbaptiste/postfix:latest
     environment:
       - SMTP_SERVER=smtp.gmail.com
-      - SMTP-PORT=465
+      - SMTP-PORT=587
       - SMTP_USERNAME={{ docker_utility_mail_username }}
       - SMTP_PASSWORD={{ docker_utility_mail_password }}
       - SERVER_HOSTNAME={{ docker_utility_mail_hostname }}
