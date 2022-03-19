@@ -1,0 +1,10 @@
+---
+#
+# roles/kanban/defaults/main.yaml
+#
+
+kanban_required_vars:
+  - ansible_host
+kanban_apt_packages:
+  - cifs-utils
+  - openproject

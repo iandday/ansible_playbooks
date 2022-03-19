@@ -1,0 +1,14 @@
+---
+#
+# roles/kanban/tasks/main.yml
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ kanban_required_vars }}'
+
+- name: load kanban install tasks
+  include_tasks: kanban_install.yml
