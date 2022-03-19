@@ -26,7 +26,5 @@ docker_utility_required_vars:
   - docker_utility_mail_networks
   - docker_uid
   - docker_gid
-  - docker_utility_leantime_root_pw
-  - docker_utility_leantime_user_pw
 docker_utility_docker_builds: '{{ all_docker_builds }}'
 docker_utility_docker_storage: '{{ all_docker_storage }}'

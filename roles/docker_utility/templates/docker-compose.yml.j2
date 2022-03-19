@@ -160,47 +160,6 @@ services:
       - "traefik.http.services.bitwarden-ws.loadbalancer.server.port=3012"
     networks:
       - traefik_proxy
-  leantime-db:
-    image: mysql:5.7
-    container_name: leantime-db
-    volumes:
-      - {{ all_docker_storage }}/leantime_db:/var/lib/mysql
-    restart: always
-    networks:
-      - traefik_proxy
-    environment:
-      - MYSQL_ROOT_PASSWORD={{ docker_utility_leantime_root_pw }}
-      - MYSQL_DATABASE=leantime
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD={{ docker_utility_leantime_user_pw }}
-    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
-  leantime-web:
-    image: leantime/leantime:latest
-    container_name: leantime-web
-    environment:
-      - LEAN_DB_HOST=leantime-db
-      - LEAN_DB_USER=admin
-      - LEAN_DB_PASSWORD={{ docker_utility_leantime_user_pw }}
-      - LEAN_DB_DATABASE=leantime
-      - LEAN_APP_URL=https://project.{{ all_ext_domain }}
-      - LEAN_EMAIL_RETURN={{ all_notification_email_from }}
-      - LEAN_EMAIL_USE_SMTP=true
-      - LEAN_EMAIL_SMTP_HOSTS={{ all_internal_mail_server }}
-      - LEAN_EMAIL_SMTP_AUTO_TLS=false
-      - LEAN_EMAIL_SMTP_SECURE=false
-      - LEAN_EMAIL_SMTP_PORT={{ all_internal_mail_port }}
-    depends_on:
-      - leantime-db
-    networks:
-      - traefik_proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.leantime-secure.entrypoints=web-secure"
-      - "traefik.http.routers.leantime-secure.rule=Host(`project.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.leantime-secure.tls=true"
-      - "traefik.http.routers.leantime-secure.tls.certresolver=godaddy"
-      - "traefik.http.routers.leantime-secure.tls.domains[0].main={{ all_ext_domain }}"
-      - "traefik.http.routers.leantime-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
   godaddy-ddns:
     image: parkerhemphill/godaddy-dns-updater
     container_name: godaddy-ddns
