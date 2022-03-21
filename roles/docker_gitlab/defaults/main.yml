@@ -9,5 +9,6 @@ docker_gitlab_required_vars:
   - all_dokcer_volume_backup_tag
   - docker_gitlab_ad_account
   - docker_gitlab_ad_password
+  -  docker_compose_dirs
 docker_gitlab_docker_builds: '{{ all_docker_builds }}'
 docker_gitlab_docker_storage: '{{ all_docker_storage }}'

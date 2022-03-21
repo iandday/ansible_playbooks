@@ -15,7 +15,7 @@ docker_media_required_vars:
   - docker_media_service_password
   - docker_media_nas_media
   - docker_media_media_path
-
+  -  docker_compose_dirs
 docker_media_docker_network_name: media
 docker_media_docker_storage: '{{ all_docker_storage }}'
 docker_media_docker_builds: '{{ all_docker_builds }}'

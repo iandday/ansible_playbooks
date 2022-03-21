@@ -1,6 +1,6 @@
 ---
 #
-#  Downloader KVM: 
+#  Downloader KVM: install *arr suite
 
 - name: Deploy and configure KVM
   hosts: downloader
@@ -18,8 +18,6 @@
       tasks_from: create_certificate.yml
       apply:
         delegate_to: localhost
-    
-
   roles:
-  #- docker
+  - docker
   - docker_media
