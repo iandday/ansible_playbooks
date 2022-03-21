@@ -27,7 +27,6 @@ docker_repo_key:
   - 'https://download.docker.com/linux/ubuntu/gpg'
 docker_python_packages:
   - docker
-docker_backup_dir: '/home/ansible/backup/docker'
 docker_s3_bucket: 'docker-volumes'
 docker_s3_id: '{{ vault_docker_s3_id }}'
 docker_s3_key: '{{ vault_docker_s3_key }}'
