@@ -11,6 +11,7 @@ docker_required_vars:
   - docker_compose_ver
   - docker_backup_username
   - docker_backup_password
+  - docker_compose_dirs
 docker_apt_packages: 
   - cifs-utils
   - nfs-common 
