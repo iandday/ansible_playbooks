@@ -165,57 +165,32 @@ services:
     volumes:
       - {{ docker_media_docker_storage }}/overseerr:/app/config
     restart: unless-stopped
+  readarr:
+    container_name: readarr
+    image: hotio/readarr:nightly    
+    ports:
+      - 8787:8787
+    environment:
+      - PUID={{ docker_uid }}
+      - PGID={{ docker_gid }}
+      - TZ='EST5EDT'
+    volumes:
+      - {{ docker_media_docker_storage }}/readarr:/config
+      - {{ docker_media_media_path }}:/media
+      - {{ docker_media_staging_path }}:/downloads
+    restart: unless-stopped
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8787 > /dev/null || exit 1
+      start_period: 20s
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      qbittorrent:
+        condition: service_healthy
 
-  # readarr:
-  #   container_name: readarr
-  #   ports:
-  #     - 8787:8787
-  #   environment:
-  #     - PUID=$PUID
-  #     - PGID=$PGID
-  #     - TZ=$TZ
-  #   volumes:
-  #     - {{ docker_media_docker_storage }}/readarr:/config
-  #     - {{ docker_media_media_path }}:/media
-  #     - {{ docker_media_staging_path }}:/downloads
-  #   image: hotio/readarr:nightly    
-  #   restart: unless-stopped
-  #   labels: 
-  #     - autoheal=true
-  #   healthcheck:
-  #     test: curl -fSs http://127.0.0.1:8787 > /dev/null || exit 1
-  #     start_period: 20s
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 3
-  #   depends_on:
-  #     sabnzbd:
-  #       condition: service_healthy
-  #     qbittorrent:
-  #       condition: service_healthy
-  # sabnzbd:
-  #   image: linuxserver/sabnzbd
-  #   container_name: sabnzbd
-  #   environment:
-  #     - PUID=$PUID
-  #     - PGID=$PGID
-  #     - TZ=$TZ
-  #   labels: 
-  #     - autoheal=true
-  #   healthcheck:
-  #     test: curl -fSs 127.0.0.1:8080 > /dev/null || exit 1
-  #     start_period: 20s
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 3
-  #   volumes:
-  #     - {{ docker_media_docker_storage }}/sabnzbd:/config
-  #     - {{ docker_media_staging_path }}:/downloads
-  #     - $INCOMPLETE:/incomplete-downloads:rw
-  #   ports:
-  #     - 8080:8080
-  #     - 9090:9090
-  #   restart: unless-stopped 
 
 networks:
   default:
