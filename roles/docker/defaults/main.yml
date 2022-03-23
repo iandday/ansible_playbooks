@@ -30,3 +30,4 @@ docker_python_packages:
 docker_s3_bucket: 'docker-volumes'
 docker_s3_id: '{{ vault_docker_s3_id }}'
 docker_s3_key: '{{ vault_docker_s3_key }}'
+docker_backup_day: '*'

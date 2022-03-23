@@ -134,6 +134,7 @@
     cron_file: backup_docker_volumes
     hour: '2'
     minute: '5'
+    day: '{{ docker_backup_day }}'
   become: true
 
 - name: configure backup rotation
