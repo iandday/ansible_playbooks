@@ -1,6 +1,0 @@
-# {{ ansible_managed }}
-
-# args for cloudflared ##
-## 5353 is localhost:5353. This is where dns queries are sent by pi-hole ##
-## 1.1.1.1 and 1.0.0.1 are Cloudflare DNS servers ##
-CLOUDFLARED_OPTS=--port 5353 --upstream https://1.1.1.1/dns-query --upstream https://1.0.0.1/dns-query

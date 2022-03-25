@@ -1,8 +1,0 @@
-# {{ ansible_managed }}
-# backup script for pihole
-
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
-
-dest="{{ pihole_backup_dir }}"
-cd $dest
-pihole -a -t
