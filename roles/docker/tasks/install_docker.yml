@@ -38,12 +38,11 @@
   become: true
 
 - name: create docker user
+  become: true
   user: 
     name: '{{ docker_user }}'
     group: '{{ docker_gid }}' 
     system: yes
-    append: yes
-  become: true
 
 - name: start docker at boot  
   systemd:
