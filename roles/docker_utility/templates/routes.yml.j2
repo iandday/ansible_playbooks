@@ -71,17 +71,6 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
-    openproject-https:
-      rule: "Host(`project.{{ all_ext_domain }}`)"
-      entryPoints:
-        - web-secure
-      service: openproject-service
-      tls:
-        certresolver: godaddy
-        domains:
-          - main: "{{ all_ext_domain }}"
-            sans:
-              - "*.{{ all_ext_domain }}"
   services:
     cloud-service:
       loadBalancer:
@@ -109,11 +98,6 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.31:5055
-    openproject-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.24
   middlewares:
     nextcloud_redirect:
       redirectRegex:

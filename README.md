@@ -17,7 +17,7 @@ Clone Ubuntu 20.04 LTS KVM template, install Docker and Docker-Compose to run th
 * Snappass
 * GoDaddy DNS Updater
 * Netflow Collector
-* Leantime Project Management
+* [Planka](https://github.com/plankanban/planka) 
 
 ---
 
