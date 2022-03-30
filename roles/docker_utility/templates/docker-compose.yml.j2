@@ -160,53 +160,6 @@ services:
       - "traefik.http.services.bitwarden-ws.loadbalancer.server.port=3012"
     networks:
       - traefik_proxy
-  planka:
-    container_name: planka-web    
-    image: meltyshev/planka:latest
-    command: >
-      bash -c
-        "for i in `seq 1 30`; do
-          ./start.sh &&
-          s=$$? && break || s=$$?;
-          echo \"Tried $$i times. Waiting 5 seconds...\";
-          sleep 5;
-        done; (exit $$s)"
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    volumes:
-      - {{ all_docker_storage }}/planka_avatars:/app/public/user-avatars
-      - {{ all_docker_storage }}/planka_images:/app/public/project-background-images
-      - {{ all_docker_storage }}/planka_attachments:/app/public/attachments
-    networks:
-      - traefik_proxy
-    environment:
-      - BASE_URL=https://project.{{ all_ext_domain }}
-      - TRUST_PROXY=0
-      - DATABASE_URL=postgresql://postgres@postgres/planka
-      - SECRET_KEY={{ docker_utility_planka_secret }}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.planks-secure.entrypoints=web-secure"
-      - "traefik.http.routers.planks-secure.rule=Host(`project.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.planks-secure.tls=true"
-      - "traefik.http.routers.planks-secure.tls.certresolver=godaddy"
-      - "traefik.http.routers.planks-secure.tls.domains[0].main={{ all_ext_domain }}"
-      - "traefik.http.routers.planks-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.planks-secure.loadbalancer.server.port=1337"
-  postgres:
-    container_name: planka-db
-    image: postgres:alpine
-    restart: unless-stopped
-    volumes:
-      - {{ all_docker_storage }}/planka_db:/var/lib/postgresql/data
-    networks:
-      - traefik_proxy
-    environment:
-      - POSTGRES_DB=planka
-      - POSTGRES_HOST_AUTH_METHOD=trust
-    labels:
-      - "traefik.enable=false"
   godaddy-ddns:
     image: parkerhemphill/godaddy-dns-updater
     container_name: godaddy-ddns
@@ -258,3 +211,4 @@ networks:
       name: traefik_proxy
   default:
     driver: bridge
+

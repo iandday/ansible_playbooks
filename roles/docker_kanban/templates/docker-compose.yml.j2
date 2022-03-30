@@ -1,0 +1,141 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+x-environment:
+  &default-back-environment
+  # Database settings
+  POSTGRES_DB: taiga
+  POSTGRES_USER: taiga
+  POSTGRES_PASSWORD: {{ docker_kanban_postgress_password }}
+  POSTGRES_HOST: taiga-db
+  # Taiga settings
+  TAIGA_SECRET_KEY: "{{ docker_kanban_secret_key }}"
+  TAIGA_SITES_SCHEME: "http"
+  TAIGA_SITES_DOMAIN: "localhost:9000"
+  TAIGA_SUBPATH: "" 
+  EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
+  DEFAULT_FROM_EMAIL: "{{ all_notification_email_from }}"
+  EMAIL_USE_TLS: "False"
+  EMAIL_USE_SSL: "False"
+  EMAIL_HOST: {{ all_internal_mail_server }}
+  EMAIL_PORT: {{ all_internal_mail_port }}
+  EMAIL_HOST_USER: ""
+  EMAIL_HOST_PASSWORD: ""
+  RABBITMQ_USER: taiga
+  RABBITMQ_PASS: {{ docker_kanban_rabbitmq_password }}
+  ENABLE_TELEMETRY: "True"
+x-volumes:
+  &default-back-volumes
+  - taiga-static-data:/taiga-back/static
+  - taiga-media-data:/taiga-back/media
+services:
+  taiga-db:
+    image: postgres:12.3
+    environment:
+      POSTGRES_DB: taiga
+      POSTGRES_USER: taiga
+      POSTGRES_PASSWORD: {{ docker_kanban_postgress_password }}
+    volumes:
+      - taiga-db-data:/var/lib/postgresql/data
+    networks:
+      - traefik_proxy
+  taiga-back:
+    image: taigaio/taiga-back:latest
+    environment: *default-back-environment
+    volumes: *default-back-volumes
+    networks:
+      - traefik_proxy
+    depends_on:
+      - taiga-db
+      - taiga-events-rabbitmq
+      - taiga-async-rabbitmq
+  taiga-async:
+    image: taigaio/taiga-back:latest
+    entrypoint: ["/taiga-back/docker/async_entrypoint.sh"]
+    environment: *default-back-environment
+    volumes: *default-back-volumes
+    networks:
+      - traefik_proxy
+    depends_on:
+      - taiga-db
+      - taiga-back
+      - taiga-async-rabbitmq
+  taiga-async-rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    environment:
+      RABBITMQ_ERLANG_COOKIE: {{ docker_kanban_erlang_cookie }}
+      RABBITMQ_DEFAULT_USER: taiga
+      RABBITMQ_DEFAULT_PASS: {{ docker_kanban_rabbitmq_password }}
+      RABBITMQ_DEFAULT_VHOST: taiga
+    volumes:
+      - taiga-async-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - traefik_proxy
+  taiga-front:
+    image: taigaio/taiga-front:latest
+    environment:
+      TAIGA_URL: "https://project.{{ all_ext_domain }}"
+      TAIGA_WEBSOCKETS_URL: "https://project.{{ all_ext_domain }}"
+      TAIGA_SUBPATH: "" 
+    networks:
+      - traefik_proxy
+  taiga-events:
+    image: taigaio/taiga-events:latest
+    environment:
+      RABBITMQ_USER: taiga
+      RABBITMQ_PASS: {{ docker_kanban_rabbitmq_password }}
+      TAIGA_SECRET_KEY: "{{ docker_kanban_secret_key }}"
+    networks:
+      - traefik_proxy
+    depends_on:
+      - taiga-events-rabbitmq
+  taiga-events-rabbitmq:
+    image: rabbitmq:3.8-management-alpine
+    environment:
+      RABBITMQ_ERLANG_COOKIE: {{ docker_kanban_erlang_cookie }}
+      RABBITMQ_DEFAULT_USER: taiga
+      RABBITMQ_DEFAULT_PASS: {{ docker_kanban_rabbitmq_password }}
+      RABBITMQ_DEFAULT_VHOST: taiga
+    volumes:
+      - taiga-events-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - traefik_proxy
+  taiga-protected:
+    image: taigaio/taiga-protected:latest
+    environment:
+      MAX_AGE: 360
+      SECRET_KEY: "{{ docker_kanban_secret_key }}"
+    networks:
+      - traefik_proxy
+  taiga-gateway:
+    image: nginx:1.19-alpine
+    volumes:
+      - {{ docker_kanban_docker_storage }}/taiga-gateway/taiga.conf:/etc/nginx/conf.d/default.conf
+      - taiga-static-data:/taiga/static
+      - taiga-media-data:/taiga/media
+    networks:
+      - traefik_proxy
+    depends_on:
+      - taiga-front
+      - taiga-back
+      - taiga-events
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.taiga-secure.entrypoints=web-secure"
+      - "traefik.http.routers.taiga-secure.rule=Host(`project.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.taiga-secure.tls=true"
+      - "traefik.http.routers.taiga-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.taiga-secure.tls.domains[0].main=ianday.me"
+      - "traefik.http.routers.taiga-secure.tls.domains[0].sans=*.ianday.me"
+volumes:
+  taiga-static-data:
+  taiga-media-data:
+  taiga-db-data:
+  taiga-async-rabbitmq-data:
+  taiga-events-rabbitmq-data:
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

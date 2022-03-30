@@ -16,5 +16,6 @@
   roles:
    - docker
    - docker_utility
+   - docker_kanban
    - docker_netflow
    - docker_photos
