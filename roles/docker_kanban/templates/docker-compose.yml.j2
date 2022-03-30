@@ -11,7 +11,7 @@ x-environment:
   # Taiga settings
   TAIGA_SECRET_KEY: "{{ docker_kanban_secret_key }}"
   TAIGA_SITES_SCHEME: "http"
-  TAIGA_SITES_DOMAIN: "localhost:9000"
+  TAIGA_SITES_DOMAIN: "project.{{ all_ext_domain }}"
   TAIGA_SUBPATH: "" 
   EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
   DEFAULT_FROM_EMAIL: "{{ all_notification_email_from }}"
