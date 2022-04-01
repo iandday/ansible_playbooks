@@ -6,9 +6,7 @@
 docker_kanban_required_vars:
   - docker_uid
   - docker_gid
-  - docker_kanban_postgress_password
-  - docker_kanban_rabbitmq_password
-  - docker_kanban_secret_key
-  - docker_kanban_erlang_cookie
+  - docker_kanban_postgres_password
+
 docker_kanban_docker_builds: '{{ all_docker_builds }}'
 docker_kanban_docker_storage: '{{ all_docker_storage }}'

@@ -24,25 +24,4 @@
     mode: 0700
   loop:
     - docker-compose.yml
-    - docker-compose-inits.yml
 
-- name: create config storage directory
-  become: true
-  file:
-    path: '{{ docker_kanban_docker_storage }}/{{ item }}'
-    state: directory
-    owner: '{{ docker_uid }}'
-    group: '{{ docker_gid }}'
-    mode: 0700
-  with_items:
-    - taiga-gateway
-
-
-- name: copy nginx config
-  become: true
-  copy:
-    src: taiga.conf
-    dest: '{{ docker_kanban_docker_storage }}/taiga-gateway/taiga.conf'
-    owner: '{{ docker_uid }}'
-    group: '{{ docker_gid }}'
-    mode: 0600
