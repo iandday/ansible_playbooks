@@ -31,12 +31,14 @@ services:
     <<: *restart_policy
     stop_grace_period: "3s"
     volumes:
-      - pgdata}/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: {{ docker_kanban_postgres_password }}
       POSTGRES_DB: openproject
     networks:
       - default
+    labels:
+      - "docker-volume-backup.stop-during-backup=true"
   cache:
     image: memcached
     <<: *restart_policy
@@ -73,6 +75,7 @@ services:
       - seeder
     labels:
       - autoheal=true
+      - "docker-volume-backup.stop-during-backup=true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health_checks/default"]
       interval: 10s
@@ -94,6 +97,8 @@ services:
       - db
       - cache
       - seeder
+    labels:
+      - "docker-volume-backup.stop-during-backup=true"
   cron:
     <<: *app
     command: "./docker/prod/cron"
@@ -103,12 +108,30 @@ services:
       - db
       - cache
       - seeder
+    labels:
+      - "docker-volume-backup.stop-during-backup=true"
   seeder:
     <<: *app
     command: "./docker/prod/seeder"
     restart: on-failure
     networks:
       - default
+  backup_pgdata:
+    image: jareware/docker-volume-backup:2.6.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - pgdata:/backup/pgdata:ro
+      - {{ docker_kanban_docker_storage }}/volume_backups:/archive  
+    environment:
+      BACKUP_FILENAME: open-project-DB-%Y-%m-%dT%H-%M-%S.tar.gz
+  backup_opdata:
+    image: jareware/docker-volume-backup:2.6.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - opdata:/backup/opdata:ro
+      - {{ docker_kanban_docker_storage }}/volume_backups:/archive 
+    environment:
+      BACKUP_FILENAME: open-project-APP-%Y-%m-%dT%H-%M-%S.tar.gz
 volumes:
   pgdata:
   opdata:
