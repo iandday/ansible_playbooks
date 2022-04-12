@@ -25,3 +25,10 @@
   loop:
     - docker-compose.yml
 
+- name: configure backup rotation
+  include_role:
+    name: common
+    tasks_from: rotate_backups
+  vars:
+    - cron_user: root
+    - backup_path: '{{ docker_kanban_docker_storage }}/volume_backups'
