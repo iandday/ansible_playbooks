@@ -20,6 +20,8 @@ certificatesResolvers:
       dnsChallenge:
         provider: godaddy
         delayBeforeCheck: 600
+        resolvers:
+          - "10.168.1.1:53"
 log:
   level: INFO
   filePath: "/logs/traefik.log"
