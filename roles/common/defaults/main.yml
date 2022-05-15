@@ -25,7 +25,7 @@ ad_packages:
 mount_options: ''
 common_apt_poackages:
   - python3-pip
-  - python-pexpect
+  - python-pexpect-doc
   - acl
 common_pip_packages:
   - pexpect

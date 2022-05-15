@@ -11,7 +11,7 @@ all_pve_api_password: '{{ vault_all_pve_api_password }}'
 all_pve_api_host: '{{ vault_all_pve_api_host }}'
 all_gateway: 10.168.1.1
 all_ansible_python_interpreter: /usr/bin/python3
-all_kvm_template_name: ubuntu-2004-cloudinit-template
+all_kvm_template_name: ubuntu-2204-cloudinit-template
 all_lxc_template_name: 'local:vztmpl/ubuntu-ansible-20.04.tar.gz'
 all_kvm_storage_target: 'local-lvm'
 all_domain: IANDAY
