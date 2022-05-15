@@ -1,0 +1,131 @@
+---
+#
+# roles/docker_seafile/tasks/main.yml
+#
+
+
+- name: create docker.service.d directory
+  become: true
+  file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: copy docker config override file
+  become: true
+  template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/docker.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0600
+  register: override_file
+
+- name: reload docker systemd
+  become: true
+  ansible.builtin.systemd:
+    name: docker.service
+    state: reloaded
+  when: override_file.changed
+  tags: 
+  - skip_ansible_lint
+  
+- name: copy docker config
+  become: true
+  template:
+    src: 'docker_daemon.json.j2'
+    dest: '/etc/docker/daemon.json'
+    owner: root
+    group: root
+    mode: 0600
+
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_seafile_docker_builds }}/seafile'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_seafile_docker_builds }}/seafile/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create config storage directory
+  become: true
+  file:
+    path: '{{ docker_seafile_docker_storage }}/seafile_data'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: create config ssl storage directory
+  become: true
+  file:
+    path: '{{ docker_seafile_docker_storage }}/seafile_data/ssl'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: create SSL cert
+  include_role:
+    name: common
+    tasks_from: create_certificate.yml
+    apply:
+      delegate_to: localhost
+    
+- name: copy ssl cert
+  become: true
+  copy:
+    src: '{{ certificate }}' 
+    dest: '{{ docker_seafile_docker_storage }}/seafile_data/ssl/files.ianday.me.crt'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy SSL key
+  become: true
+  copy:
+    src: '{{ certificate_key }}' 
+    dest: '{{ docker_seafile_docker_storage }}/seafile_data/ssl/files.ianday.me.key'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy CA cert
+  become: true
+  copy:
+    src: '{{ common_root_ca_cert }}' 
+    dest: '{{ docker_seafile_docker_storage }}/seafile_data/ssl/ca.crt'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+# - name: copy cert file for gitlab runner
+#   become: true
+#   template:
+#     src: 'cert_chain.j2' 
+#     dest: '{{ docker_seafile_docker_storage }}/gitlab_runner/certs/{{ inventory_hostname }}.{{ all_ext_domain }}.crt'
+#     backup: true
+#     owner: '{{ docker_uid }}'
+#     group: '{{ docker_gid }}'
+#     mode: 0700
+#   vars: 
+#     ca_file: '{{ common_certificate_path }}'
+#     host_file: '{{ certificate }}'

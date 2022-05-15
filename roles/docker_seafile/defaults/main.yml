@@ -1,0 +1,14 @@
+---
+#
+# roles/docker_seafile/defaults/main.yml
+#
+
+docker_seafile_required_vars:
+  - docker_uid
+  - docker_gid
+  - all_dokcer_volume_backup_tag
+  - docker_seafile_admin_username
+  - docker_seafile_admin_password
+  - docker_seafile_mysql_root_pw
+docker_seafile_docker_builds: '{{ all_docker_builds }}'
+docker_seafile_docker_storage: '{{ all_docker_storage }}'

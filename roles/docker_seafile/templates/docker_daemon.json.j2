@@ -1,0 +1,7 @@
+{
+    "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+    "tls": true,
+    "tlscert": "{{ docker_seafile_docker_storage }}/seafile_data/ssl/files.ianday.me.crt",
+    "tlskey": "{{ docker_seafile_docker_storage }}/seafile_data/ssl/files.ianday.me.key",
+    "tlscacert": "{{ docker_seafile_docker_storage }}/seafile_data/ssl/ca.crt"
+  }
