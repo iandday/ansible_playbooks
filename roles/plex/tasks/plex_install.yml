@@ -29,6 +29,14 @@
     state: started
     enabled: true
 
+- name: create mount target
+  become: true
+  file:
+    state: directory
+    path: '{{ plex_media_dest }}'
+    owner: '{{ plex_user }}'
+    group: '{{ plex_group }}'
+
 - name: mount media share
   include_role:
     name: common
