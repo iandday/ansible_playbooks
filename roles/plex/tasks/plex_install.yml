@@ -29,11 +29,19 @@
     state: started
     enabled: true
 
-- name: create mount target
+- name: create media mount target
   become: true
   file:
     state: directory
     path: '{{ plex_media_dest }}'
+    owner: '{{ plex_user }}'
+    group: '{{ plex_group }}'
+
+- name: create photos mount target
+  become: true
+  file:
+    state: directory
+    path: '{{ plex_photo_dest }}'
     owner: '{{ plex_user }}'
     group: '{{ plex_group }}'
 
@@ -51,6 +59,19 @@
     mount_options: ',file_mode=0770,dir_mode=0770,nounix'
   no_log: true
 
+- name: mount photos share
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src:  '{{ plex_photo_path }}'
+    mount_dest: '{{ plex_photo_dest }}'
+    mount_username: '{{ plex_service_username }}'
+    mount_password: '{{ plex_service_password }}'
+    mount_uid: '{{ plex_user }}'
+    mount_gid: '{{ plex_group }}'
+    mount_options: ',file_mode=0770,dir_mode=0770,nounix'
+  no_log: true
 
 # - name: create backup directory
 #   file:
