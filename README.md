@@ -87,7 +87,8 @@ Clone Ubuntu 20.04 LXC KVM template, install docker with remote portainer suppor
 * Guacamole
 * Backup rotation
 
-## Template Creation
+## KVMTemplate Creation
+
 adapted from https://austinsnerdythings.com/2021/08/30/how-to-create-a-proxmox-ubuntu-cloud-init-image/ 
 
 Requirements
@@ -118,3 +119,28 @@ qm set 9000 --serial0 socket --vga serial0
 qm set 9000 --agent enabled=1
 qm template 9000
 ```
+
+## LXC Tempalte Creation
+
+https://www.chucknemeth.com/proxmox/lxc/lxc-template#create-the-template
+
+list current templates `pveam list nas`
+update container database `pveam update`
+list available `pveam available | grep ubuntu`
+download `pveam download nas ubuntu-22.04-standard_22.04-1_amd64.tar.zst`
+create temp lxc via GUI
+enter container `pct enter 111`
+configure
+`useradd --shell /bin/bash ansible`
+`mkdir -p /home/ansible/.ssh`
+`nano /home/ansible/.ssh/authorized_keys`
+`chown -R ansible:ansible /home/ansible`
+`chmod 0400 /home/ansible/.ssh/authorized_keys`
+`chmod 0700 /home/ansible/.ssh/`
+`nano /etc/sudoers.d/ansible`  with `ansible ALL=(ALL) NOPASSWD: ALL`
+`chmod 0440 /etc/sudoers.d/ansible`
+`chown root:root /etc/sudoers.d/ansible`
+exit container `exit`
+delete NIC `pct set 111 --delete net0`
+backup lxc `vzdump 111 --mode stop --compress gzip --dumpdir /mnt/nas/template/cache/`
+rename template `mv vzdump-lxc-111-2023_05_13-12_17_07.tar.gz ubuntu-22.04-standard_22.04-1_amd64_ansible.tar.zst`
