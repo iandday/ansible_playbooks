@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+[Unit]
+Description=cloudflared DoH proxy
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+User={{ pihole_user }}
+EnvironmentFile=/etc/default/cloudflared
+ExecStart=/usr/local/bin/cloudflared proxy-dns $CLOUDFLARED_OPTS
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target 

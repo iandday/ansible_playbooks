@@ -1,0 +1,14 @@
+---
+#
+# roles/pihole/tasks/main.yml
+#
+
+
+- name: check required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ pihole_required_vars }}'
+
+- name: load pihole install tasks
+  include_tasks: pihole_install.yml 

@@ -1,0 +1,17 @@
+
+# {{ ansible_managed }}
+
+configDirectory={{ pihole_config_path }}
+installDirectory={{ pihole_install_path }}
+PIHOLE_INTERFACE={{ pihole_network_interface }}
+IPV4_ADDRESS={{ hostvars[inventory_hostname]['ansible_' + pihole_network_interface]['ipv4']['address'] }}/24
+PIHOLE_DNS_1={{ pihole_dns_servers[0] }}
+PIHOLE_DNS_2={{ pihole_dns_servers[1] }}
+QUERY_LOGGING=true
+INSTALL_WEB_SERVER=true
+INSTALL_WEB_INTERFACE=true
+REV_SERVER=true
+REV_SERVER_CIDR=10.168.1.0/24
+REV_SERVER_TARGET={{ vault_all_dc_ip }}
+REV_SERVER_DOMAIN={{ all_ext_domain }}
+WEBTHEME=default-darker
