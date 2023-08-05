@@ -119,6 +119,21 @@ services:
     user: "{{ docker_uid }}"
     networks:
       - traefik_proxy
+  which_plates:
+    container_name: which_plates
+    restart: always
+    image:  ghcr.io/iandday/whichplates_api:latest
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whichplates-secure.entrypoints=web-secure"
+      - "traefik.http.routers.whichplates-secure.rule=Host(`whichplates.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.whichplates-secure.tls=true"
+      - "traefik.http.routers.whichplates-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.whichplates-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.whichplates-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.whichplates-secure.loadbalancer.server.port=80"
   bitwarden:
     hostname: bitwarden
     image: vaultwarden/server:latest
