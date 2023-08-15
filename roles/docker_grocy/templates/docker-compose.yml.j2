@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  grocy:
+    image: lscr.io/linuxserver/grocy:latest
+    container_name: grocy
+    restart: unless-stopped
+    environment:
+      - PUID={{ docker_uid }}
+      - PGID={{ docker_gid }}
+      - TZ={{ docker_utility_timezone }}
+    volumes:
+      - {{ docker_grocy_docker_storage }}/grocy:/config
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grocy-secure.entrypoints=web-secure"
+      - "traefik.http.routers.grocy-secure.rule=Host(`grocy.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.grocy-secure.tls=true"
+      - "traefik.http.routers.grocy-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.grocy-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.grocy-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.grocy-secure.loadbalancer.server.port=9283"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

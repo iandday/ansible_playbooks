@@ -1,0 +1,37 @@
+---
+#
+# roles/docker_grocy/tasks/main.yml
+#
+
+
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_grocy_docker_builds }}/grocy'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_grocy_docker_builds }}/grocy/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create config storage directory
+  become: true
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  with_items:
+    - '{{ docker_grocy_docker_storage }}/grocy'
