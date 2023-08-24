@@ -16,6 +16,5 @@
   roles:
     #- docker
     #- docker_utility
-    - docker_grocy
     #- docker_netflow
     #- docker_photos
