@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_openwebrx/defaults/main.yml
+#
+
+docker_openwebrx_required_vars:
+  - docker_uid
+  - docker_gid
+docker_openwebrx_docker_builds: '{{ all_docker_builds }}'
+docker_openwebrx_docker_storage: '{{ all_docker_storage }}'

@@ -1,0 +1,35 @@
+---
+#
+# roles/docker_openwebrx/tasks/main.yml
+#
+
+
+- name: create compose directory
+  become: true
+  file:
+    path: '{{ docker_openwebrx_docker_builds }}/openwebrx'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: '{{ item }}.j2' 
+    dest: '{{ docker_openwebrx_docker_builds }}/openwebrx/{{ item }}'
+    backup: true
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create config storage directory
+  become: true
+  file:
+    path: '{{ docker_openwebrx_docker_storage }}/openwebrx'
+    state: directory
+    owner: '{{ docker_uid }}'
+    group: '{{ docker_gid }}'
+    mode: 0700
