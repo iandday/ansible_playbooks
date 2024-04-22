@@ -1,0 +1,58 @@
+# {{ ansible_managed }}
+version: "3.6"
+services:
+  backend:
+    image: ghcr.io/iandday/plant_tracker:latest
+    user: "{{ docker_uid }}"
+    networks:
+      - traefik_proxy
+    volumes:
+      - {{ docker_plants_docker_storage }}/plants:/media
+      - {{ docker_plants_docker_storage }}/plants:/static
+    environment:
+      - DATABASE_URL=psql://plants:{{vault_docker_plants_db_password}}@db:5432/plants
+      - SECRET_KEY={{ vault_DJANGO_SECRET }}
+      - JWT_SIGNING_KEY={{ vault_JWT_SECRET_KEY }}
+      - JWT_ACCESS_TOKEN_LIFETIME_MINUTES=90
+      - JWT_ACCESS_REFRESH_LIFETIME_DAYS=10
+      - DEBUG=False
+      - ENABLE_REGISTRATION=True
+      - MEDIA_PATH=/media
+      - ADMIN_PASSWORD={{vault_PLANTS_ADMIN_PASSWORD}}
+      - ADMIN_EMAIL={{vault_PLANTS_ADMIN_EMAIL}}
+      - POSTGRES_USER=plants
+      - POSTGRES_PASSWORD={{vault_docker_plants_db_password}}
+      - POSTGRES_DB=plants
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plant-secure.entrypoints=web-secure"
+      - "traefik.http.routers.plant-secure.rule=Host(`plant.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.plant-secure.tls=true"
+      - "traefik.http.routers.plant-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.plant-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.plant-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=plants
+      - POSTGRES_PASSWORD={{vault_docker_plants_db_password}}
+      - POSTGRES_DB=plants
+    networks:
+      - traefik_proxy
+    volumes:
+      - db:/var/lib/postgresql/data
+    labels:
+      - "traefik.enable=false"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge
+volumes:
+  db:
+
