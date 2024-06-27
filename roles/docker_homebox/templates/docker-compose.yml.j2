@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  homebox:
+    image: ghcr.io/hay-kot/homebox:latest
+    container_name: homebox
+    restart: unless-stopped
+    environment:
+      - HBOX_WEB_MAX_UPLOAD_SIZE=100
+      - HBOX_MAILER_HOST={{ all_internal_mail_server}}
+      - HBOX_MAILER_PORT={{ all_internal_mail_port }}
+      - HBOX_MAILER_FROM={{ all_notification_email_from }}
+      - HBOX_OPTIONS_ALLOW_REGISTRATION=false
+    volumes:
+      - {{ docker_homebox_docker_storage }}/homebox:/data/
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homebox-secure.entrypoints=web-secure"
+      - "traefik.http.routers.homebox-secure.rule=Host(`inventory.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.homebox-secure.tls=true"
+      - "traefik.http.routers.homebox-secure.tls.certresolver=route53"
+      - "traefik.http.routers.homebox-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.homebox-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.homebox-secure.loadbalancer.server.port=7745"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

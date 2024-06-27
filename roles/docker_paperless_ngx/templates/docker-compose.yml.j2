@@ -1,0 +1,83 @@
+# {{ ansible_managed }}
+services:
+  paperless:
+    container_name: paperless
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    networks:
+      - default
+      - traefik_proxy
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - {{ docker_paperless_docker_storage }}/paperless_data:/usr/src/paperless/data # Docker container data
+      - {{ docker_paperless_docker_storage }}/paperless_media:/usr/src/paperless/media # Location of your documents
+      - {{ docker_paperless_docker_storage }}/paperless_export:/usr/src/paperless/export # Target for backups
+      - {{ docker_paperless_ingest_path }}:/usr/src/paperless/consume # Watch folder
+    environment:
+      - USERMAP_UID={{ docker_uid }}
+      - USERMAP_GID={{ docker_gid }}
+      - PAPERLESS_TIME_ZONE=America/New_York
+      - PAPERLESS_OCR_LANGUAGE=eng
+      - PAPERLESS_ENABLE_UPDATE_CHECK=true
+      - PAPERLESS_REDIS=redis://redis:6379
+      - PAPERLESS_DBHOST=postgres
+      - PAPERLESS_DBNAME=paperless
+      - PAPERLESS_DBUSER=paperless
+      - PAPERLESS_DBPASS={{ vault_docker_paperless_db_password }}
+      - PAPERLESS_SECRET_KEY=f8txhKqA9cuG@#GVQiZ#pmF8k2iP^RhxnsgjLea&6MAq4ESJBY4Ktfb!5wuJGKsffS
+      - PAPERLESS_FILENAME_FORMAT={created_year}/{correspondent}/{created} {title}/
+      - PAPERLESS_URL=https://paperless.{{ all_ext_domain }}
+      - PAPERLESS_ALLOWED_HOSTS=paperless.{{ all_ext_domain }}
+      - PAPERLESS_ADMIN_USER=paperless_admin
+      - PAPERLESS_ADMIN_PASSWORD={{ vault_docker_paperless_admin_password }}
+      - PAPERLESS_CONSUMER_RECURSIVE=True
+      - PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS=True
+      
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.paperless-secure.entrypoints=web-secure"
+      - "traefik.http.routers.paperless-secure.rule=Host(`paperless.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.paperless-secure.tls=true"
+      - "traefik.http.routers.paperless-secure.tls.certresolver=route53"
+      - "traefik.http.routers.paperless-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.paperless-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.paperless-secure.loadbalancer.server.port=8000"
+  redis:
+    container_name: paperless-redis
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    networks:
+      - default
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - {{ docker_paperless_docker_storage }}/paperless_redis:/data
+    environment:
+      - REDIS_ARGS=--save 60 10
+  postgres:
+    container_name: paperless-postgres
+    image: postgres:16.3-alpine
+    restart: unless-stopped
+    networks:
+      - default
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - {{ docker_paperless_docker_storage }}/paperless_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=paperless
+      - POSTGRES_DB=paperless
+      - POSTGRES_PASSWORD={{ vault_docker_paperless_db_password }}
+    labels:
+      - "traefik.enable=false"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

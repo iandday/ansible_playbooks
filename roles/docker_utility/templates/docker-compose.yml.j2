@@ -23,7 +23,7 @@ services:
       - "traefik.http.routers.portainer-secure.entrypoints=web-secure"
       - "traefik.http.routers.portainer-secure.rule=Host(`portainer.{{ all_ext_domain }}`)"
       - "traefik.http.routers.portainer-secure.tls=true"
-      - "traefik.http.routers.portainer-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.portainer-secure.tls.certresolver=route53"
       - "traefik.http.routers.portainer-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.portainer-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
@@ -49,7 +49,7 @@ services:
     restart: always
     image: lissy93/dashy:latest
     volumes:
-      - {{ all_docker_storage }}/dashy/dashy-config.yml:/app/public/conf.yml
+      - {{ all_docker_storage }}/dashy/dashy-config.yml:/app/user-data/conf.yml
     environment:
       - UID={{ docker_uid }}
       - GID={{ docker_gid }}
@@ -66,10 +66,10 @@ services:
       - "traefik.http.routers.dashy-secure.entrypoints=web-secure"
       - "traefik.http.routers.dashy-secure.rule=Host(`start.{{ all_ext_domain }}`)"
       - "traefik.http.routers.dashy-secure.tls=true"
-      - "traefik.http.routers.dashy-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.dashy-secure.tls.certresolver=route53"
       - "traefik.http.routers.dashy-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.dashy-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.dashy-secure.loadbalancer.server.port=80"
+      - "traefik.http.services.dashy-secure.loadbalancer.server.port=8080"
   secrets:
     container_name: secrets
     restart: always
@@ -86,7 +86,7 @@ services:
       - "traefik.http.routers.secrets-secure.entrypoints=web-secure"
       - "traefik.http.routers.secrets-secure.rule=Host(`secrets.{{ all_ext_domain }}`)"
       - "traefik.http.routers.secrets-secure.tls=true"
-      - "traefik.http.routers.secrets-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.secrets-secure.tls.certresolver=route53"
       - "traefik.http.routers.secrets-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.secrets-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.secrets-secure.loadbalancer.server.port=5000"
@@ -130,7 +130,7 @@ services:
       - "traefik.http.routers.whichplates-secure.entrypoints=web-secure"
       - "traefik.http.routers.whichplates-secure.rule=Host(`whichplates.{{ all_ext_domain }}`)"
       - "traefik.http.routers.whichplates-secure.tls=true"
-      - "traefik.http.routers.whichplates-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.whichplates-secure.tls.certresolver=route53"
       - "traefik.http.routers.whichplates-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.whichplates-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.whichplates-secure.loadbalancer.server.port=80"
@@ -160,7 +160,7 @@ services:
       - "traefik.http.routers.bitwarden-ui.entrypoints=web-secure"
       - "traefik.http.routers.bitwarden-ui.rule=Host(`vault.{{ all_ext_domain }}`)"
       - "traefik.http.routers.bitwarden-ui.tls=true"
-      - "traefik.http.routers.bitwarden-ui.tls.certresolver=godaddy"
+      - "traefik.http.routers.bitwarden-ui.tls.certresolver=route53"
       - "traefik.http.routers.bitwarden-ui.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.bitwarden-ui.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.routers.bitwarden-ui.service=bitwarden-ui"
@@ -168,29 +168,17 @@ services:
       - "traefik.http.routers.bitwarden-ws.entrypoints=web-secure"
       - "traefik.http.routers.bitwarden-ws.rule=Host(`vault.{{ all_ext_domain }}`) && Path(`/notifications/hub`)"
       - "traefik.http.routers.bitwarden-ws.tls=true"
-      - "traefik.http.routers.bitwarden-ws.tls.certresolver=godaddy"
+      - "traefik.http.routers.bitwarden-ws.tls.certresolver=route53"
       - "traefik.http.routers.bitwarden-ws.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.bitwarden-ws.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.routers.bitwarden-ws.service=bitwarden-ws"
       - "traefik.http.services.bitwarden-ws.loadbalancer.server.port=3012"
     networks:
       - traefik_proxy
-  godaddy-ddns:
-    image: parkerhemphill/godaddy-dns-updater
-    container_name: godaddy-ddns
-    restart: unless-stopped
-    environment:
-      - DOMAIN={{ all_ext_domain }}
-      - API_KEY={{ docker_utility_godaddy_key }}:{{ docker_utility_godaddy_secret }}
-      - DNS_CHECK=600
-      - TIME_ZONE=America/New_York
-    volumes:
-      - {{ all_docker_storage }}/logs/godaddy-dns:/tmp
-    networks:
-      - traefik_proxy
+
   traefik:
     hostname: traefik
-    image: traefik:latest
+    image: traefik:v2.10
     container_name: traefik
     restart: always
     domainname: {{ all_ext_domain }}
@@ -202,15 +190,16 @@ services:
       - "443:443"
       - "3012:3012"
     environment:
-      - DOMAINNAME={{ all_ext_domain }}
-      - GODADDY_API_KEY={{ docker_utility_godaddy_key }} 
-      - GODADDY_API_SECRET={{ docker_utility_godaddy_secret }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_utility_aws_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_utility_aws_key }}
+      - AWS_REGION=us-east-1
+      - AWS_HOSTED_ZONE_ID={{ vault_docker_utility_aws_zone_id }}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.entrypoints=web-secure"
       - "traefik.http.routers.traefik.rule=Host(`traefik.{{ all_ext_domain }}`)"
       - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=godaddy"
+      - "traefik.http.routers.traefik.tls.certresolver=route53"
       - "traefik.http.routers.traefik.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.traefik.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.routers.traefik.service=api@internal"

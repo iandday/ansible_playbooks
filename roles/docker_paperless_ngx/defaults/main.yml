@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_paperless/defaults/main.yml
+#
+
+docker_paperless_required_vars:
+  - docker_uid
+  - docker_gid
+docker_paperless_docker_builds: "{{ all_docker_builds }}"
+docker_paperless_docker_storage: "{{ all_docker_storage }}"

@@ -4,8 +4,6 @@
 #
 
 docker_utility_required_vars:
-  - docker_utility_godaddy_key
-  - docker_utility_godaddy_secret
   - docker_utility_trafik_dashboard_auth
   - docker_utility_duo_svc_username
   - docker_utility_duo_svc_pass

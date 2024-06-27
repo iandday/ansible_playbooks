@@ -42,7 +42,7 @@ services:
       - "traefik.http.routers.photos-secure.entrypoints=web-secure"
       - "traefik.http.routers.photos-secure.rule=Host(`photos.{{ all_ext_domain }}`)"
       - "traefik.http.routers.photos-secure.tls=true"
-      - "traefik.http.routers.photos-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.photos-secure.tls.certresolver=route53"
       - "traefik.http.routers.photos-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.photos-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.photos-secure.loadbalancer.server.port=2342"

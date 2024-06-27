@@ -11,7 +11,7 @@ http:
         - nextcloud_headers
       service: cloud-service
       tls:
-        certresolver: godaddy
+        certresolver: route53
         domains:
           - main: "{{ all_ext_domain }}"
             sans:
@@ -22,7 +22,7 @@ http:
         - web-secure
       service: media-service
       tls:
-        certresolver: godaddy
+        certresolver: route53
         domains:
           - main: "{{ all_ext_domain }}"
             sans:
@@ -33,7 +33,7 @@ http:
         - web-secure
       service: hass-service
       tls:
-        certresolver: godaddy
+        certresolver: route53
         domains:
           - main: "{{ all_ext_domain }}"
             sans:
@@ -44,7 +44,7 @@ http:
         - web-secure
       service: splunk-service
       tls:
-        certresolver: godaddy
+        certresolver: route53
         domains:
           - main: "{{ all_ext_domain }}"
             sans:
@@ -55,7 +55,7 @@ http:
         - web-secure
       service: git-service
       tls:
-        certresolver: godaddy
+        certresolver: route53
         domains:
           - main: "{{ all_ext_domain }}"
             sans:
@@ -66,7 +66,7 @@ http:
         - web-secure
       service: overseerr-service
       tls:
-        certresolver: godaddy
+        certresolver: route53
         domains:
           - main: "{{ all_ext_domain }}"
             sans:

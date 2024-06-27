@@ -14,18 +14,22 @@ entryPoints:
   web-secure:
     address: ":443"
 
+
 certificatesResolvers:
-  godaddy:
+  route53:
     acme:
       email: admin@ianday.me
       storage: /etc/traefik/acme.json
       dnsChallenge:
-        provider: godaddy
-        delayBeforeCheck: 600
+        provider: route53
+        disablePropagationCheck: true
+        delayBeforeCheck: 10
         resolvers:
-          - "10.168.1.1:53"
+          - 1.1.1.1
+          - 8.8.8.8
+
 log:
-  level: INFO
+  level: DEBUG
   filePath: "/logs/traefik.log"
 accessLog:
   filePath: "/logs/access.log"

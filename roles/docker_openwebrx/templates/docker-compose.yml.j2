@@ -14,7 +14,7 @@ services:
       - "traefik.http.routers.openwebrx-secure.entrypoints=web-secure"
       - "traefik.http.routers.openwebrx-secure.rule=Host(`openwebrx.{{ all_ext_domain }}`)"
       - "traefik.http.routers.openwebrx-secure.tls=true"
-      - "traefik.http.routers.openwebrx-secure.tls.certresolver=godaddy"
+      - "traefik.http.routers.openwebrx-secure.tls.certresolver=route53"
       - "traefik.http.routers.openwebrx-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.openwebrx-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.openwebrx-secure.loadbalancer.server.port=8073"
