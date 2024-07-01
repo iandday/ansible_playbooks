@@ -12,6 +12,8 @@ services:
     depends_on:
       - redis
       - postgres
+      - gotenberg
+      - tika
     volumes:
       - {{ docker_paperless_docker_storage }}/paperless_data:/usr/src/paperless/data # Docker container data
       - {{ docker_paperless_docker_storage }}/paperless_media:/usr/src/paperless/media # Location of your documents
@@ -36,7 +38,8 @@ services:
       - PAPERLESS_ADMIN_PASSWORD={{ vault_docker_paperless_admin_password }}
       - PAPERLESS_CONSUMER_RECURSIVE=True
       - PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS=True
-      
+      - PAPERLESS_CONSUMER_POLLING=300
+      - PAPERLESS_FILENAME_DATE_ORDER=MDY
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
@@ -75,6 +78,20 @@ services:
       - POSTGRES_PASSWORD={{ vault_docker_paperless_db_password }}
     labels:
       - "traefik.enable=false"
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:7.10
+    restart: unless-stopped
+    networks:
+      - default
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=file:///tmp/.*"
+  tika:
+    image: docker.io/apache/tika:latest
+    restart: unless-stopped
+    networks:
+      - default
 networks:
   traefik_proxy:
     external:

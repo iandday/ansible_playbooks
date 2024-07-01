@@ -15,9 +15,9 @@
       gather_facts:
   roles:
     #- docker
-    - docker_utility
+    #- docker_utility
     #- docker_netflow
-    - docker_photos
+    #- docker_photos
     - docker_plants
-    - docker_openwebrx
-    - docker_paperless_ngx
+    #- docker_openwebrx
+    #- docker_paperless_ngx
