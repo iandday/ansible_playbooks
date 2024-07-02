@@ -19,5 +19,6 @@
     #- docker_netflow
     #- docker_photos
     - docker_plants
+    - docker_nextcloud
     #- docker_openwebrx
     #- docker_paperless_ngx
