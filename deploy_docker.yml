@@ -14,11 +14,11 @@
     - name: gather KVM facts
       gather_facts:
   roles:
-    #- docker
+    - docker
     #- docker_utility
     #- docker_netflow
     #- docker_photos
-    - docker_plants
-    - docker_nextcloud
+    #- docker_plants
+    #- docker_nextcloud
     #- docker_openwebrx
     #- docker_paperless_ngx
