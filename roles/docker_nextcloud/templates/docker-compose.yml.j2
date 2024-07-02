@@ -1,0 +1,91 @@
+# {{ ansible_managed }}
+services:
+  db:
+    image: postgres:alpine
+    restart: always
+    networks:
+      - default
+      - traefik_proxy
+    volumes:
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_db:/var/lib/postgresql/data:Z
+    environment:
+      - POSTGRES_PASSWORD={{ vault_nextcloud_mysql_password }}
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - default
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_redis:/data
+    environment:
+      - REDIS_ARGS=--save 60 10
+  cron:
+    image: nextcloud:27.1-fpm-alpine
+    restart: always
+    networks:
+      - default
+    volumes:
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+      - redis
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile-web
+    restart: always
+    networks:
+      - default
+      - traefik_proxy
+    volumes:
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z,ro
+    depends_on:
+      - app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.middlewares.nc-rep.redirectregex.regex=https://(.*)/.well-known/(card|cal)dav"
+      - "traefik.http.middlewares.nc-rep.redirectregex.replacement=https://$$1/remote.php/dav/"
+      - "traefik.http.middlewares.nc-rep.redirectregex.permanent=true"
+      - "traefik.http.middlewares.nc-header.headers.referrerPolicy=no-referrer"
+      - "traefik.http.middlewares.nc-header.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.nc-header.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.nc-header.headers.stsPreload=true"
+      - "traefik.http.middlewares.nc-header.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.nc-header.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.nc-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.nextcloud-secure.middlewares=nc-rep,nc-header"
+      - "traefik.http.routers.nextcloud-secure.entrypoints=web-secure"
+      - "traefik.http.routers.nextcloud-secure.rule=Host(`nc.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.nextcloud-secure.tls=true"
+      - "traefik.http.routers.nextcloud-secure.tls.certresolver=route53"
+      - "traefik.http.routers.nextcloud-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.nextcloud-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.nextcloud-secure.loadbalancer.server.port=80" 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+    restart: always
+    volumes:
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z
+    environment:
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+      - POSTGRES_PASSWORD={{ vault_nextcloud_mysql_password }}
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+    depends_on:
+      - db
+      - redis
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

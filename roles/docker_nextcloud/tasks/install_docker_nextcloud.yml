@@ -1,0 +1,48 @@
+---
+#
+# roles/docker_nextcloud/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_nextcloud_docker_builds }}/nextcloud"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_nextcloud_docker_builds }}/nextcloud/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+    - Dockerfile-web
+    - Dockerfile-app
+
+- name: copy files
+  become: true
+  copy:
+    src: "nginx.conf"
+    dest: "{{ docker_nextcloud_docker_builds }}/nextcloud/nginx.conf"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: create config storage directory
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  with_items:
+    - "{{ docker_nextcloud_docker_storage }}/nextcloud_data"
