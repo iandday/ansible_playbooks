@@ -1,0 +1,46 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  frigate:
+    container_name: frigate
+    privileged: true 
+    restart: unless-stopped
+    image: ghcr.io/blakeblackshear/frigate:stable
+    shm_size: "128mb" # update for your cameras based on calculation above
+    networks:
+      - traefik_proxy
+#    devices:
+#      - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
+#      - /dev/apex_0:/dev/apex_0    # Passes a PCIe Coral, follow driver instructions here https://coral.ai/docs/m2/get-started/#2a-on-linux
+#      - /dev/video11:/dev/video11  # For Raspberry Pi 4B
+#      - /dev/dri/renderD128:/dev/dri/renderD128 # For intel hwaccel, needs to be updated for your hardware
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - {{ docker_frigate_docker_storage }}/frigate_config:/config
+      - {{ docker_frigate_docker_storage }}/frigate_media:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "8554:8554" # RTSP feeds
+      - "8555:8555/tcp" # WebRTC over tcp
+      - "8555:8555/udp" # WebRTC over udp
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frigate-secure.entrypoints=web-secure"
+      - "traefik.http.routers.frigate-secure.rule=Host(`frigate.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.frigate-secure.tls=true"
+      - "traefik.http.routers.frigate-secure.tls.certresolver=route53"
+      - "traefik.http.routers.frigate-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.frigate-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.frigate-secure.loadbalancer.server.port=5000"
+    environment:
+      FRIGATE_RTSP_PASSWORD: "password"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

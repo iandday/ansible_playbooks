@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_frigate/defaults/main.yml
+#
+
+docker_frigate_required_vars:
+  - docker_uid
+  - docker_gid
+docker_frigate_docker_builds: "{{ all_docker_builds }}"
+docker_frigate_docker_storage: "{{ all_docker_storage }}"

@@ -32,7 +32,7 @@ services:
       - DATABASE_URL=psql://plants:{{vault_docker_plants_db_password}}@db:5432/plants
       - SECRET_KEY={{ vault_DJANGO_SECRET }}
       - JWT_SIGNING_KEY={{ vault_JWT_SECRET_KEY }}
-      - JWT_ACCESS_TOKEN_LIFETIME_MINUTES=90
+      - JWT_ACCESS_TOKEN_LIFETIME_MINUTES=4
       - JWT_ACCESS_REFRESH_LIFETIME_DAYS=10
       - DEBUG=False
       - ENABLE_REGISTRATION=True
