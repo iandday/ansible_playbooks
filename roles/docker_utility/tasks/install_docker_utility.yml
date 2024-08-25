@@ -3,17 +3,16 @@
 # roles/docker_utility/tasks/main.yml
 #
 
-
 - name: create compose directory
   file:
-    path: '{{ docker_utility_docker_builds }}/utility'
+    path: "{{ docker_utility_docker_builds }}/utility"
     state: directory
   become: true
-  
+
 - name: copy compose files
   template:
-    src: '{{ item }}.j2' 
-    dest: '{{ docker_utility_docker_builds }}/utility/{{ item }}'
+    src: "{{ item }}.j2"
+    dest: "{{ docker_utility_docker_builds }}/utility/{{ item }}"
     backup: true
   loop:
     - docker-compose.yml
@@ -22,36 +21,36 @@
 - name: copy Duo Auth Proxy config
   template:
     src: authproxy.cfg.j2
-    dest: '{{ docker_utility_docker_storage }}/duo/authproxy.cfg'
-    owner: '{{ docker_uid }}'
-    group: '{{ docker_gid }}'
+    dest: "{{ docker_utility_docker_storage }}/duo/authproxy.cfg"
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
     mode: 0600
   become: true
 
 - name: copy Duo Auth Proxy cert bundle
   copy:
     src: ca-bundle.crt
-    dest: '{{ docker_utility_docker_storage }}/duo/ca-bundle.crt'
-    owner: '{{ docker_uid }}'
-    group: '{{ docker_gid }}'
+    dest: "{{ docker_utility_docker_storage }}/duo/ca-bundle.crt"
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
     mode: 0600
   become: true
 
 - name: copy Traefik config
   template:
     src: traefik.yml.j2
-    dest: '{{ docker_utility_docker_storage }}/traefik/traefik.yml'
-    owner: '{{ docker_uid }}'
-    group: '{{ docker_gid }}'
+    dest: "{{ docker_utility_docker_storage }}/traefik/traefik.yml"
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
     mode: 0600
   become: true
 
 - name: copy Traefik static routes
   template:
     src: routes.yml.j2
-    dest: '{{ docker_utility_docker_storage }}/traefik/routes.yml'
-    owner: '{{ docker_uid }}'
-    group: '{{ docker_gid }}'
+    dest: "{{ docker_utility_docker_storage }}/traefik/routes.yml"
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
     mode: 0600
   become: true
 
