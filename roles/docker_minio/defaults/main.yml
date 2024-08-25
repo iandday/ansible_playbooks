@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_minio/defaults/main.yml
+#
+
+docker_minio_required_vars:
+  - docker_uid
+  - docker_gid
+docker_minio_docker_builds: "{{ all_docker_builds }}"
+docker_minio_docker_storage: "{{ all_docker_storage }}"
