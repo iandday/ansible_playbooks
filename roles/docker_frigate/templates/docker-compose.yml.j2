@@ -9,16 +9,13 @@ services:
     image: ghcr.io/blakeblackshear/frigate:0.14.0
     shm_size: "128mb" # update for your cameras based on calculation above
     networks:
-      - traefik_proxy
+      - default
     devices:
-      - /dev/bus/usb:/dev/bus/usb  # Passes the USB Coral, needs to be modified for other versions
-#      - /dev/apex_0:/dev/apex_0    # Passes a PCIe Coral, follow driver instructions here https://coral.ai/docs/m2/get-started/#2a-on-linux
-#      - /dev/video11:/dev/video11  # For Raspberry Pi 4B
-#      - /dev/dri/renderD128:/dev/dri/renderD128 # For intel hwaccel, needs to be updated for your hardware
+      - /dev/bus/usb:/dev/bus/usb
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - {{ docker_frigate_docker_storage }}/frigate_config:/config
-      - {{ docker_frigate_docker_storage }}/frigate_media:/media/frigate
+      - /mnt/video/:/media/frigate
       - type: tmpfs
         target: /tmp/cache
         tmpfs:
@@ -41,8 +38,5 @@ services:
     environment:
       FRIGATE_RTSP_PASSWORD: "password"
 networks:
-  traefik_proxy:
-    external:
-      name: traefik_proxy
   default:
     driver: bridge
