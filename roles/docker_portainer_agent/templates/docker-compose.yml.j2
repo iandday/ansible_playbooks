@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+services:
+  portainer_agent:
+    image:  portainer/agent:2.21.0
+    ports:
+      - "9001:9001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - /:/host
+    container_name: portainer_agent
+    pull_policy: always
+    networks:
+      - default
+    restart: always
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge
