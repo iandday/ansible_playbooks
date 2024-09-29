@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
 services:
-  db:
-    image: postgres:alpine
+  nc-db:
+    image: postgres:16-alpine
     restart: always
+    hostname: nc-db
     networks:
-      - default
       - traefik_proxy
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_db:/var/lib/postgresql/data:Z
@@ -12,40 +12,45 @@ services:
       - POSTGRES_PASSWORD={{ vault_nextcloud_mysql_password }}
       - POSTGRES_DB=nextcloud
       - POSTGRES_USER=nextcloud
-  redis:
+  nc-redis:
     image: redis:alpine
     restart: always
+    hostname: nc-redis
     networks:
-      - default
+      - traefik_proxy
     security_opt:
       - no-new-privileges:true
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_redis:/data
     environment:
       - REDIS_ARGS=--save 60 10
-  cron:
-    image: nextcloud:27.1-fpm-alpine
+  nc-cron:
+    image: nextcloud:30.0-fpm
     restart: always
+    hostname: nc-cron
     networks:
-      - default
+      - traefik_proxy
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini
     entrypoint: /cron.sh
+    environment:
+      - PHP_MEMORY_LIMIT=1024M
     depends_on:
-      - db
-      - redis
-  web:
+      - nc-db
+      - nc-redis
+  nc-web:
     build:
       context: .
       dockerfile: Dockerfile-web
     restart: always
+    hostname: nc-web
     networks:
-      - default
       - traefik_proxy
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z,ro
     depends_on:
-      - app
+      - nc-app
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
@@ -67,22 +72,27 @@ services:
       - "traefik.http.routers.nextcloud-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.nextcloud-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.nextcloud-secure.loadbalancer.server.port=80" 
-  app:
+  nc-app:
     build:
       context: .
       dockerfile: Dockerfile-app
     restart: always
+    hostname: nc_app
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z
+      - {{ docker_nextcloud_docker_storage }}/nextcloud_d_config/php.ini:/usr/local/etc/php/conf.d/zzz-custom.ini
     environment:
-      - POSTGRES_HOST=db
-      - REDIS_HOST=redis
+      - POSTGRES_HOST=nc-db
+      - REDIS_HOST=nc-redis
       - POSTGRES_PASSWORD={{ vault_nextcloud_mysql_password }}
       - POSTGRES_DB=nextcloud
       - POSTGRES_USER=nextcloud
+      - PHP_MEMORY_LIMIT=1024M
+    networks:
+      - traefik_proxy
     depends_on:
-      - db
-      - redis
+      - nc-db
+      - nc-redis
 networks:
   traefik_proxy:
     external:

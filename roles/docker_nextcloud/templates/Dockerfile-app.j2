@@ -1,4 +1,4 @@
-FROM nextcloud:fpm
+FROM nextcloud:30.0-fpm
 
 RUN set -ex; \
     \
@@ -11,6 +11,8 @@ RUN set -ex; \
         smbclient \
         supervisor \
 #       libreoffice \
+        sudo \
+    
     ; \
     rm -rf /var/lib/apt/lists/*
 

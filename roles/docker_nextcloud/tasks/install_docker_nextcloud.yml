@@ -46,3 +46,14 @@
     mode: 0700
   with_items:
     - "{{ docker_nextcloud_docker_storage }}/nextcloud_data"
+    - "{{ docker_nextcloud_docker_storage }}/nextcloud_d_config"
+
+- name: copy files
+  become: true
+  copy:
+    src: "php.ini"
+    dest: "{{ docker_nextcloud_docker_storage }}/nextcloud_d_config/php.ini"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
