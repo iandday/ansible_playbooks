@@ -1,7 +1,6 @@
 ---
 #
-#  Docker KVM: utility, media, and automation stack
-#
+#  Docker KVM: frigate and frigate LPR
 
 - name: Deploy and configure KVMkvm
   hosts: docker_frigate
@@ -17,3 +16,4 @@
     - docker
     - docker_portainer_agent
     - docker_frigate
+    - docker_frigate_lpr

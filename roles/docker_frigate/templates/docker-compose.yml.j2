@@ -36,7 +36,8 @@ services:
       - "traefik.http.routers.frigate-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.frigate-secure.loadbalancer.server.port=8971"
     environment:
-      FRIGATE_RTSP_PASSWORD: "password"
+      - FRIGATE_RTSP_PASSWORD=password
+      - PLUS_API_KEY={{vault_frigate_plus_api_key}}
 networks:
   default:
     driver: bridge

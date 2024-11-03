@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  frigate_lpr:
+    container_name: frigate_lpr
+    restart: unless-stopped
+    image: lmerza/frigate_plate_recognizer:latest
+    networks:
+      - default
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - {{ docker_frigate_lpr_docker_storage }}/frigate_lpr_config:/config
+      - {{ docker_frigate_lpr_docker_storage }}/frigate_lpr_plates:/plates
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - TZ=America/New_York
+networks:
+  default:
+    driver: bridge
