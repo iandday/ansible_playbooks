@@ -1,0 +1,67 @@
+# {{ ansible_managed }}
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - {{ docker_ollama_docker_storage }}/ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    networks:
+      - default
+      - traefik_proxy
+    tty: true
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    labels:
+      - "traefik.enable=false"
+  ollama-db:
+    image: postgres:alpine
+    restart: always
+    networks:
+      - default
+    volumes:
+      - {{ docker_ollama_docker_storage }}/ollama_db:/var/lib/postgresql/data:Z
+    environment:
+      - POSTGRES_PASSWORD={{ vault_ollama_mysql_password }}
+      - POSTGRES_DB=ollama
+      - POSTGRES_USER=ollama
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:v0.3.16
+    container_name: ollama-webui
+    volumes:
+      - {{ docker_ollama_docker_storage }}/ollama_webui:/app/backend/data
+    depends_on:
+      - ollama
+      - ollama-db
+    networks:
+      - default
+      - traefik_proxy
+    environment: # https://docs.openwebui.com/getting-started/env-configuration#default_models
+      - OLLAMA_BASE_URLS=http://ollama:11434
+      - ENV=dev
+      - DATABASE_URL=postgresql://ollama:{{ vault_ollama_mysql_password }}@ollama-db:5432/ollama
+      - WEBUI_AUTH=False
+      - WEBUI_NAME= AI
+      - WEBUI_URL=https://ai.{{ all_ext_domain }}
+      - WEBUI_SECRET_KEY={{ vault_ollama_ui_secret }}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.ai-secure.entrypoints=web-secure"
+      - "traefik.http.routers.ai-secure.rule=Host(`ai.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.ai-secure.tls=true"
+      - "traefik.http.routers.ai-secure.tls.certresolver=route53"
+      - "traefik.http.routers.ai-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.ai-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.ai-secure.loadbalancer.server.port=8080"
+
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

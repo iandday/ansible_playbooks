@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+
+version: "3.6"
+services:
+  codeprojectai:
+    container_name: codeprojectai
+    restart: unless-stopped
+    image: codeproject/ai-server
+    networks:
+      - default
+    ports:
+      - "32168:32168" # RTSP feeds
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - {{ docker_codeprojectai_docker_storage }}/codeprojectai_config:/etc/codeproject/ai
+      - {{ docker_codeprojectai_docker_storage }}/codeprojectai_modules:/app/modules 
+    labels:
+      - "traefik.enable=false"
+    environment:
+      - TZ=America/New_York
+networks:
+  default:
+    driver: bridge
