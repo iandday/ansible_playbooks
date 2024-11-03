@@ -44,6 +44,111 @@ services:
     - "25:25"
     labels:
       - "traefik.enable=false"
+  authentik_postgresql:
+    image: docker.io/library/postgres:16-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d authentik -U authentik"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    volumes:
+      - {{ all_docker_storage }}/authentik_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: {{ vault_docker_utility_authentik_db_password }}
+      POSTGRES_USER: authentik
+      POSTGRES_DB: authentik
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+  authentik_redis:
+    image: docker.io/library/redis:alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    volumes:
+      - {{ all_docker_storage }}/authentik_redis:/data
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+  authentik_server:
+    image: ghcr.io/goauthentik/server:2024.8.3
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik_redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik_postgresql
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: {{ vault_docker_utility_authentik_db_password }}
+      AUTHENTIK_EMAIL__HOST: mail
+      AUTHENTIK_EMAIL__PORT: 25
+      AUTHENTIK_EMAIL__USE_TLS: "false"
+      AUTHENTIK_EMAIL__USE_SSL: "false"
+      AUTHENTIK_EMAIL__TIMEOUT: 10
+      AUTHENTIK_EMAIL__FROM: {{ vault_docker_utility_mail_username }}
+      AUTHENTIK_SECRET_KEY: {{ vault_docker_utility_authentik_secret_key }}
+    volumes:
+      - {{ all_docker_storage }}/authentik_media:/media
+      - {{ all_docker_storage }}/authentik_custom-templates:/templates
+      - {{ all_docker_storage }}/traefik/certs/certs/ianday.me.crt:/certs/ianday.me.pem
+      - {{ all_docker_storage }}/traefik/certs/private/ianday.me.key:/certs/ianday.me.key
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik-secure.entrypoints=web-secure"
+      - "traefik.http.routers.authentik-secure.rule=Host(`auth.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.authentik-secure.tls=true"
+      - "traefik.http.routers.authentik-secure.tls.certresolver=route53"
+      - "traefik.http.routers.authentik-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.authentik-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.authentik-secure.loadbalancer.server.port=9443"
+      - "traefik.http.services.authentik-secure.loadbalancer.server.scheme=https"
+    depends_on:
+      - authentik_postgresql
+      - authentik_redis
+  authentik_worker:
+    image: ghcr.io/goauthentik/server:2024.8.3
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik_redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik_postgresql
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: {{ vault_docker_utility_authentik_db_password }}
+      AUTHENTIK_EMAIL__HOST: mail
+      AUTHENTIK_EMAIL__PORT: 25
+      AUTHENTIK_EMAIL__USE_TLS: "false"
+      AUTHENTIK_EMAIL__USE_SSL: "false"
+      AUTHENTIK_EMAIL__TIMEOUT: 10
+      AUTHENTIK_EMAIL__FROM: {{ vault_docker_utility_mail_username }}
+      AUTHENTIK_SECRET_KEY: {{ vault_docker_utility_authentik_secret_key }}   
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - {{ all_docker_storage }}/authentik_media:/media
+      - {{ all_docker_storage }}/authentik_certs:/certs
+      - {{ all_docker_storage }}/authentik_custom-templates:/templates
+      - {{ all_docker_storage }}/traefik/certs/certs/ianday.me.crt:/certs/ianday.me.pem
+      - {{ all_docker_storage }}/traefik/certs/private/ianday.me.key:/certs/ianday.me.key
+    depends_on:
+      - authentik_postgresql
+      - authentik_redis
+      - authentik_server
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
   dashy:
     container_name: dashy
     restart: always
@@ -209,6 +314,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - {{ all_docker_storage }}/traefik:/etc/traefik
       - {{ all_docker_storage }}/logs/traefik:/logs/
+  traefik-certs-dumper:
+    image: ldez/traefik-certs-dumper:v2.8.3
+    entrypoint: sh -c '
+      apk add jq
+      ; while ! [ -e /data/acme.json ]
+      || ! [ `jq ".[] | .Certificates | length" /data/acme.json` != 0 ]; do
+      sleep 1
+      ; done
+      && traefik-certs-dumper file --version v2 --watch
+      --source /data/acme.json --dest /data/certs'
+    volumes:
+      - {{ all_docker_storage }}/traefik:/data
 networks:
   traefik_proxy:
     external:
