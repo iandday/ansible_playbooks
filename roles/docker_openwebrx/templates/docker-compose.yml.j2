@@ -3,12 +3,9 @@
 version: "3.6"
 services:
   app:
-    image: jketterl/openwebrx-full:stable
+    image: slechev/openwebrxplus
     networks:
       - traefik_proxy
-    environment:
-      - OPENWEBRX_ADMIN_USER=admin
-      - OPENWEBRX_ADMIN_PASSWORD={{ vault_docker_openwebrx_admin_password }}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.openwebrx-secure.entrypoints=web-secure"
@@ -19,9 +16,8 @@ services:
       - "traefik.http.routers.openwebrx-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.openwebrx-secure.loadbalancer.server.port=8073"
     volumes:
-      - {{ docker_openwebrx_docker_storage }}/openwebrx:/var/lib/openwebrx
-    tmpfs:
-      - /tmp/openwebrx
+      - {{ docker_openwebrx_docker_storage }}/openwebrx-settings:/var/lib/openwebrx
+      - {{ docker_openwebrx_docker_storage }}/openwebrx-etc:/etc/openwebrx
 networks:
   traefik_proxy:
     external:
