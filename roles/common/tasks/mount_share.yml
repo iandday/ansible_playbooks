@@ -5,11 +5,11 @@
 
 - name: check for entry in fstab
   mount:
-    src:  '{{ mount_src }}'
-    path: '{{ mount_dest }}'
-    opts: 'username={{ mount_username }},password={{ mount_password}},domain={{ all_domain }},uid={{ mount_uid }},gid={{ mount_gid }}'
-    fstype: 'cifs'
-    state: 'present'
+    src: "{{ mount_src }}"
+    path: "{{ mount_dest }}"
+    opts: "username={{ mount_username }},password={{ mount_password}},uid={{ mount_uid }},gid={{ mount_gid }}"
+    fstype: "cifs"
+    state: "present"
   no_log: true
   become: true
   register: mount_status
@@ -21,11 +21,11 @@
 
 - name: mount
   mount:
-    src:  '{{ mount_src }}'
-    path: '{{ mount_dest }}'
-    opts: 'username={{ mount_username }},password={{ mount_password}},domain={{ all_domain }},uid={{ mount_uid }},gid={{ mount_gid }}{{ mount_options }}'
-    fstype: 'cifs'
-    state: 'mounted'
+    src: "{{ mount_src }}"
+    path: "{{ mount_dest }}"
+    opts: "username={{ mount_username }},password={{ mount_password}},uid={{ mount_uid }},gid={{ mount_gid }}{{ mount_options }}"
+    fstype: "cifs"
+    state: "mounted"
   #no_log: true
   when: mount_dest not in mount_names
   become: true
