@@ -1,15 +1,32 @@
 ---
 # {{ ansible_managed }}
 http:
+  middlewares:
+    authentik:
+      forwardAuth:
+        address: "http://authentik_server:9000/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-Authentik-Username
+          - X-Authentik-Groups
+          - X-Authentik-Email
+          - X-Authentik-Name
+          - X-Authentik-Uid
+          - X-Authentik-Jwt
+          - X-Authentik-Meta-Jwks
+          - X-Authentik-Meta-Outpost
+          - X-Authentik-Meta-Provider
+          - X-Authentik-Meta-App
+          - X-Authentik-Meta-Version
   routers:
-    cloud-https:
-      rule: "Host(`cloud.{{ all_ext_domain }}`)"
+    cctv-https:
+      rule: "Host(`cctv.{{ all_ext_domain }}`)"
       entryPoints:
         - web-secure
       middlewares:
-        - nextcloud_redirect
-        - nextcloud_headers
-      service: cloud-service
+        - authentik
+      service: cctv-service
+
       tls:
         certresolver: route53
         domains:
@@ -38,28 +55,6 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
-    splunk-https:
-      rule: "Host(`splunk.{{ all_ext_domain }}`)"
-      entryPoints:
-        - web-secure
-      service: splunk-service
-      tls:
-        certresolver: route53
-        domains:
-          - main: "{{ all_ext_domain }}"
-            sans:
-              - "*.{{ all_ext_domain }}"
-    git-https:
-      rule: "Host(`gitlab.{{ all_ext_domain }}`)"
-      entryPoints:
-        - web-secure
-      service: git-service
-      tls:
-        certresolver: route53
-        domains:
-          - main: "{{ all_ext_domain }}"
-            sans:
-              - "*.{{ all_ext_domain }}"
     overseerr-https:
       rule: "Host(`requests.{{ all_ext_domain }}`)"
       entryPoints:
@@ -72,10 +67,6 @@ http:
             sans:
               - "*.{{ all_ext_domain }}"
   services:
-    cloud-service:
-      loadBalancer:
-        servers:
-          - url: http://10.168.1.5
     media-service:
       loadBalancer:
         servers:
@@ -84,30 +75,16 @@ http:
       loadBalancer:
         servers:
           - url: http://10.168.1.14:8123
-    splunk-service:
-      loadBalancer:
-        servers:
-          - url: http://10.168.1.40:8000
-    git-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: https://10.168.1.16:443
     overseerr-service:
       loadBalancer:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.31:5055
-  middlewares:
-    nextcloud_redirect:
-      redirectRegex:
-        permanent: true
-        regex: "https://(.*)/.well-known/(card|cal)dav"
-        replacement: "https://${1}/remote.php/dav/"
-    nextcloud_headers:
-      headers:
-        stsSeconds: 15552011
-        stsPreload: true
+    cctv-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: https://10.168.1.206:8971
   serversTransports:
     mytransport:
       insecureSkipVerify: true
