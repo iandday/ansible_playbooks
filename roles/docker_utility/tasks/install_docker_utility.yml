@@ -53,10 +53,9 @@
     group: "{{ docker_gid }}"
     mode: 0600
   become: true
-
-- name: start utility stack
-  ansible.builtin.systemd:
-    name: docker-compose@utility
-    state: started
-    enabled: yes
-  become: true
+# - name: start utility stack
+#   ansible.builtin.systemd:
+#     name: docker-compose@utility
+#     state: started
+#     enabled: yes
+#   become: true

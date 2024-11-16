@@ -9,7 +9,7 @@ services:
     command: -H unix:///var/run/docker.sock
     ports:
       - target: 9000
-        published: 9000
+        published: 9002
         protocol: tcp
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -45,6 +45,7 @@ services:
     labels:
       - "traefik.enable=false"
   authentik_postgresql:
+    container_name: authentik_postgresql
     image: docker.io/library/postgres:16-alpine
     restart: unless-stopped
     healthcheck:
@@ -64,6 +65,7 @@ services:
     labels:
       - "traefik.enable=false"
   authentik_redis:
+    container_name: authentik_redis
     image: docker.io/library/redis:alpine
     command: --save 60 1 --loglevel warning
     restart: unless-stopped
@@ -80,6 +82,7 @@ services:
     labels:
       - "traefik.enable=false"
   authentik_server:
+    container_name: authentik_server
     image: ghcr.io/goauthentik/server:2024.8.3
     restart: unless-stopped
     command: server
@@ -113,10 +116,18 @@ services:
       - "traefik.http.routers.authentik-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.authentik-secure.loadbalancer.server.port=9443"
       - "traefik.http.services.authentik-secure.loadbalancer.server.scheme=https"
+      ## Individual Application forwardAuth regex (catch any subdomain using individual application forwardAuth)  
+      - "traefik.http.routers.authentik-rtr-outpost.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.{{ all_ext_domain }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      - "traefik.http.routers.authentik-rtr-outpost.entrypoints=web-secure"
+      - "traefik.http.routers.authentik-rtr-outpost.tls=true"
+      - "traefik.http.routers.authentik-rtr-outpost.tls.certresolver=route53"
+      - "traefik.http.routers.authentik-rtr-outpost.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.authentik-rtr-outpost.tls.domains[0].sans=*.{{ all_ext_domain }}"
     depends_on:
       - authentik_postgresql
       - authentik_redis
   authentik_worker:
+    container_name: authentik_worker
     image: ghcr.io/goauthentik/server:2024.8.3
     restart: unless-stopped
     command: worker
