@@ -5,8 +5,8 @@ services:
     image: ghcr.io/iandday/plant_tracker_proxy:latest
     restart: always
     volumes:
-      - {{ docker_plants_docker_storage }}/plants:/mnt/media:ro
-      - {{ docker_plants_docker_storage }}/plants_static:/mnt/static:ro
+      - {{ docker_plants_docker_storage }}/plants:/media:ro
+      - {{ docker_plants_docker_storage }}/plants_static:/static:ro
     depends_on:
       - django
     networks:
