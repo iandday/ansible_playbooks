@@ -6,7 +6,7 @@ services:
     container_name: frigate
     privileged: true 
     restart: unless-stopped
-    image: ghcr.io/blakeblackshear/frigate:0.15.0-beta3
+    image: ghcr.io/blakeblackshear/frigate:0.15.0
     shm_size: "256mb" # update for your cameras based on calculation above
     networks:
       - default
