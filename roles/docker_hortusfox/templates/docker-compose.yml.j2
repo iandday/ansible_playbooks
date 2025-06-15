@@ -1,0 +1,54 @@
+# {{ ansible_managed }}
+services:
+  app:
+    image: ghcr.io/danielbrendel/hortusfox-web:v5.0
+    restart: always
+    environment:
+      - APP_ADMIN_EMAIL={{ vault_PLANTS_ADMIN_EMAIL }}
+      - APP_ADMIN_PASSWORD={{ vault_PLANTS_ADMIN_PASSWORD }}
+      - APP_TIMEZONE=America/New_York
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=hortusfox
+      - DB_USERNAME=hortusfox
+      - DB_PASSWORD={{ vault_docker_plants_db_password }}
+      - DB_CHARSET=utf8mb4
+    volumes:
+      - {{ docker_hortusfox_docker_storage }}/hortusfox_images:/var/www/html/public/img
+      - {{ docker_hortusfox_docker_storage }}/hortusfox_logs:/var/www/html/app/logs
+      - {{ docker_hortusfox_docker_storage }}/hortusfox_backup:/var/www/html/public/backup
+      - {{ docker_hortusfox_docker_storage }}/hortusfox_themes:/var/www/html/public/themes
+      - {{ docker_hortusfox_docker_storage }}/hortusfox_migrate:/var/www/html/app/migrations
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plants-secure.entrypoints=web-secure"
+      - "traefik.http.routers.plants-secure.rule=Host(`plants.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.plants-secure.tls=true"
+      - "traefik.http.routers.plants-secure.tls.certresolver=route53"
+      - "traefik.http.routers.plants-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.plants-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+    depends_on:
+      - db
+  db:
+    image: mariadb:lts-noble
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD={{ vault_docker_plants_db_root_password }}
+      - MYSQL_DATABASE=hortusfox
+      - MYSQL_USER=hortusfox
+      - MYSQL_PASSWORD={{ vault_docker_plants_db_password }}
+    networks:
+      - traefik_proxy
+    volumes:
+      - {{ docker_hortusfox_docker_storage }}/hortusfox_db:/var/lib/mysql
+    labels:
+      - "traefik.enable=false"
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge
+

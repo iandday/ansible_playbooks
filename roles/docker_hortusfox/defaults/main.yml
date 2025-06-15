@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_hortusfox/defaults/main.yml
+#
+
+docker_hortusfox_required_vars:
+  - docker_uid
+  - docker_gid
+docker_hortusfox_docker_builds: '{{ all_docker_builds }}'
+docker_hortusfox_docker_storage: '{{ all_docker_storage }}'

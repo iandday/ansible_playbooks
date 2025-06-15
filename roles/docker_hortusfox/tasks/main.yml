@@ -1,0 +1,26 @@
+---
+#
+# roles/docker_hortusfox/tasks/main.yml
+#
+
+- name: load common role variables
+  include_vars: '{{ playbook_dir }}/roles/common/vars/{{ item }}.yml'
+  with_items:
+    - main
+    - vault
+  no_log: true
+  
+- name: check for required variables
+  fail:
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in vars
+  loop: '{{ docker_hortusfox_required_vars }}'
+
+- name: wait for response
+  wait_for_connection:
+    delay: '1'
+    timeout: '300'
+  delegate_to: localhost
+
+- name: start main play
+  include_tasks: install_docker_hortusfox.yml
