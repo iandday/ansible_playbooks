@@ -31,7 +31,7 @@
     state: directory
     owner: "{{ docker_uid }}"
     group: "{{ docker_gid }}"
-    mode: 0700
+    mode: 0777
   with_items:
     - "{{ docker_wedding_docker_storage }}/wedding_static"
     - "{{ docker_wedding_docker_storage }}/wedding_media"

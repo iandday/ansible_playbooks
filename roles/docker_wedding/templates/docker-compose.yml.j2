@@ -43,8 +43,8 @@ services:
       - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
       - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
     volumes:
-      - wedding_static:/app/static
-      - wedding_media:/app/media
+      - {{ docker_wedding_docker_storage }}/wedding_static:/app/static
+      - {{ docker_wedding_docker_storage }}/wedding_media:/app/media
     networks:
       - traefik_proxy
     labels:
@@ -60,9 +60,6 @@ services:
     depends_on:
       - postgres 
 
-volumes:
-  wedding_static:
-  wedding_media:
 networks:
   traefik_proxy:
     external:
