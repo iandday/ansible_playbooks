@@ -1,0 +1,71 @@
+# {{ ansible_managed }}
+
+services:
+  postgres:
+    image: postgres:17.4
+    container_name: wedding-postgres
+    volumes:
+      - {{ docker_wedding_docker_storage }}/wedding_db:/var/lib/postgresql/data
+    networks:
+      - traefik_proxy
+    environment:
+      - POSTGRES_USER={{ vault_docker_wedding_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_wedding_db_password }}
+      - POSTGRES_DB=wedding
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ vault_docker_wedding_db_username }}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+  app:
+    image: ghcr.io/iandday/okletsdoit:latest
+    container_name: wedding-app
+    restart: always
+    environment:
+      - POSTGRES_USER={{ vault_docker_wedding_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_wedding_db_password }}
+      - POSTGRES_DB=wedding
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - SECRET_KEY={{ vault_docker_wedding_secret_key }}
+      - DEBUG=False
+      - ALLOWED_HOSTS={{ vault_docker_wedding_allowed_hosts }}
+      - TIMEZONE=America/New_York
+      - DJANGO_SUPERUSER_EMAIL={{ vault_docker_wedding_admin_email }}
+      - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_wedding_admin_password }}
+      - STATIC_ROOT=/app/static
+      - MEDIA_ROOT=/app/media
+      - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
+      - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
+      - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
+    volumes:
+      - wedding_static:/app/static
+      - wedding_media:/app/media
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.wedding-secure.entrypoints=web-secure"
+      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.wedding-secure.tls=true"
+      - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
+      - "traefik.http.routers.wedding-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.wedding-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.wedding-secure.loadbalancer.server.port=8000"
+    depends_on:
+      - postgres 
+
+volumes:
+  wedding_static:
+  wedding_media:
+networks:
+  traefik_proxy:
+    external:
+      name: traefik_proxy
+  default:
+    driver: bridge

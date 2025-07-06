@@ -19,8 +19,9 @@
     # - docker_netflow
     # - docker_photos
     # - docker_plants
-    - docker_hortusfox
+    #- docker_hortusfox
     # - docker_nextcloud
     # - docker_openwebrx
     # - docker_paperless_ngx
     # - docker_minio
+    - docker_wedding

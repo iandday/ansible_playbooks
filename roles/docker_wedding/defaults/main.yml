@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_wedding/defaults/main.yml
+#
+
+docker_wedding_required_vars:
+  - docker_uid
+  - docker_gid
+docker_wedding_docker_builds: "{{ all_docker_builds }}"
+docker_wedding_docker_storage: "{{ all_docker_storage }}"

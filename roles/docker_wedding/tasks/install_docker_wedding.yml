@@ -1,0 +1,38 @@
+---
+#
+# roles/docker_wedding/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_wedding_docker_builds }}/wedding"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_wedding_docker_builds }}/wedding/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create config storage directory
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  with_items:
+    - "{{ docker_wedding_docker_storage }}/wedding_static"
+    - "{{ docker_wedding_docker_storage }}/wedding_media"
+
