@@ -83,7 +83,7 @@ services:
       - "traefik.enable=false"
   authentik_server:
     container_name: authentik_server
-    image: ghcr.io/goauthentik/server:2024.8.3
+    image: ghcr.io/goauthentik/server:2025.6.3
     restart: unless-stopped
     command: server
     environment:
@@ -92,12 +92,14 @@ services:
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__PASSWORD: {{ vault_docker_utility_authentik_db_password }}
-      AUTHENTIK_EMAIL__HOST: mail
-      AUTHENTIK_EMAIL__PORT: 25
-      AUTHENTIK_EMAIL__USE_TLS: "false"
+      AUTHENTIK_EMAIL__HOST: '{{ vault_docker_utility_authentik_email_server }}'
+      AUTHENTIK_EMAIL__PORT: '{{ vault_docker_utility_authentik_email_port }}'
+      AUTHENTIK_EMAIL__USE_TLS: "true"
       AUTHENTIK_EMAIL__USE_SSL: "false"
-      AUTHENTIK_EMAIL__TIMEOUT: 10
-      AUTHENTIK_EMAIL__FROM: {{ vault_docker_utility_mail_username }}
+      AUTHENTIK_EMAIL__TIMEOUT: 60
+      AUTHENTIK_EMAIL__USERNAME: {{ vault_docker_utility_authentik_email_username }}
+      AUTHENTIK_EMAIL__PASSWORD: {{ vault_docker_utility_authentik_email_password }}
+      AUTHENTIK_EMAIL__FROM: {{ vault_docker_utility_authentik_email_username }}
       AUTHENTIK_SECRET_KEY: {{ vault_docker_utility_authentik_secret_key }}
     volumes:
       - {{ all_docker_storage }}/authentik_media:/media
@@ -128,7 +130,7 @@ services:
       - authentik_redis
   authentik_worker:
     container_name: authentik_worker
-    image: ghcr.io/goauthentik/server:2024.8.3
+    image: ghcr.io/goauthentik/server:2025.6.3
     restart: unless-stopped
     command: worker
     environment:
@@ -137,13 +139,15 @@ services:
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__PASSWORD: {{ vault_docker_utility_authentik_db_password }}
-      AUTHENTIK_EMAIL__HOST: mail
-      AUTHENTIK_EMAIL__PORT: 25
-      AUTHENTIK_EMAIL__USE_TLS: "false"
+      AUTHENTIK_EMAIL__HOST: '{{ vault_docker_utility_authentik_email_server }}'
+      AUTHENTIK_EMAIL__PORT: '{{ vault_docker_utility_authentik_email_port }}'
+      AUTHENTIK_EMAIL__USE_TLS: "true"
       AUTHENTIK_EMAIL__USE_SSL: "false"
-      AUTHENTIK_EMAIL__TIMEOUT: 10
-      AUTHENTIK_EMAIL__FROM: {{ vault_docker_utility_mail_username }}
-      AUTHENTIK_SECRET_KEY: {{ vault_docker_utility_authentik_secret_key }}   
+      AUTHENTIK_EMAIL__TIMEOUT: 60
+      AUTHENTIK_EMAIL__USERNAME: {{ vault_docker_utility_authentik_email_username }}
+      AUTHENTIK_EMAIL__PASSWORD: {{ vault_docker_utility_authentik_email_password }}
+      AUTHENTIK_EMAIL__FROM: {{ vault_docker_utility_authentik_email_username }}
+      AUTHENTIK_SECRET_KEY: {{ vault_docker_utility_authentik_secret_key }}
     user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
