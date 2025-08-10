@@ -35,4 +35,14 @@
   with_items:
     - "{{ docker_wedding_docker_storage }}/wedding_static"
     - "{{ docker_wedding_docker_storage }}/wedding_media"
+    - "{{ docker_wedding_docker_storage }}/wedding_nginx/"
 
+- name: create nginx config file
+  become: true
+  template:
+    src: default.conf.j2
+    dest: "{{ docker_wedding_docker_storage }}/wedding_nginx/default.conf"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0644

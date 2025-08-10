@@ -1,7 +1,7 @@
 # {{ ansible_managed }}
 
 services:
-  postgres:
+  wedding-postgres:
     image: postgres:17.4
     container_name: wedding-postgres
     volumes:
@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
-  app:
+  wedding-app:
     image: ghcr.io/iandday/okletsdoit:latest
     container_name: wedding-app
     restart: always
@@ -28,10 +28,11 @@ services:
       - POSTGRES_USER={{ vault_docker_wedding_db_username }}
       - POSTGRES_PASSWORD={{ vault_docker_wedding_db_password }}
       - POSTGRES_DB=wedding
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=wedding-postgres
       - POSTGRES_PORT=5432
       - SECRET_KEY={{ vault_docker_wedding_secret_key }}
       - DEBUG=False
+      - DJANGO_LOG_LEVEL=INFO
       - ALLOWED_HOSTS={{ vault_docker_wedding_allowed_hosts }}
       - TIMEZONE=America/New_York
       - DJANGO_SUPERUSER_EMAIL={{ vault_docker_wedding_admin_email }}
@@ -48,6 +49,19 @@ services:
     networks:
       - traefik_proxy
     labels:
+      - "traefik.enable=false"
+    depends_on:
+      - wedding-postgres
+  wedding-nginx:
+    image: nginx:latest
+    container_name: wedding-nginx
+    volumes:
+      - {{ docker_wedding_docker_storage }}/wedding_nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - {{ docker_wedding_docker_storage }}/wedding_static:/usr/share/nginx/html/static
+      - {{ docker_wedding_docker_storage }}/wedding_media:/usr/share/nginx/html/media
+    networks:
+      - traefik_proxy
+    labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.wedding-secure.entrypoints=web-secure"
@@ -56,9 +70,9 @@ services:
       - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
       - "traefik.http.routers.wedding-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.wedding-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.wedding-secure.loadbalancer.server.port=8000"
+      - "traefik.http.services.wedding-secure.loadbalancer.server.port=80"
     depends_on:
-      - postgres 
+      - wedding-app
 
 networks:
   traefik_proxy:
