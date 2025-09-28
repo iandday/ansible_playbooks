@@ -25,3 +25,4 @@
     # - docker_paperless_ngx
     # - docker_minio
     - docker_wedding
+    - docker_garage

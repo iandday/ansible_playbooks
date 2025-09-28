@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_garage/defaults/main.yml
+#
+
+docker_garage_required_vars:
+  - docker_uid
+  - docker_gid
+docker_garage_docker_builds: "{{ all_docker_builds }}"
+docker_garage_docker_storage: "{{ all_docker_storage }}"
