@@ -21,7 +21,7 @@ services:
     labels:
       - "traefik.enable=false"
   wedding-app:
-    image: ghcr.io/iandday/okletsdoit:latest
+    image: ghcr.io/iandday/okletsdoit:develop
     container_name: wedding-app
     restart: always
     environment:
@@ -37,15 +37,94 @@ services:
       - TIMEZONE=America/New_York
       - DJANGO_SUPERUSER_EMAIL={{ vault_docker_wedding_admin_email }}
       - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_wedding_admin_password }}
-      - STATIC_ROOT=/app/static
-      - MEDIA_ROOT=/app/media
       - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
       - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
       - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
       - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
-    volumes:
-      - {{ docker_wedding_docker_storage }}/wedding_static:/app/static
-      - {{ docker_wedding_docker_storage }}/wedding_media:/app/media
+      - AWS_ACCESS_KEY_ID={{ vault_docker_wedding_aws_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_wedding_aws_secret_access_key }}
+      - AWS_STATIC_BUCKET_NAME={{ vault_docker_wedding_aws_static_bucket_name }}
+      - AWS_MEDIA_BUCKET_NAME={{ vault_docker_wedding_aws_media_bucket_name }}
+      - AWS_S3_REGION_NAME={{ vault_docker_wedding_aws_s3_region_name }}
+      - AWS_S3_ENDPOINT_URL={{ vault_docker_wedding_aws_s3_endpoint_url }}
+      - AWS_S3_STATIC_DOMAIN={{ vault_docker_wedding_aws_s3_static_domain }}
+      - AWS_S3_MEDIA_DOMAIN={{ vault_docker_wedding_aws_s3_media_domain }}
+      - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_wedding_aws_s3_static_domain_csp }}
+      - CONTAINER_ROLE=server
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - wedding-postgres
+  wedding-worker:
+    image: ghcr.io/iandday/okletsdoit:develop
+    container_name: wedding-worker
+    restart: always
+    environment:
+      - POSTGRES_USER={{ vault_docker_wedding_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_wedding_db_password }}
+      - POSTGRES_DB=wedding
+      - POSTGRES_HOST=wedding-postgres
+      - POSTGRES_PORT=5432
+      - SECRET_KEY={{ vault_docker_wedding_secret_key }}
+      - DEBUG=False
+      - DJANGO_LOG_LEVEL=INFO
+      - ALLOWED_HOSTS={{ vault_docker_wedding_allowed_hosts }}
+      - TIMEZONE=America/New_York
+      - DJANGO_SUPERUSER_EMAIL={{ vault_docker_wedding_admin_email }}
+      - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_wedding_admin_password }}
+      - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
+      - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
+      - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_wedding_aws_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_wedding_aws_secret_access_key }}
+      - AWS_STATIC_BUCKET_NAME={{ vault_docker_wedding_aws_static_bucket_name }}
+      - AWS_MEDIA_BUCKET_NAME={{ vault_docker_wedding_aws_media_bucket_name }}
+      - AWS_S3_REGION_NAME={{ vault_docker_wedding_aws_s3_region_name }}
+      - AWS_S3_ENDPOINT_URL={{ vault_docker_wedding_aws_s3_endpoint_url }}
+      - AWS_S3_STATIC_DOMAIN={{ vault_docker_wedding_aws_s3_static_domain }}
+      - AWS_S3_MEDIA_DOMAIN={{ vault_docker_wedding_aws_s3_media_domain }}
+      - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_wedding_aws_s3_static_domain_csp }}
+      - CONTAINER_ROLE=worker
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - wedding-postgres
+  wedding-beats:
+    image: ghcr.io/iandday/okletsdoit:develop
+    container_name: wedding-beats
+    restart: always
+    environment:
+      - POSTGRES_USER={{ vault_docker_wedding_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_wedding_db_password }}
+      - POSTGRES_DB=wedding
+      - POSTGRES_HOST=wedding-postgres
+      - POSTGRES_PORT=5432
+      - SECRET_KEY={{ vault_docker_wedding_secret_key }}
+      - DEBUG=False
+      - DJANGO_LOG_LEVEL=INFO
+      - ALLOWED_HOSTS={{ vault_docker_wedding_allowed_hosts }}
+      - TIMEZONE=America/New_York
+      - DJANGO_SUPERUSER_EMAIL={{ vault_docker_wedding_admin_email }}
+      - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_wedding_admin_password }}
+      - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
+      - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
+      - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_wedding_aws_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_wedding_aws_secret_access_key }}
+      - AWS_STATIC_BUCKET_NAME={{ vault_docker_wedding_aws_static_bucket_name }}
+      - AWS_MEDIA_BUCKET_NAME={{ vault_docker_wedding_aws_media_bucket_name }}
+      - AWS_S3_REGION_NAME={{ vault_docker_wedding_aws_s3_region_name }}
+      - AWS_S3_ENDPOINT_URL={{ vault_docker_wedding_aws_s3_endpoint_url }}
+      - AWS_S3_STATIC_DOMAIN={{ vault_docker_wedding_aws_s3_static_domain }}
+      - AWS_S3_MEDIA_DOMAIN={{ vault_docker_wedding_aws_s3_media_domain }}
+      - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_wedding_aws_s3_static_domain_csp }}
+      - CONTAINER_ROLE=beats
     networks:
       - traefik_proxy
     labels:
@@ -57,10 +136,13 @@ services:
     container_name: wedding-nginx
     volumes:
       - {{ docker_wedding_docker_storage }}/wedding_nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - {{ docker_wedding_docker_storage }}/wedding_static:/usr/share/nginx/html/static
-      - {{ docker_wedding_docker_storage }}/wedding_media:/usr/share/nginx/html/media
     networks:
       - traefik_proxy
+    environment:
+      - DJANGO_HOST=wedding-app
+      - DJANGO_PORT=8000
+      - NGINX_SERVER_NAME=wedding.{{ all_ext_domain }}
+      - NGINX_CLIENT_MAX_BODY_SIZE=100M
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
