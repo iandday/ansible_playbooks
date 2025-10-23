@@ -17,14 +17,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.services.garage-secure.loadbalancer.server.port=3900"
+      - "traefik.http.routers.garage-secure.service=garage-secure"
       - "traefik.http.routers.garage-secure.entrypoints=web-secure"
       - "traefik.http.routers.garage-secure.rule=Host(`garage.{{ all_ext_domain }}`)"
       - "traefik.http.routers.garage-secure.tls=true"
       - "traefik.http.routers.garage-secure.tls.certresolver=route53"
       - "traefik.http.routers.garage-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.garage-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.garage-secure.loadbalancer.server.port=3900"
-      - "traefik.http.routers.garage-secure.service=garage-secure"
       - "traefik.http.routers.garage-admin-secure.rule=Host(`garage-admin.{{ all_ext_domain }}`)"
       - "traefik.http.routers.garage-admin-secure.entrypoints=web-secure"
       - "traefik.http.routers.garage-admin-secure.tls=true"
@@ -33,6 +33,8 @@ services:
       - "traefik.http.routers.garage-admin-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.garage-admin-secure.loadbalancer.server.port=3903"
       - "traefik.http.routers.garage-admin-secure.service=garage-admin-secure"
+      
+      
       - "traefik.http.routers.garage-static-secure.rule=Host(`garage-static.{{ all_ext_domain }}`)"
       - "traefik.http.routers.garage-static-secure.entrypoints=web-secure"
       - "traefik.http.routers.garage-static-secure.tls=true"

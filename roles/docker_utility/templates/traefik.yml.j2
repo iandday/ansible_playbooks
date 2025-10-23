@@ -13,8 +13,6 @@ entryPoints:
           scheme: https
   web-secure:
     address: ":443"
-
-
 certificatesResolvers:
   route53:
     acme:
@@ -27,9 +25,8 @@ certificatesResolvers:
         resolvers:
           - 1.1.1.1
           - 8.8.8.8
-
 log:
-  level: DEBUG
+  level: INFO
   filePath: "/logs/traefik.log"
 accessLog:
   filePath: "/logs/access.log"

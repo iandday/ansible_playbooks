@@ -22,61 +22,15 @@ Clone Ubuntu 20.04 LTS KVM template, install Docker and Docker-Compose to run th
 
 ---
 
-### deploy_nextcloud.yml
-
-Clone Ubuntu 20.04 LXC template, install Nextcloud, MariaDB, and Nginx
-
----
-
 ### deploy_plex.yml
 
 Clone Ubuntu 20.04 LXC template and install Plex, configure nightly backups
 
 ---
 
-### deploy_gitlab.yml
-
-Clone Ubuntu 20.04 KVM template. Install Docker, Gitlab EE and Gitlab runner. Configure docker for remote adminstration over TLS.
-
-### deploy_wiki.yml
-
-Clone Ubuntu 20.04 LTS LXC template and install Dokuwiki and Nginx
-
-### restore_wiki.yml
-
-Restore wiki content and settings from backup
+### deploy_docker_frigate.yml
 
 ---
-
-### deploy_music_server.yml
-
-Clone Ubuntu 20.04 LXC template, install mopidy, snapcast server, and spotify connect client for distributed audio
-
----
-
-### deploy_pihole.yml
-
-Clone Ubuntu 20.04 LXC template, install PiHole and cloudflared for DoH, configure syslog-ng to export logs to syslog collector
-
----
-
-### deploy_log_collector.yml
-
-Clone Ubuntu 20.04 LXC template, install syslog-ng to collect logs from:
-
-- OpnSense
-- UnFi Controller
-- PiHole
-
----
-
-### deploy_splunk.yml
-
-Clone Ubuntu 20.04 LXC template, install Splunk Enterprise using a NFS bind mount for bucket storage
-
-### deploy_unifi.yml
-
-Clone Ubuntu 20.04 LXC template, install UniFi controller
 
 ### deploy_downloader.yml
 
@@ -89,11 +43,6 @@ Clone Ubuntu 20.04 LXC KVM template, install docker with remote portainer suppor
 - Lidarr
 - Radarr
 - Overseerr
-
-## TODO
-
-- Guacamole
-- Backup rotation
 
 ## KVMTemplate Creation
 
