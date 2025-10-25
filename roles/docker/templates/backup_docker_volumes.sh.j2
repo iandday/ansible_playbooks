@@ -3,7 +3,7 @@
 {% for dir in docker_compose_dirs %}
 docker-compose -f {{ all_docker_builds }}/{{ dir }}/docker-compose.yml down
 {% endfor %}
-tar --exclude {{ all_docker_storage }}/logs -czf {{ docker_backup_dir }}/docker_volumes_`date +"%Y%m%d"`.tar.gz   {{ all_docker_storage }}
+tar --exclude {{ all_docker_storage }}/logs -czf {{ docker_backup_dir }}/{{ ansible_hostname }}_volumes_`date +"%Y%m%d"`.tar.gz   {{ all_docker_storage }}
 {% for dir in docker_compose_dirs %}
 docker-compose -f {{ all_docker_builds }}/{{ dir }}/docker-compose.yml up -d
 {% endfor %}

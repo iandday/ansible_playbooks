@@ -5,16 +5,14 @@
 
 - name: add package repo key(s)
   apt_key:
-    url: "{{ item }}"
+    url: "https://download.docker.com/linux/ubuntu/gpg"
     state: present
-  loop: "{{ docker_repo_key }}"
   become: true
 
 - name: add package repo source(s)
   apt_repository:
-    repo: "{{ item }}"
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu noble stable"
     state: present
-  loop: "{{ docker_package_repo }}"
   become: true
 
 - name: install packages
@@ -45,22 +43,6 @@
     enabled: yes
   become: true
 
-- name: download docker compose
-  get_url:
-    url: "{{ docker_compose_url }}"
-    dest: /usr/local/bin/docker-compose
-    mode: a+x
-  become: true
-
-- name: symlink docker compose
-  file:
-    src: /usr/local/bin/docker-compose
-    dest: /usr/bin/docker-compose
-    state: link
-    owner: "{{ docker_user }}"
-    group: "{{ docker_gid }}"
-  become: true
-
 - name: create docker networks
   docker_network:
     name: "{{ item }}"
@@ -78,17 +60,6 @@
   with_items:
     - "{{ all_docker_builds }}"
     - "{{ all_docker_storage }}"
-
-- name: install systemd file
-  template:
-    src: docker-compose@.service.j2
-    dest: /etc/systemd/system/docker-compose@.service
-  become: true
-
-- name: Reload docker-compose@.service
-  ansible.builtin.systemd:
-    daemon_reload: yes
-  become: true
 
 - name: mount backup share
   include_role:
@@ -118,7 +89,7 @@
     dest: /usr/local/bin/backup_docker_volumes.sh
     mode: "a+x"
   become: true
-  when: "'docker-01' in inventory_hostname"
+  when: "'docker-infra-01' in inventory_hostname"
 
 - name: copy backup script
   template:
