@@ -15,7 +15,7 @@ services:
     restart: always
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
