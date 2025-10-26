@@ -29,7 +29,7 @@
     reboot: yes
     state: present
     timeout: 900
-  when: kvm_check | length == 0
+  when: kvm_check.proxmox_vms | length == 0
   delegate_to: localhost
   register: kvm_create
 

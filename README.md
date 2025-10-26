@@ -4,21 +4,21 @@ Ansible playbooks for production and lab virtual machines. All plays utilize a U
 
 ## Plays
 
-### deploy_docker.yml
+### deploy_docker_infra.yml
 
-Clone Ubuntu 20.04 LTS KVM template, install Docker and Docker-Compose to run the following services
+* Portainer
+* Traefik
+* Traefik Certs Dumper
+* Dashy
+* Vaultwarden
+* SMTP Relay
+* Snappass
+* Authentik
+* SMTP Relay
 
-- Portainer
-- Traefik
-- Dashy
-- Bitwarden
-- Duo Auth Proxy
-- SMTP Relay
-- Watchtower
-- Snappass
-- GoDaddy DNS Updater
-- Netflow Collector
-- [Taiga](https://docs.taiga.io/)
+---
+
+
 
 ---
 
@@ -56,22 +56,24 @@ Requirements
 
 ```console
 #customize image
-wget https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --update
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --install qemu-guest-agent
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --run-command 'useradd --shell /bin/bash ansible'
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --run-command 'mkdir -p /home/ansible/.ssh'
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --ssh-inject ansible:file:/root/id_ed25519.pub
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --run-command 'chown -R ansible:ansible /home/ansible'
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --upload /root/ansible:/etc/sudoers.d/ansible
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --run-command 'chmod 0440 /etc/sudoers.d/ansible'
-virt-customize -a ubuntu-24.04-server-cloudimg-amd64.img --run-command 'chown root:root /etc/sudoers.d/ansible'
+wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img -O os.img
+apt update -y && apt install libguestfs-tools net-tools -y
+virt-customize -a os.img --install qemu-guest-agent
+virt-customize -a os.img --run-command 'useradd --shell /bin/bash ansible'
+virt-customize -a os.img --run-command 'usermod --password $(echo ansible | openssl passwd -1 -stdin) ansible'
+virt-customize -a os.img --run-command 'mkdir -p /home/ansible/.ssh'
+virt-customize -a os.img --ssh-inject ansible:file:/root/id_ed25519.pub
+virt-customize -a os.img --run-command 'chown -R ansible:ansible /home/ansible'
+virt-customize -a os.img --upload ansible:/etc/sudoers.d/ansible
+virt-customize -a os.img --run-command 'chmod 0440 /etc/sudoers.d/ansible'
+virt-customize -a os.img --run-command 'chown root:root /etc/sudoers.d/ansible'
 
 #create template
 qm create 9000 --name "ubuntu-2404-cloudinit-template" --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
-qm set 9000 --scsi0 iso:0,import-from=/root/ubuntu-24.04-server-cloudimg-amd64.img
+qm importdisk 9000 os.img local-lvm
+qm set 9000 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-9000-disk-0
 qm set 9000 --boot c --bootdisk scsi0
-qm set 9000 --ide2 iso:cloudinit
+qm set 9000 --ide2 local-lvm:cloudinit
 qm set 9000 --serial0 socket --vga serial0
 qm set 9000 --agent enabled=1
 qm template 9000

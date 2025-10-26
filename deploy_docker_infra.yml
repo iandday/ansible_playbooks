@@ -1,0 +1,19 @@
+---
+#
+#  Docker KVM: utility containers
+#
+
+- name: Deploy and configure KVM
+  hosts: docker_infra
+  gather_facts: false
+  pre_tasks:
+    - name: create kvm
+      include_role:
+        name: common
+        tasks_from: create_kvm.yml
+    - name: gather KVM facts
+      gather_facts:
+  roles:
+    - docker
+    - docker_utility
+    - docker_minio

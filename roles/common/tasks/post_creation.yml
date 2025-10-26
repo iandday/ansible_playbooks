@@ -8,23 +8,18 @@
 - name: disable root password
   user:
     name: root
-    password: '!'
+    password: "!"
   become: true
 
 - name: set timezone
   timezone:
-    name: '{{ all_system_timezone }}'
+    name: "{{ all_system_timezone }}"
   become: true
 
 - name: Install apt packages
   apt:
     update_cache: yes
-    name: '{{ common_apt_poackages }}'
-  become: true
-
-- name: Install pip pakcages
-  pip:
-    name: '{{ common_pip_packages }}'
+    name: "{{ common_apt_poackages }}"
   become: true
 
 - name: update packages
