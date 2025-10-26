@@ -5,13 +5,13 @@
 
 docker_utility_required_vars:
   - docker_utility_trafik_dashboard_auth
-  - docker_utility_duo_svc_username
-  - docker_utility_duo_svc_pass
-  - docker_utility_duo_svc_dn
-  - docker_utility_duo_utm_group
-  - docker_utility_duo_utm_ikey
-  - docker_utility_duo_utm_skey
-  - docker_utility_duo_utm_api
+  #- docker_utility_duo_svc_username
+  #- docker_utility_duo_svc_pass
+  #- docker_utility_duo_svc_dn
+  #- docker_utility_duo_utm_group
+  #- docker_utility_duo_utm_ikey
+  #- docker_utility_duo_utm_skey
+  #- docker_utility_duo_utm_api
   - docker_utility_bitwarden_admin_token
   - docker_utility_bitwarden_duo_ikey
   - docker_utility_bitwarden_duo_skey
@@ -24,5 +24,5 @@ docker_utility_required_vars:
   - docker_utility_mail_networks
   - docker_uid
   - docker_gid
-docker_utility_docker_builds: '{{ all_docker_builds }}'
-docker_utility_docker_storage: '{{ all_docker_storage }}'
+docker_utility_docker_builds: "{{ all_docker_builds }}"
+docker_utility_docker_storage: "{{ all_docker_storage }}"

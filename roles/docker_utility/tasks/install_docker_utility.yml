@@ -3,11 +3,18 @@
 # roles/docker_utility/tasks/main.yml
 #
 
-- name: create compose directory
-  file:
-    path: "{{ docker_utility_docker_builds }}/utility"
-    state: directory
+- name: create required directories
   become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+  with_items:
+    - "{{ docker_utility_docker_builds }}/utility"
+    - "{{ docker_utility_docker_storage }}/duo"
+    - "{{ docker_utility_docker_storage }}/traefik"
+    - "{{ docker_utility_docker_storage }}/logs"
 
 - name: copy compose files
   template:
@@ -53,9 +60,18 @@
     group: "{{ docker_gid }}"
     mode: 0600
   become: true
-# - name: start utility stack
-#   ansible.builtin.systemd:
-#     name: docker-compose@utility
-#     state: started
-#     enabled: yes
-#   become: true
+
+- name: Ensure logrotate is installed
+  become: true
+  ansible.builtin.package:
+    name: logrotate
+    state: present
+
+- name: Set up logrotate for custom application logs
+  become: true
+  ansible.builtin.template:
+    src: traefik_rotate.j2
+    dest: /etc/logrotate.d/traefik
+    owner: root
+    group: root
+    mode: "0644"

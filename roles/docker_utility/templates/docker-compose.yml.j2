@@ -226,34 +226,34 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --schedule "0 0 4 * * *" --cleanup
-  duo_auth:
-    container_name: duo_auth
-    restart: always
-    image: jumanjiman/duoauthproxy:latest
-    volumes:
-      - {{ all_docker_storage }}/duo:/opt/duoauthproxy/conf/
-      - {{ all_docker_storage }}/logs/duo:/opt/duoauthproxy/log/
-    ports:
-      - "1812:1812"
-      - "18120:18120"
-    user: "{{ docker_uid }}"
-    networks:
-      - traefik_proxy
-  which_plates:
-    container_name: which_plates
-    restart: always
-    image:  ghcr.io/iandday/whichplates_api:latest
-    networks:
-      - traefik_proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whichplates-secure.entrypoints=web-secure"
-      - "traefik.http.routers.whichplates-secure.rule=Host(`whichplates.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.whichplates-secure.tls=true"
-      - "traefik.http.routers.whichplates-secure.tls.certresolver=route53"
-      - "traefik.http.routers.whichplates-secure.tls.domains[0].main={{ all_ext_domain }}"
-      - "traefik.http.routers.whichplates-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.whichplates-secure.loadbalancer.server.port=80"
+  #duo_auth:
+  #  container_name: duo_auth
+  #  restart: always
+  #  image: jumanjiman/duoauthproxy:latest
+  #  volumes:
+  #    - {{ all_docker_storage }}/duo:/opt/duoauthproxy/conf/
+  #    - {{ all_docker_storage }}/logs/duo:/opt/duoauthproxy/log/
+  #  ports:
+  #    - "1812:1812"
+  #    - "18120:18120"
+  #  user: "{{ docker_uid }}"
+  #  networks:
+  #    - traefik_proxy
+  #which_plates:
+  #  container_name: which_plates
+  #  restart: always
+  #  image:  ghcr.io/iandday/whichplates_api:latest
+  #  networks:
+  #    - traefik_proxy
+  #  labels:
+  #    - "traefik.enable=true"
+  #    - "traefik.http.routers.whichplates-secure.entrypoints=web-secure"
+  #    - "traefik.http.routers.whichplates-secure.rule=Host(`whichplates.{{ all_ext_domain }}`)"
+  #    - "traefik.http.routers.whichplates-secure.tls=true"
+  #    - "traefik.http.routers.whichplates-secure.tls.certresolver=route53"
+  #    - "traefik.http.routers.whichplates-secure.tls.domains[0].main={{ all_ext_domain }}"
+  #    - "traefik.http.routers.whichplates-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+  #    - "traefik.http.services.whichplates-secure.loadbalancer.server.port=80"
   bitwarden:
     hostname: bitwarden
     image: vaultwarden/server:latest
@@ -343,8 +343,8 @@ services:
       - {{ all_docker_storage }}/traefik:/data
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
 

@@ -7,21 +7,5 @@ log_dir=/opt/duoauthproxy/log
 log_file: true
 log_auth_events=true
 
-# UTM/VPN Auth Source
-[ad_client]
-host={{ all_domain_controller }}
-service_account_username={{ docker_utility_duo_svc_username }}
-service_account_password={{ docker_utility_duo_svc_pass }}
-bind_dn={{ docker_utility_duo_svc_dn }}
-search_dn={{ all_base_dn }}
-security_group_dn={{ docker_utility_duo_utm_group }}
 
-# UTM/VPN
-[ldap_server_auto]
-ikey={{ docker_utility_duo_utm_ikey }} 
-skey={{ docker_utility_duo_utm_skey }} 
-api_host={{ docker_utility_duo_utm_api }}
-failmode=safe
-client=ad_client
-port=1812
 
