@@ -1,5 +1,4 @@
 # {{ ansible_managed }}
-version: "3.6"
 services:
   proxy:
     image: ghcr.io/iandday/plant_tracker_proxy:latest
@@ -11,6 +10,8 @@ services:
       - django
     networks:
       - traefik_proxy
+    ports:
+      - "8004:80"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.plant-secure.entrypoints=web-secure"
@@ -37,10 +38,10 @@ services:
       - DEBUG=False
       - ENABLE_REGISTRATION=True
       - MEDIA_PATH=/media
-      - ADMIN_PASSWORD={{vault_PLANTS_ADMIN_PASSWORD}}
-      - ADMIN_EMAIL={{vault_PLANTS_ADMIN_EMAIL}}
+      - ADMIN_PASSWORD={{ vault_PLANTS_ADMIN_PASSWORD }}
+      - ADMIN_EMAIL={{ vault_PLANTS_ADMIN_EMAIL }}
       - POSTGRES_USER=plants
-      - POSTGRES_PASSWORD={{vault_docker_plants_db_password}}
+      - POSTGRES_PASSWORD={{ vault_docker_plants_db_password }}
       - POSTGRES_DB=plants
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
@@ -51,7 +52,7 @@ services:
     restart: always
     environment:
       - POSTGRES_USER=plants
-      - POSTGRES_PASSWORD={{vault_docker_plants_db_password}}
+      - POSTGRES_PASSWORD={{ vault_docker_plants_db_password }}
       - POSTGRES_DB=plants
     networks:
       - traefik_proxy
@@ -61,8 +62,8 @@ services:
       - "traefik.enable=false"
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
 
