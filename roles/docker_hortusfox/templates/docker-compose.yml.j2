@@ -21,6 +21,8 @@ services:
       - {{ docker_hortusfox_docker_storage }}/hortusfox_migrate:/var/www/html/app/migrations
     networks:
       - traefik_proxy
+    ports:
+      - "8005:80"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.plants-secure.entrypoints=web-secure"
@@ -47,8 +49,8 @@ services:
       - "traefik.enable=false"
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
 
