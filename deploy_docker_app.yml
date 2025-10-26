@@ -1,0 +1,24 @@
+---
+#
+#  Docker KVM: application containers
+#
+
+- name: Deploy and configure KVM
+  hosts: docker_app
+  gather_facts: false
+  pre_tasks:
+    - name: create kvm
+      include_role:
+        name: common
+        tasks_from: create_kvm.yml
+    - name: gather KVM facts
+      gather_facts:
+  roles:
+    - docker
+    - docker_portainer_agent
+    - docker_nextcloud
+    - docker_photos
+    - docker_paperless_ngx
+    - docker_wedding
+    - docker_plants
+    - docker_hortusfox

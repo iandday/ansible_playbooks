@@ -6,6 +6,8 @@ Ansible playbooks for production and lab virtual machines. All plays utilize a U
 
 ### deploy_docker_infra.yml
 
+Clone Ubuntu 24.04 template and install docker with the following services:
+
 * Portainer
 * Traefik
 * Traefik Certs Dumper
@@ -18,6 +20,17 @@ Ansible playbooks for production and lab virtual machines. All plays utilize a U
 
 ---
 
+### deploy_docker_app.yml
+
+Clone Ubuntu 24.04 template and install docker with the following services:
+
+* Portainer Agent
+* Nextcloud
+* Photoprisim
+* Paperless NGX
+* HortusFox
+* Plants
+* Wedding
 
 
 ---

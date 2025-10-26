@@ -66,6 +66,72 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
+    nc-https:
+      rule: "Host(`nc.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: nc-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    photoprisim-https:
+      rule: "Host(`photos.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: photoprisim-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    paperless-https:
+      rule: "Host(`paperless.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: paperless-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    wedding-https:
+      rule: "Host(`wedding.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: wedding-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    plants-https:
+      rule: "Host(`plants.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: plants-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    hortusfox-https:
+      rule: "Host(`plant.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: hortusfox-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
   services:
     media-service:
       loadBalancer:
@@ -85,6 +151,36 @@ http:
         serversTransport: mytransport
         servers:
           - url: https://10.168.1.206:8971
+    nc-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8000
+    photoprisim-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8001
+    paperless-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8002
+    wedding-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8003
+    plants-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8004
+    hortusfox-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8005
   serversTransports:
     mytransport:
       insecureSkipVerify: true

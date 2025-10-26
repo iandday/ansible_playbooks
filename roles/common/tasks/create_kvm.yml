@@ -46,10 +46,9 @@
     api_password: "{{ all_pve_api_password }}"
     api_host: "{{ all_pve_api_host }}"
     name: "{{ inventory_hostname }}"
-    cores: '{{ kvm_cores | default("1") }}'
-    memory: '{{ kvm_memory | default("1024") }}'
-    ipconfig:
-      ipconfig0: "ip={{ ansible_host }}/24,gw={{ all_gateway }}"
+    cores: "{{ kvm_cores }}"
+    memory: "{{ kvm_memory }}"
+    net: "{{ kvm_net }}"
     node: "{{ kvm_node }}"
     update: yes
     agent: yes
