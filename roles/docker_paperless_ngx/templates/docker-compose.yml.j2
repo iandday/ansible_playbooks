@@ -14,6 +14,8 @@ services:
       - postgres
       - gotenberg
       - tika
+    ports:
+      - "8002:8000"
     volumes:
       - {{ docker_paperless_docker_storage }}/paperless_data:/usr/src/paperless/data # Docker container data
       - {{ docker_paperless_docker_storage }}/paperless_media:/usr/src/paperless/media # Location of your documents
@@ -94,7 +96,7 @@ services:
       - default
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
