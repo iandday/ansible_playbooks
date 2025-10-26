@@ -1,6 +1,5 @@
 # {{ ansible_managed }}
 
-version: "3.6"
 services:
   photoprism:
     image: photoprism/photoprism:latest
@@ -10,6 +9,8 @@ services:
     security_opt:
       - seccomp:unconfined
       - apparmor:unconfined
+    ports:
+      - "8001:2342"
     environment:
       - PHOTOPRISM_ADMIN_PASSWORD={{ docker_photos_admin_password }}
       - PHOTOPRISM_SITE_URL=https://photos.{{ all_ext_domain }}
@@ -27,10 +28,6 @@ services:
       - PHOTOPRISM_UID={{ docker_uid }}
       - PHOTOPRISM_GID={{ docker_gid }}
       - HOME=/photoprism
-    # devices:
-    #  - "/dev/video11:/dev/video11" # Video4Linux (h264_v4l2m2m)
-    #  - "/dev/dri/renderD128:/dev/dri/renderD128" # Intel GPU
-    #  - "/dev/dri/card0:/dev/dri/card0"
     working_dir: "/photoprism"
     volumes:
       - {{ docker_photos_originals_path }}:/photoprism/originals
@@ -64,7 +61,7 @@ services:
       - "traefik.enable=false"
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
