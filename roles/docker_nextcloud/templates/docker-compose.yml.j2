@@ -49,6 +49,8 @@ services:
       - traefik_proxy
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z,ro
+    ports:
+      - "8000:80"
     depends_on:
       - nc-app
     labels:
@@ -95,7 +97,7 @@ services:
       - nc-redis
 networks:
   traefik_proxy:
-    external:
       name: traefik_proxy
+      external: true
   default:
     driver: bridge
