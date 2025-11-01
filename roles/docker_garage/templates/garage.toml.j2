@@ -8,17 +8,17 @@ replication_factor = 3
 compression_level = 2
 
 rpc_bind_addr = "[::]:3901"
-rpc_public_addr = "{{ ansible_host }}:3901"
+rpc_public_addr_subnet = "172.20.0.0/16"
 rpc_secret = "{{ vault_docker_garage_rpc_secret }}"
 
 [s3_api]
 s3_region = "garage"
 api_bind_addr = "[::]:3900"
-root_domain = ".s3.garage"
+root_domain = ".garage-admin.ianday.me"
 
 [s3_web]
 bind_addr = "[::]:3902"
-root_domain = ".web.garage"
+root_domain = ".garage-static.ianday.me"
 index = "index.html"
 
 [admin]

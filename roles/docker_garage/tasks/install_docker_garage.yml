@@ -42,3 +42,14 @@
     owner: "{{ docker_uid }}"
     group: "{{ docker_gid }}"
     mode: 0600
+
+- name: create docker network with custom subnet
+  become: true
+  docker_network:
+    name: garage
+    driver: bridge
+    ipam_config:
+      - subnet: 172.20.0.0/16
+        gateway: 172.20.0.1
+        iprange: 172.20.0.0/24
+    state: present
