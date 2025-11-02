@@ -152,7 +152,7 @@ services:
     image: nginx:latest
     container_name: wedding-nginx
     volumes:
-      - {{ docker_wedding_docker_storage }}/wedding_nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - {{ docker_wedding_docker_storage }}/wedding_nginx/default.conf:/etc/nginx/templates/default.conf.template
     networks:
       - traefik_proxy
     ports:
