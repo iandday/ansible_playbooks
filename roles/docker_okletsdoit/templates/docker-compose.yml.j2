@@ -1,0 +1,187 @@
+# {{ ansible_managed }}
+
+services:
+  okletsdoit-postgres:
+    image: postgres:17.4
+    container_name: okletsdoit-postgres
+    volumes:
+      - {{ docker_okletsdoit_docker_storage }}/okletsdoit_db:/var/lib/postgresql/data
+    networks:
+      - traefik_proxy
+    environment:
+      - POSTGRES_USER={{ vault_docker_okletsdoit_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_okletsdoit_db_password }}
+      - POSTGRES_DB=wedding
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ vault_docker_okletsdoit_db_username }}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+  okletsdoit-redis:
+    image: redis:7.0
+    container_name: okletsdoit-redis
+    command: [ "redis-server", "--save", "60", "1", "--loglevel", "warning" ]
+    volumes:
+      - {{ docker_okletsdoit_docker_storage }}/okletsdoit_redis:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+  okletsdoit-app:
+    image: ghcr.io/iandday/okletsdoit:latest
+    container_name: okletsdoit-app
+    restart: always
+    environment:
+      - POSTGRES_USER={{ vault_docker_okletsdoit_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_okletsdoit_db_password }}
+      - POSTGRES_DB=wedding
+      - POSTGRES_HOST=okletsdoit-postgres
+      - POSTGRES_PORT=5432
+      - SECRET_KEY={{ vault_docker_okletsdoit_secret_key }}
+      - DEBUG=False
+      - DJANGO_LOG_LEVEL=INFO
+      - ALLOWED_HOSTS={{ vault_docker_okletsdoit_allowed_hosts }}
+      - TIMEZONE=America/New_York
+      - DJANGO_SUPERUSER_EMAIL={{ vault_docker_okletsdoit_admin_email }}
+      - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_okletsdoit_admin_password }}
+      - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
+      - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
+      - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_okletsdoit_csrf_trusted_origins }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_okletsdoit_aws_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_okletsdoit_aws_secret_access_key }}
+      - AWS_STATIC_BUCKET_NAME={{ vault_docker_okletsdoit_aws_static_bucket_name }}
+      - AWS_MEDIA_BUCKET_NAME={{ vault_docker_okletsdoit_aws_media_bucket_name }}
+      - AWS_S3_REGION_NAME={{ vault_docker_okletsdoit_aws_s3_region_name }}
+      - AWS_S3_ENDPOINT_URL={{ vault_docker_okletsdoit_aws_s3_endpoint_url }}
+      - AWS_S3_STATIC_DOMAIN={{ vault_docker_okletsdoit_aws_s3_static_domain }}
+      - AWS_S3_MEDIA_DOMAIN={{ vault_docker_okletsdoit_aws_s3_media_domain }}
+      - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_okletsdoit_aws_s3_static_domain_csp }}
+      - CONTAINER_ROLE=server
+      - LOCAL_DB=True
+      - LOCAL_DEV=False
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - okletsdoit-postgres
+  okletsdoit-worker:
+    image: ghcr.io/iandday/okletsdoit:latest
+    container_name: okletsdoit-worker
+    restart: always
+    environment:
+      - POSTGRES_USER={{ vault_docker_okletsdoit_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_okletsdoit_db_password }}
+      - POSTGRES_DB=wedding
+      - POSTGRES_HOST=okletsdoit-postgres
+      - POSTGRES_PORT=5432
+      - SECRET_KEY={{ vault_docker_okletsdoit_secret_key }}
+      - DEBUG=False
+      - DJANGO_LOG_LEVEL=INFO
+      - ALLOWED_HOSTS={{ vault_docker_okletsdoit_allowed_hosts }}
+      - TIMEZONE=America/New_York
+      - DJANGO_SUPERUSER_EMAIL={{ vault_docker_okletsdoit_admin_email }}
+      - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_okletsdoit_admin_password }}
+      - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
+      - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
+      - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_okletsdoit_csrf_trusted_origins }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_okletsdoit_aws_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_okletsdoit_aws_secret_access_key }}
+      - AWS_STATIC_BUCKET_NAME={{ vault_docker_okletsdoit_aws_static_bucket_name }}
+      - AWS_MEDIA_BUCKET_NAME={{ vault_docker_okletsdoit_aws_media_bucket_name }}
+      - AWS_S3_REGION_NAME={{ vault_docker_okletsdoit_aws_s3_region_name }}
+      - AWS_S3_ENDPOINT_URL={{ vault_docker_okletsdoit_aws_s3_endpoint_url }}
+      - AWS_S3_STATIC_DOMAIN={{ vault_docker_okletsdoit_aws_s3_static_domain }}
+      - AWS_S3_MEDIA_DOMAIN={{ vault_docker_okletsdoit_aws_s3_media_domain }}
+      - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_okletsdoit_aws_s3_static_domain_csp }}
+      - CONTAINER_ROLE=server
+      - LOCAL_DB=True
+      - LOCAL_DEV=False
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - okletsdoit-postgres
+  okletsdoit-beats:
+    image: ghcr.io/iandday/okletsdoit:latest
+    container_name: okletsdoit-beats
+    restart: always
+    environment:
+      - POSTGRES_USER={{ vault_docker_okletsdoit_db_username }}
+      - POSTGRES_PASSWORD={{ vault_docker_okletsdoit_db_password }}
+      - POSTGRES_DB=wedding
+      - POSTGRES_HOST=okletsdoit-postgres
+      - POSTGRES_PORT=5432
+      - SECRET_KEY={{ vault_docker_okletsdoit_secret_key }}
+      - DEBUG=False
+      - DJANGO_LOG_LEVEL=INFO
+      - ALLOWED_HOSTS={{ vault_docker_okletsdoit_allowed_hosts }}
+      - TIMEZONE=America/New_York
+      - DJANGO_SUPERUSER_EMAIL={{ vault_docker_okletsdoit_admin_email }}
+      - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_okletsdoit_admin_password }}
+      - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
+      - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
+      - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
+      - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_okletsdoit_csrf_trusted_origins }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_okletsdoit_aws_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_okletsdoit_aws_secret_access_key }}
+      - AWS_STATIC_BUCKET_NAME={{ vault_docker_okletsdoit_aws_static_bucket_name }}
+      - AWS_MEDIA_BUCKET_NAME={{ vault_docker_okletsdoit_aws_media_bucket_name }}
+      - AWS_S3_REGION_NAME={{ vault_docker_okletsdoit_aws_s3_region_name }}
+      - AWS_S3_ENDPOINT_URL={{ vault_docker_okletsdoit_aws_s3_endpoint_url }}
+      - AWS_S3_STATIC_DOMAIN={{ vault_docker_okletsdoit_aws_s3_static_domain }}
+      - AWS_S3_MEDIA_DOMAIN={{ vault_docker_okletsdoit_aws_s3_media_domain }}
+      - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_okletsdoit_aws_s3_static_domain_csp }}
+      - CONTAINER_ROLE=server
+      - LOCAL_DB=True
+      - LOCAL_DEV=False
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - okletsdoit-postgres
+  okletsdoit-nginx:
+    image: nginx:latest
+    container_name: okletsdoit-nginx
+    volumes:
+      - {{ docker_okletsdoit_docker_storage }}/okletsdoit_nginx/default.conf.template:/etc/nginx/templates/default.conf.template
+    networks:
+      - traefik_proxy
+    environment:
+      - DJANGO_HOST=okletsdoit-app
+      - DJANGO_PORT=8000
+      - NGINX_SERVER_NAME=aboutdayumtime.com
+      - NGINX_CLIENT_MAX_BODY_SIZE=100M
+    ports:
+      - "8006:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.okletsdoit-secure.entrypoints=web-secure"
+      - "traefik.http.routers.okletsdoit-secure.rule=HostRegexp(`(?:www.)aboutdayumtime.com`)"
+      - "traefik.http.routers.okletsdoit-secure.tls=true"
+      - "traefik.http.routers.okletsdoit-secure.tls.certresolver=route53"
+      - "traefik.http.routers.okletsdoit-secure.tls.domains[0].main=aboutdayumtime.com"
+      - "traefik.http.routers.okletsdoit-secure.tls.domains[0].sans=*.aboutdayumtime.com"
+      - "traefik.http.services.okletsdoit-secure.loadbalancer.server.port=80"
+    depends_on:
+      - okletsdoit-app
+
+networks:
+  traefik_proxy:
+      name: traefik_proxy
+      external: true
+  default:
+    driver: bridge

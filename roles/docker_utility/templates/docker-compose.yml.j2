@@ -1,6 +1,5 @@
 # {{ ansible_managed }}
 
-version: "3.6"
 services:
   portainer:
     image: portainer/portainer-ce
@@ -290,7 +289,7 @@ services:
 
   traefik:
     hostname: traefik
-    image: traefik:v2.10
+    image: traefik:v3.5
     container_name: traefik
     restart: always
     domainname: {{ all_ext_domain }}
@@ -305,7 +304,6 @@ services:
       - AWS_ACCESS_KEY_ID={{ vault_docker_utility_aws_id }}
       - AWS_SECRET_ACCESS_KEY={{ vault_docker_utility_aws_key }}
       - AWS_REGION=us-east-1
-      - AWS_HOSTED_ZONE_ID={{ vault_docker_utility_aws_zone_id }}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.entrypoints=web-secure"

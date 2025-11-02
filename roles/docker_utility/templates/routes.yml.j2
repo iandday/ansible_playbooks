@@ -132,6 +132,17 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
+    okletsdoit-https:
+      rule: "HostRegexp(`(?:www.)aboutdayumtime.com`)"
+      entryPoints:
+        - web-secure
+      service: okletsdoit-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "aboutdayumtime.com"
+            sans:
+              - "*.aboutdayumtime.com"
   services:
     media-service:
       loadBalancer:
@@ -181,6 +192,11 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8005
+    okletsdoit-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8006
   serversTransports:
     mytransport:
       insecureSkipVerify: true

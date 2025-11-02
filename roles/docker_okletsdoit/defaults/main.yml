@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_okletsdoit/defaults/main.yml
+#
+
+docker_okletsdoit_required_vars:
+  - docker_uid
+  - docker_gid
+docker_okletsdoit_docker_builds: "{{ all_docker_builds }}"
+docker_okletsdoit_docker_storage: "{{ all_docker_storage }}"
