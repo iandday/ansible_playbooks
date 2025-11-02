@@ -133,7 +133,7 @@ http:
             sans:
               - "*.{{ all_ext_domain }}"
     okletsdoit-https:
-      rule: "HostRegexp(`(?:www.)aboutdayumtime.com`)"
+      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`)"
       entryPoints:
         - web-secure
       service: okletsdoit-service

@@ -170,7 +170,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.okletsdoit-secure.entrypoints=web-secure"
-      - "traefik.http.routers.okletsdoit-secure.rule=HostRegexp(`(?:www.)aboutdayumtime.com`)"
+      - "traefik.http.routers.okletsdoit-secure.rule=HostRegexp(`(?:www.)?aboutdayumtime.com`)"
       - "traefik.http.routers.okletsdoit-secure.tls=true"
       - "traefik.http.routers.okletsdoit-secure.tls.certresolver=route53"
       - "traefik.http.routers.okletsdoit-secure.tls.domains[0].main=aboutdayumtime.com"
