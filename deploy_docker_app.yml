@@ -14,12 +14,12 @@
     - name: gather KVM facts
       gather_facts:
   roles:
-    - docker
-    - docker_portainer_agent
-    - docker_nextcloud
-    - docker_photos
-    - docker_paperless_ngx
+    # - docker
+    # - docker_portainer_agent
+    # - docker_nextcloud
+    # - docker_photos
+    # - docker_paperless_ngx
     - docker_wedding
-    - docker_plants
-    - docker_hortusfox
+    # - docker_plants
+    # - docker_hortusfox
     - docker_okletsdoit

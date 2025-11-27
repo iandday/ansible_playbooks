@@ -99,11 +99,23 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
-    wedding-https:
+    wedding-backend-https:
+      rule: "Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`) || PathPrefix(`/planning`) || PathPrefix(`/inspiration`) || PathPrefix(`/idea`) || PathPrefix(`/contacts`) || PathPrefix(`/lists`) || PathPrefix(`/deadline`) || PathPrefix(`/expenses`) || PathPrefix(`/guestlist`) || PathPrefix(`/timeline`) || PathPrefix(`/question`) || PathPrefix(`/settings`))"
+      priority: 35
+      entryPoints:
+        - web-secure
+      service: wedding-backend-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    wedding-frontend-https:
       rule: "Host(`wedding.{{ all_ext_domain }}`)"
       entryPoints:
         - web-secure
-      service: wedding-service
+      service: wedding-frontend-service
       tls:
         certresolver: route53
         domains:
@@ -132,11 +144,24 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
-    okletsdoit-https:
-      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`)"
+    okletsdoit-backend-https:
+      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`) && (PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`) || PathPrefix(`/planning`) || PathPrefix(`/inspiration`) || PathPrefix(`/idea`) || PathPrefix(`/contacts`) || PathPrefix(`/lists`) || PathPrefix(`/deadline`) || PathPrefix(`/expenses`) || PathPrefix(`/guestlist`) || PathPrefix(`/timeline`) || PathPrefix(`/question`) || PathPrefix(`/settings`))"
+      priority: 35
       entryPoints:
         - web-secure
-      service: okletsdoit-service
+      service: okletsdoit-backend-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "aboutdayumtime.com"
+            sans:
+              - "*.aboutdayumtime.com"
+    okletsdoit-frontend-https:
+      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`)"
+      priority: 10
+      entryPoints:
+        - web-secure
+      service: okletsdoit-frontend-service
       tls:
         certresolver: route53
         domains:
@@ -177,11 +202,16 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8002
-    wedding-service:
+    wedding-backend-service:
       loadBalancer:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8003
+    wedding-frontend-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8007
     plants-service:
       loadBalancer:
         serversTransport: mytransport
@@ -192,11 +222,16 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8005
-    okletsdoit-service:
+    okletsdoit-backend-service:
       loadBalancer:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8006
+    okletsdoit-frontend-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8008
   serversTransports:
     mytransport:
       insecureSkipVerify: true

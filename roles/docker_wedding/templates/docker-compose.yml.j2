@@ -31,6 +31,14 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+  wedding-frontend:
+    image: ghcr.io/iandday/okletsdoit_web:develop
+    container_name: wedding-frontend
+    restart: always
+    environment:
+      - PUBLIC_API_URL=https://wedding.{{ all_ext_domain }}
+    ports:
+      - "8007:3000"
   wedding-app:
     image: ghcr.io/iandday/okletsdoit:develop
     container_name: wedding-app
@@ -64,6 +72,8 @@ services:
       - CONTAINER_ROLE=server
       - LOCAL_DEV=True
       - REDIS_URL=redis://redis:6379
+    ports:
+      - "8003:8000"
     networks:
       - traefik_proxy
     labels:
@@ -148,32 +158,7 @@ services:
       - "traefik.enable=false"
     depends_on:
       - wedding-postgres
-  wedding-nginx:
-    image: nginx:latest
-    container_name: wedding-nginx
-    volumes:
-      - {{ docker_wedding_docker_storage }}/wedding_nginx/default.conf:/etc/nginx/templates/default.conf.template
-    networks:
-      - traefik_proxy
-    ports:
-      - "8003:80"
-    environment:
-      - DJANGO_HOST=wedding-app
-      - DJANGO_PORT=8000
-      - NGINX_SERVER_NAME=wedding.{{ all_ext_domain }}
-      - NGINX_CLIENT_MAX_BODY_SIZE=100M
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_proxy"
-      - "traefik.http.routers.wedding-secure.entrypoints=web-secure"
-      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.wedding-secure.tls=true"
-      - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
-      - "traefik.http.routers.wedding-secure.tls.domains[0].main={{ all_ext_domain }}"
-      - "traefik.http.routers.wedding-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.wedding-secure.loadbalancer.server.port=80"
-    depends_on:
-      - wedding-app
+
 
 networks:
   traefik_proxy:

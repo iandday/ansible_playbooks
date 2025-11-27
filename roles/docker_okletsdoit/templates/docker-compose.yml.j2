@@ -32,6 +32,14 @@ services:
       timeout: 10s
       retries: 5
     restart: unless-stopped
+  okletsdoit-frontend:
+    image: ghcr.io/iandday/okletsdoit_web:latest
+    container_name: okletsdoit-frontend
+    restart: always
+    environment:
+      - PUBLIC_API_URL=https://aboutdayumtime.com
+    ports:
+      - "8008:3000"
   okletsdoit-app:
     image: ghcr.io/iandday/okletsdoit:latest
     container_name: okletsdoit-app
@@ -66,6 +74,8 @@ services:
       - LOCAL_DB=True
       - LOCAL_DEV=False
       - REDIS_URL=redis://redis:6379
+    ports:
+      - "8006:8000"
     networks:
       - traefik_proxy
     labels:
@@ -152,32 +162,7 @@ services:
       - "traefik.enable=false"
     depends_on:
       - okletsdoit-postgres
-  okletsdoit-nginx:
-    image: nginx:latest
-    container_name: okletsdoit-nginx
-    volumes:
-      - {{ docker_okletsdoit_docker_storage }}/okletsdoit_nginx/default.conf.template:/etc/nginx/templates/default.conf.template
-    networks:
-      - traefik_proxy
-    environment:
-      - DJANGO_HOST=okletsdoit-app
-      - DJANGO_PORT=8000
-      - NGINX_SERVER_NAME=aboutdayumtime.com
-      - NGINX_CLIENT_MAX_BODY_SIZE=100M
-    ports:
-      - "8006:80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_proxy"
-      - "traefik.http.routers.okletsdoit-secure.entrypoints=web-secure"
-      - "traefik.http.routers.okletsdoit-secure.rule=HostRegexp(`(?:www.)?aboutdayumtime.com`)"
-      - "traefik.http.routers.okletsdoit-secure.tls=true"
-      - "traefik.http.routers.okletsdoit-secure.tls.certresolver=route53"
-      - "traefik.http.routers.okletsdoit-secure.tls.domains[0].main=aboutdayumtime.com"
-      - "traefik.http.routers.okletsdoit-secure.tls.domains[0].sans=*.aboutdayumtime.com"
-      - "traefik.http.services.okletsdoit-secure.loadbalancer.server.port=80"
-    depends_on:
-      - okletsdoit-app
+  
 
 networks:
   traefik_proxy:
