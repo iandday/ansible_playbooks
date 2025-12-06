@@ -1,0 +1,135 @@
+# {{ ansible_managed }}
+
+
+
+services:
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:{{ docker_immich_version }}
+    volumes:
+      - {{ docker_immich_docker_storage }}/immich_data:/data
+      - {{ docker_immich_originals_path }}/ian:/mnt/photos/ian
+      - {{ docker_immich_originals_path }}/steph:/mnt/photos/steph
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - DB_USERNAME={{ vault_docker_immich_postgres_user }}
+      - DB_PASSWORD={{ vault_docker_immich_postgres_password }}
+      - DB_DATABASE_NAME={{ docker_immich_db_name }}
+      - DB_HOSTNAME=immich_postgres
+      - TZ=America/New_York
+      - REDIS_HOSTNAME=immich_redis
+    ports:
+      - '8009:2283'
+    networks:
+      traefik_proxy: {}
+      immich:
+        ipv4_address: 172.24.0.13
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - redis
+      - database
+    restart: always
+    healthcheck:
+      disable: false
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:{{ docker_immich_version }}
+    volumes:
+      - model-cache:/cache
+    environment:
+      - DB_USERNAME={{ vault_docker_immich_postgres_user }}
+      - DB_PASSWORD={{ vault_docker_immich_postgres_password }}
+      - DB_DATABASE_NAME={{ docker_immich_db_name }}
+      - DB_HOSTNAME=immich_postgres
+      - TZ=America/New_York
+      - REDIS_HOSTNAME=immich_redis
+    depends_on:
+      - database
+    restart: always
+    healthcheck:
+      disable: false
+    networks:
+      immich:
+        ipv4_address: 172.24.0.12
+    labels:
+      - "traefik.enable=false"
+
+  redis:
+    container_name: immich_redis
+    image: docker.io/valkey/valkey:8
+    healthcheck:
+      test: redis-cli ping || exit 1
+    restart: always
+    networks:
+      immich:
+        ipv4_address: 172.24.0.11
+    labels:
+      - "traefik.enable=false"
+
+  database:
+    container_name: immich_postgres
+    image: ghcr.io/immich-app/postgres:18-vectorchord0.5.3
+    environment:
+      - POSTGRES_PASSWORD={{ vault_docker_immich_postgres_password }}
+      - POSTGRES_USER={{ vault_docker_immich_postgres_user }}
+      - POSTGRES_DB={{ docker_immich_db_name }}
+      - POSTGRES_INITDB_ARGS=--data-checksums
+    volumes:
+      - {{ docker_immich_docker_storage }}/immich_db:/var/lib/postgresql
+    shm_size: 128mb
+    restart: always
+    networks:
+      immich:
+        ipv4_address: 172.24.0.10
+    labels:
+      - "traefik.enable=false"
+
+  immich-folder-album-creator:
+    container_name: immich_folder_album_creator
+    image: salvoxia/immich-folder-album-creator:latest
+    restart: unless-stopped
+    networks:
+      traefik_proxy: {}
+      immich:
+        ipv4_address: 172.24.0.15
+    volumes:
+      - {{ docker_immich_originals_path }}/ian:/mnt/photos/ian
+      - {{ docker_immich_originals_path }}/steph:/mnt/photos/steph
+    environment:
+      - API_URL=http://172.24.0.13:2283/api
+      - API_KEY={{ vault_docker_immich_album_creator_api_ian }}:{{ vault_docker_immich_album_creator_api_steph }}
+      - ROOT_PATH=/mnt/photos/ian
+      - CRON_EXPRESSION=0 * * * *
+      - TZ=America/New_York
+      - RUN_IMMEDIATELY=true
+      - LOG_LEVEL=DEBUG
+
+  immichframe:
+    container_name: immichframe
+    image: ghcr.io/immichframe/immichframe:latest
+    restart: on-failure
+    ports:
+      - '8010:8080'
+    networks:
+      traefik_proxy: {}
+      immich:
+        ipv4_address: 172.24.0.14
+    environment:
+      - TZ=America/New_York
+      - ImmichServerUrl=http://172.24.0.13:2283
+      - ApiKey={{ vault_docker_immichframe_api_key }}
+      - Albums=5cb6dc81-a456-4a11-9839-e4f14c9919cc
+      - Layout=single
+      - ShowAlbumName=false
+volumes:
+  model-cache:
+
+networks:
+  immich:
+    external: true
+    name: immich
+  traefik_proxy:
+    external: true
+    name: traefik_proxy

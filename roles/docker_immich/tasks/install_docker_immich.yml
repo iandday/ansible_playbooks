@@ -1,0 +1,49 @@
+---
+#
+# roles/docker_immich/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_immich_docker_builds }}/immich"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_immich_docker_builds }}/immich/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: create docker network with custom subnet
+  become: true
+  docker_network:
+    name: immich
+    driver: bridge
+    ipam_config:
+      - subnet: 172.24.0.0/16
+        gateway: 172.24.0.1
+        iprange: 172.24.0.0/24
+    state: present
+
+- name: mount photo
+  include_role:
+    name: common
+    tasks_from: mount_share
+  vars:
+    mount_src: "{{ docker_immich_originals_nas }}"
+    mount_dest: "{{ docker_immich_originals_path }}"
+    mount_username: "{{ docker_backup_username }}"
+    mount_password: "{{ docker_backup_password }}"
+    mount_uid: "{{ docker_uid }}"
+    mount_gid: "{{ docker_gid }}"
+    mount_options: ",file_mode=0700,dir_mode=0700,nounix"

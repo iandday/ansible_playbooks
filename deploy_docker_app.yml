@@ -17,9 +17,9 @@
     # - docker
     # - docker_portainer_agent
     # - docker_nextcloud
-    # - docker_photos
     # - docker_paperless_ngx
     - docker_wedding
     # - docker_plants
     # - docker_hortusfox
     - docker_okletsdoit
+    - docker_immich

@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_immich/defaults/main.yml
+#
+
+docker_immich_required_vars:
+  - docker_uid
+  - docker_gid
+docker_immich_docker_builds: "{{ all_docker_builds }}"
+docker_immich_docker_storage: "{{ all_docker_storage }}"

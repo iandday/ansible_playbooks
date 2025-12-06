@@ -77,17 +77,17 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
-    photoprisim-https:
-      rule: "Host(`photos.{{ all_ext_domain }}`)"
-      entryPoints:
-        - web-secure
-      service: photoprisim-service
-      tls:
-        certresolver: route53
-        domains:
-          - main: "{{ all_ext_domain }}"
-            sans:
-              - "*.{{ all_ext_domain }}"
+#    photoprisim-https:
+#      rule: "Host(`photos.{{ all_ext_domain }}`)"
+#      entryPoints:
+#        - web-secure
+#      service: photoprisim-service
+#      tls:
+#        certresolver: route53
+#        domains:
+#          - main: "{{ all_ext_domain }}"
+#            sans:
+#              - "*.{{ all_ext_domain }}"
     paperless-https:
       rule: "Host(`paperless.{{ all_ext_domain }}`)"
       entryPoints:
@@ -168,6 +168,28 @@ http:
           - main: "aboutdayumtime.com"
             sans:
               - "*.aboutdayumtime.com"
+    immich-https:
+      rule: "Host(`photos.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: immich-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
+    immichframe-https:
+      rule: "Host(`immichframe.{{ all_ext_domain }}`)"
+      entryPoints:
+        - web-secure
+      service: immichframe-service
+      tls:
+        certresolver: route53
+        domains:
+          - main: "{{ all_ext_domain }}"
+            sans:
+              - "*.{{ all_ext_domain }}"
   services:
     media-service:
       loadBalancer:
@@ -192,16 +214,11 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8000
-    photoprisim-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.7:8001
-    paperless-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.7:8002
+#    paperless-service:
+#      loadBalancer:
+#       serversTransport: mytransport
+#        servers:
+#          - url: http://10.168.1.7:8002
     wedding-backend-service:
       loadBalancer:
         serversTransport: mytransport
@@ -232,6 +249,16 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8008
+    immich-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8009
+    immichframe-service:
+      loadBalancer:
+        serversTransport: mytransport
+        servers:
+          - url: http://10.168.1.7:8010
   serversTransports:
     mytransport:
       insecureSkipVerify: true
