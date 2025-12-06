@@ -82,7 +82,7 @@ services:
       - "traefik.enable=false"
   authentik_server:
     container_name: authentik_server
-    image: ghcr.io/goauthentik/server:2025.6.3
+    image: ghcr.io/goauthentik/server:2025.10.2
     restart: unless-stopped
     command: server
     environment:
@@ -129,7 +129,7 @@ services:
       - authentik_redis
   authentik_worker:
     container_name: authentik_worker
-    image: ghcr.io/goauthentik/server:2025.6.3
+    image: ghcr.io/goauthentik/server:2025.10.2
     restart: unless-stopped
     command: worker
     environment:
