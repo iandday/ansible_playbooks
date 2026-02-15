@@ -13,6 +13,11 @@ entryPoints:
           scheme: https
   web-secure:
     address: ":443"
+    transport:
+      respondingTimeouts:
+        readTimeout: 680s
+        idleTimeout: 180s
+        writeTimeout: 680s
 certificatesResolvers:
   route53:
     acme:

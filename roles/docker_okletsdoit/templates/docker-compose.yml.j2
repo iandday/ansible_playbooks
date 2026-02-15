@@ -33,15 +33,21 @@ services:
       retries: 5
     restart: unless-stopped
   okletsdoit-frontend:
-    image: ghcr.io/iandday/okletsdoit_web:latest
+    image: ghcr.io/iandday/okletsdoit-frontend:latest
     container_name: okletsdoit-frontend
     restart: always
     environment:
-      - PUBLIC_API_URL=https://aboutdayumtime.com
+      - BACKEND_API_URL=http://okletsdoit-app:8000
+      - PUBLIC_CLIENT_API_URL=https://aboutdayumtime.com
+      - SERVICE_TOKEN={{ vault_docker_okletsdoit_api_backend_token }}
+      - VITE_ALLOWED_HOSTS=aboutdayumtime.com
+      - BODY_SIZE_LIMIT=1G  
     ports:
       - "8008:3000"
+    networks:
+      - traefik_proxy
   okletsdoit-app:
-    image: ghcr.io/iandday/okletsdoit:latest
+    image: ghcr.io/iandday/okletsdoit-backend:latest
     container_name: okletsdoit-app
     restart: always
     environment:
@@ -75,6 +81,16 @@ services:
       - LOCAL_DB=True
       - LOCAL_DEV=False
       - REDIS_URL=redis://redis:6379
+      - SERVICE_TOKEN={{ vault_docker_okletsdoit_api_backend_token }}
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
+      - EMAIL_USE_TLS=True
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER={{ vault_docker_utility_authentik_email_username }}
+      - EMAIL_HOST_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - EMAIL_URL_BASE=https://aboutdayumtime.com
+      - PERSONALIZED_RSVP_BASE_URL=https://aboutdayumtime.com
+      - RSVP_URL=https://aboutdayumtime.com/rsvp
     ports:
       - "8006:8000"
     networks:
@@ -84,7 +100,7 @@ services:
     depends_on:
       - okletsdoit-postgres
   okletsdoit-worker:
-    image: ghcr.io/iandday/okletsdoit:latest
+    image: ghcr.io/iandday/okletsdoit-backend:latest
     container_name: okletsdoit-worker
     restart: always
     environment:
@@ -117,6 +133,16 @@ services:
       - LOCAL_DB=True
       - LOCAL_DEV=False
       - REDIS_URL=redis://redis:6379
+      - SERVICE_TOKEN={{ vault_docker_okletsdoit_api_backend_token }}
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
+      - EMAIL_USE_TLS=True
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER={{ vault_docker_utility_authentik_email_username }}
+      - EMAIL_HOST_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - EMAIL_URL_BASE=https://aboutdayumtime.com
+      - PERSONALIZED_RSVP_BASE_URL=https://aboutdayumtime.com
+      - RSVP_URL=https://aboutdayumtime.com/rsvp
     networks:
       - traefik_proxy
     labels:
@@ -124,7 +150,7 @@ services:
     depends_on:
       - okletsdoit-postgres
   okletsdoit-beats:
-    image: ghcr.io/iandday/okletsdoit:latest
+    image: ghcr.io/iandday/okletsdoit-backend:latest
     container_name: okletsdoit-beats
     restart: always
     environment:
@@ -157,6 +183,16 @@ services:
       - LOCAL_DB=True
       - LOCAL_DEV=False
       - REDIS_URL=redis://redis:6379
+      - SERVICE_TOKEN={{ vault_docker_okletsdoit_api_backend_token }}
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
+      - EMAIL_USE_TLS=True
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER={{ vault_docker_utility_authentik_email_username }}
+      - EMAIL_HOST_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - EMAIL_URL_BASE=https://aboutdayumtime.com
+      - PERSONALIZED_RSVP_BASE_URL=https://aboutdayumtime.com
+      - RSVP_URL=https://aboutdayumtime.com/rsvp
     networks:
       - traefik_proxy
     labels:
@@ -164,7 +200,6 @@ services:
     depends_on:
       - okletsdoit-postgres
   
-
 networks:
   traefik_proxy:
       name: traefik_proxy

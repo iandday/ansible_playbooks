@@ -105,24 +105,38 @@ services:
       - TZ=America/New_York
       - RUN_IMMEDIATELY=true
       - LOG_LEVEL=DEBUG
-
-  immichframe:
-    container_name: immichframe
-    image: ghcr.io/immichframe/immichframe:latest
+  immich-kiosk:
+    container_name: immich-kiosk
+    image: ghcr.io/damongolding/immich-kiosk:latest
     restart: on-failure
     ports:
-      - '8010:8080'
+      - '8010:3000'
     networks:
       traefik_proxy: {}
       immich:
         ipv4_address: 172.24.0.14
     environment:
-      - TZ=America/New_York
-      - ImmichServerUrl=http://172.24.0.13:2283
-      - ApiKey={{ vault_docker_immichframe_api_key }}
-      - Albums=5cb6dc81-a456-4a11-9839-e4f14c9919cc
-      - Layout=single
-      - ShowAlbumName=false
+      - KIOSK_IMMICH_API_KEY={{ vault_docker_immichframe_api_key }}
+      - KIOSK_IMMICH_URL=http://172.24.0.13:2283
+      - KIOSK_IMMICH_EXTERNAL_URL=https://photos.{{ all_ext_domain }}
+      #- KIOSK_ALBUMS=all
+      - KIOSK_SHOW_ALBUM_NAME=true
+      - KIOSK_SHOW_IMAGE_DATE=true
+      - KIOSK_IMAGE_DATE_FORMAT=MM/DD/YYYY
+      - KIOSK_SHOW_IMAGE_CAMERA=true
+      - KIOSK_SHOW_IMAGE_EXIF=true
+      - KIOSK_SHOW_IMAGE_QR=true
+      - KIOSK_SHOW_TIME=true
+      - KIOSK_SHOW_DATE=true
+      - KIOSK_DATE_FORMAT=DDD MMMM DD, YYYY
+      - KIOSK_LIVE_PHOTOS=true
+      - KIOSK_SHOW_IMAGE_LOCATION=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 volumes:
   model-cache:
 

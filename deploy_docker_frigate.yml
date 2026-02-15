@@ -16,4 +16,4 @@
     - docker
     - docker_portainer_agent
     - docker_frigate
-    - docker_frigate_lpr
+    #- docker_frigate_lpr

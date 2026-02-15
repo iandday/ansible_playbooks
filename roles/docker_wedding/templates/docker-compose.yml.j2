@@ -32,15 +32,22 @@ services:
       retries: 5
     restart: unless-stopped
   wedding-frontend:
-    image: ghcr.io/iandday/okletsdoit_web:develop
+    image: ghcr.io/iandday/okletsdoit-frontend:develop
     container_name: wedding-frontend
     restart: always
     environment:
-      - PUBLIC_API_URL=https://wedding.{{ all_ext_domain }}
+      - BACKEND_API_URL=http://wedding-app:8000
+      - PUBLIC_CLIENT_API_URL=https://wedding.{{ all_ext_domain }}
+      - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
+      - VITE_ALLOWED_HOSTS=wedding.{{ all_ext_domain }}
+      - NODE_ENV=development
+      - BODY_SIZE_LIMIT=1G  
     ports:
       - "8007:3000"
+    networks:
+      - traefik_proxy
   wedding-app:
-    image: ghcr.io/iandday/okletsdoit:develop
+    image: ghcr.io/iandday/okletsdoit-backend:develop
     container_name: wedding-app
     restart: always
     environment:
@@ -73,6 +80,16 @@ services:
       - CONTAINER_ROLE=server
       - LOCAL_DEV=True
       - REDIS_URL=redis://redis:6379
+      - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
+      - EMAIL_USE_TLS=True
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER={{ vault_docker_utility_authentik_email_username }}
+      - EMAIL_HOST_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
+      - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
+      - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
     ports:
       - "8003:8000"
     networks:
@@ -82,7 +99,7 @@ services:
     depends_on:
       - wedding-postgres
   wedding-worker:
-    image: ghcr.io/iandday/okletsdoit:develop
+    image: ghcr.io/iandday/okletsdoit-backend:develop
     container_name: wedding-worker
     restart: always
     environment:
@@ -114,6 +131,16 @@ services:
       - CONTAINER_ROLE=worker
       - LOCAL_DEV=True
       - REDIS_URL=redis://redis:6379
+      - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
+      - EMAIL_USE_TLS=True
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER={{ vault_docker_utility_authentik_email_username }}
+      - EMAIL_HOST_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
+      - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
+      - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
     networks:
       - traefik_proxy
     labels:
@@ -121,7 +148,7 @@ services:
     depends_on:
       - wedding-postgres
   wedding-beats:
-    image: ghcr.io/iandday/okletsdoit:develop
+    image: ghcr.io/iandday/okletsdoit-backend:develop
     container_name: wedding-beats
     restart: always
     environment:
@@ -153,6 +180,16 @@ services:
       - CONTAINER_ROLE=beats
       - LOCAL_DEV=True
       - REDIS_URL=redis://redis:6379
+      - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
+      - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+      - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
+      - EMAIL_USE_TLS=True
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER={{ vault_docker_utility_authentik_email_username }}
+      - EMAIL_HOST_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
+      - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
+      - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
     networks:
       - traefik_proxy
     labels:

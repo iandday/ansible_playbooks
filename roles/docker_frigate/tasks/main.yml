@@ -3,12 +3,12 @@
 # roles/docker_frigate/tasks/main.yml
 #
 
-- name: load common role variables
-  include_vars: "{{ playbook_dir }}/roles/common/vars/{{ item }}.yml"
-  with_items:
-    - main
-    - vault
-  no_log: true
+# - name: load common role variables
+#   include_vars: "{{ playbook_dir }}/roles/common/vars/{{ item }}.yml"
+#   with_items:
+#     - main
+#     - vault
+#   no_log: true
 
 - name: check for required variables
   fail:
