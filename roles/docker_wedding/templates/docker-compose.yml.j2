@@ -6,8 +6,6 @@ services:
     container_name: wedding-postgres
     volumes:
       - {{ docker_wedding_docker_storage }}/wedding_db:/var/lib/postgresql/data
-    networks:
-      - traefik_proxy
     environment:
       - POSTGRES_USER={{ vault_docker_wedding_db_username }}
       - POSTGRES_PASSWORD={{ vault_docker_wedding_db_password }}
@@ -46,6 +44,7 @@ services:
       - "8007:3000"
     networks:
       - traefik_proxy
+      - default
   wedding-app:
     image: ghcr.io/iandday/okletsdoit-backend:develop
     container_name: wedding-app
@@ -94,6 +93,7 @@ services:
       - "8003:8000"
     networks:
       - traefik_proxy
+      - default
     labels:
       - "traefik.enable=false"
     depends_on:
@@ -119,6 +119,7 @@ services:
       - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
       - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
       - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
+      - DJANGO_CORS_ALLOWED_ORIGINS={{ vault_docker_wedding_cors_allowed_origins }}
       - AWS_ACCESS_KEY_ID={{ vault_docker_wedding_aws_access_key_id }}
       - AWS_SECRET_ACCESS_KEY={{ vault_docker_wedding_aws_secret_access_key }}
       - AWS_STATIC_BUCKET_NAME={{ vault_docker_wedding_aws_static_bucket_name }}
@@ -141,8 +142,6 @@ services:
       - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
       - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
       - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
-    networks:
-      - traefik_proxy
     labels:
       - "traefik.enable=false"
     depends_on:
@@ -168,6 +167,7 @@ services:
       - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
       - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
       - DJANGO_CSRF_TRUSTED_ORIGINS={{ vault_docker_wedding_csrf_trusted_origins }}
+      - DJANGO_CORS_ALLOWED_ORIGINS={{ vault_docker_wedding_cors_allowed_origins }}
       - AWS_ACCESS_KEY_ID={{ vault_docker_wedding_aws_access_key_id }}
       - AWS_SECRET_ACCESS_KEY={{ vault_docker_wedding_aws_secret_access_key }}
       - AWS_STATIC_BUCKET_NAME={{ vault_docker_wedding_aws_static_bucket_name }}
@@ -190,8 +190,6 @@ services:
       - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
       - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
       - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
-    networks:
-      - traefik_proxy
     labels:
       - "traefik.enable=false"
     depends_on:
