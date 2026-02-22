@@ -1,0 +1,62 @@
+version: "3"
+
+vars:
+  VAULT_ADDR: "https://hc_vault.{{ all_ext_domain }}"
+  KEY_SHARES: 5
+  KEY_THRESHOLD: 3
+
+tasks:
+  up:
+    desc: Start the Vault cluster
+    cmds:
+      - docker compose up -d
+
+  init:
+    desc: Initialize hcv_1 and auto-generate unseal.sh scripts
+    cmds:
+      - ./init-and-generate-unseal.sh
+    preconditions:
+      - sh: docker compose ps hcv_1 | grep -q "Up"
+        msg: "hcv_1 is not running. Run 'task up' first."
+      - sh: command -v jq >/dev/null 2>&1
+        msg: "jq is required but not installed. Please install jq to proceed."
+
+  setup-cluster:
+    desc: Complete cluster setup - unseal hcv_1, join and unseal hcv_2 and hcv_3
+    cmds:
+      - docker compose exec hcv_1 sh -c "/vault/config/unseal.sh"
+      - docker compose exec hcv_2 sh -c "vault operator raft join https://hcv_1:8200"  
+      - docker compose exec hcv_2 sh -c "/vault/config/unseal.sh"
+      - docker compose exec hcv_3 sh -c "vault operator raft join https://hcv_1:8200"
+      - docker compose exec hcv_3 sh -c "/vault/config/unseal.sh"
+
+
+  bootstrap:
+    desc: Full bootstrap - start cluster, initialize, and setup
+    cmds:
+      - task: up
+      - echo "⏳ Waiting for containers to be ready (15 seconds)..."
+      - sleep 15
+      - task: init
+      - echo ""
+      - echo "📋 Credentials saved! Review them above."
+      - echo "Press Enter to continue with cluster setup..."
+      - read _
+      - task: setup-cluster
+      - echo ""
+      - echo "✅ Bootstrap complete!"
+
+  unseal:
+    desc: Unseal the Vault cluster using the generated unseal.sh scripts
+    cmds:
+      - docker compose exec hcv_1 sh -c "/vault/config/unseal.sh"
+      - docker compose exec hcv_2 sh -c "/vault/config/unseal.sh"
+      - docker compose exec hcv_3 sh -c "/vault/config/unseal.sh"
+
+  reset:
+    desc: Stop and remove all Vault containers, and clean up data
+    cmds:
+      - docker compose down -v
+      - rm -rf {{ docker_hc_vault_docker_storage }}/hc_vault_1/* {{ docker_hc_vault_docker_storage }}/hc_vault_2/* {{ docker_hc_vault_docker_storage }}/hc_vault_3/*
+      - rm -rf vault-credentials*.md
+      - echo "All Vault data has been removed. You can now run 'task bootstrap' to start fresh."

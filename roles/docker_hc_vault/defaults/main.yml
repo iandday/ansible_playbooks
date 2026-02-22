@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_hc_vault/defaults/main.yml
+#
+
+docker_hc_vault_required_vars:
+  - docker_uid
+  - docker_gid
+docker_hc_vault_docker_builds: "{{ all_docker_builds }}"
+docker_hc_vault_docker_storage: "{{ all_docker_storage }}"

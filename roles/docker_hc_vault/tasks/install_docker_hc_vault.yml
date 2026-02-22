@@ -1,0 +1,128 @@
+---
+#
+# roles/docker_hc_vault/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_hc_vault_docker_builds }}/hc_vault"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_hc_vault_docker_builds }}/hc_vault/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+    - taskfile.yml
+    - init-and-generate-unseal.sh
+    - auto-unseal-monitor.sh
+
+- name: create persist directory
+  become: true
+  file:
+    path: "{{ docker_hc_vault_docker_storage }}/hc_vault_{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  with_items:
+    - 1
+    - 2
+    - 3
+
+- name: create config directory
+  become: true
+  file:
+    path: "{{ docker_hc_vault_docker_storage }}/hc_vault_{{ item }}/config"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  with_items:
+    - 1
+    - 2
+    - 3
+
+- name: create data directory
+  become: true
+  file:
+    path: "{{ docker_hc_vault_docker_storage }}/hc_vault_{{ item }}/data"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  with_items:
+    - 1
+    - 2
+    - 3
+
+- name: copy config file and certs
+  become: true
+  copy:
+    src: "{{ item.s }}"
+    dest: "{{ item.d }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0600
+  with_items:
+    - {
+        "s": "vault1.hcl",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_1/config/vault.hcl",
+      }
+    - {
+        "s": "vault2.hcl",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_2/config/vault.hcl",
+      }
+    - {
+        "s": "vault3.hcl",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_3/config/vault.hcl",
+      }
+    - {
+        "s": "hcv_1.crt",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_1/config/cert.crt",
+      }
+    - {
+        "s": "hcv_2.crt",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_2/config/cert.crt",
+      }
+    - {
+        "s": "hcv_3.crt",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_3/config/cert.crt",
+      }
+    - {
+        "s": "hcv_1.key",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_1/config/cert.key",
+      }
+    - {
+        "s": "hcv_2.key",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_2/config/cert.key",
+      }
+    - {
+        "s": "hcv_3.key",
+        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_3/config/cert.key",
+      }
+
+- name: copy root certificate to all config directories
+  become: true
+  copy:
+    src: "root-ca.crt"
+    dest: "{{ docker_hc_vault_docker_storage }}/hc_vault_{{ item }}/config/root-ca.crt"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0644
+  with_items:
+    - 1
+    - 2
+    - 3

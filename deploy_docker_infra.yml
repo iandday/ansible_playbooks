@@ -15,5 +15,6 @@
       gather_facts:
   roles:
     #- docker
-    - docker_utility
+    #- docker_utility
     #- docker_garage
+    - docker_hc_vault
