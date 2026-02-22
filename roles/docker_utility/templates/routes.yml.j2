@@ -104,7 +104,7 @@ http:
             sans:
               - "*.{{ all_ext_domain }}"
     wedding-backend-https:
-      rule: "Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
+      rule: "Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
       priority: 35
       entryPoints:
         - web-secure
@@ -153,7 +153,7 @@ http:
             sans:
               - "*.{{ all_ext_domain }}"
     okletsdoit-backend-https:
-      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`) && (PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
+      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
       priority: 35
       entryPoints:
         - web-secure

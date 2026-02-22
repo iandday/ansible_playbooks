@@ -89,7 +89,7 @@
     dest: /usr/local/bin/backup_docker_volumes.sh
     mode: "a+x"
   become: true
-  when: "'docker-infra-01' in inventory_hostname"
+  when: "'docker-infra-01' in inventory_hostname or 'docker-app-01' in inventory_hostname"
 
 - name: copy backup script
   template:

@@ -119,7 +119,6 @@ services:
       - KIOSK_IMMICH_API_KEY={{ vault_docker_immichframe_api_key }}
       - KIOSK_IMMICH_URL=http://172.24.0.13:2283
       - KIOSK_IMMICH_EXTERNAL_URL=https://photos.{{ all_ext_domain }}
-      #- KIOSK_ALBUMS=all
       - KIOSK_SHOW_ALBUM_NAME=true
       - KIOSK_SHOW_IMAGE_DATE=true
       - KIOSK_IMAGE_DATE_FORMAT=MM/DD/YYYY
@@ -131,6 +130,8 @@ services:
       - KIOSK_DATE_FORMAT=DDD MMMM DD, YYYY
       - KIOSK_LIVE_PHOTOS=true
       - KIOSK_SHOW_IMAGE_LOCATION=true
+      - KIOSK_BACKGROUND_BLUR=false
+      - KIOSK_HIDE_CURSOR=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
