@@ -10,17 +10,19 @@ storage "raft" {
   retry_join {
     leader_api_addr = "https://hcv_1:8200"
     leader_ca_cert_file = "/vault/config/root-ca.crt"
-    leader_tls_servicename = "hcv_1"
   }
   retry_join {
     leader_api_addr = "https://hcv_3:8200"
     leader_ca_cert_file = "/vault/config/root-ca.crt"
-    leader_tls_servicename = "hcv_3"
   }
 }
 
 listener "tcp" {
   address = "0.0.0.0:8200"
-  tls_cert_file = "/vault/config/cert.crt"
-  tls_key_file  = "/vault/config/cert.key"
+  cluster_address = "0.0.0.0:8201"
+  tls_cert_file = "/vault/config/hcv.crt"
+  tls_key_file  = "/vault/config/hcv.key"
+  tls_client_ca_file = "/vault/config/root-ca.crt"
+  tls_disable        = 0
+  tls_min_version    = "tls12"
 }

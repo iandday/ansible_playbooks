@@ -88,32 +88,8 @@
         "s": "vault3.hcl",
         "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_3/config/vault.hcl",
       }
-    - {
-        "s": "hcv_1.crt",
-        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_1/config/cert.crt",
-      }
-    - {
-        "s": "hcv_2.crt",
-        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_2/config/cert.crt",
-      }
-    - {
-        "s": "hcv_3.crt",
-        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_3/config/cert.crt",
-      }
-    - {
-        "s": "hcv_1.key",
-        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_1/config/cert.key",
-      }
-    - {
-        "s": "hcv_2.key",
-        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_2/config/cert.key",
-      }
-    - {
-        "s": "hcv_3.key",
-        "d": "{{ docker_hc_vault_docker_storage }}/hc_vault_3/config/cert.key",
-      }
 
-- name: copy root certificate to all config directories
+- name: copy certificates
   become: true
   copy:
     src: "root-ca.crt"
@@ -121,7 +97,35 @@
     backup: true
     owner: "{{ docker_uid }}"
     group: "{{ docker_gid }}"
-    mode: 0644
+    mode: 0777
+  with_items:
+    - 1
+    - 2
+    - 3
+
+- name: copy certificates
+  become: true
+  copy:
+    src: "hcv.crt"
+    dest: "{{ docker_hc_vault_docker_storage }}/hc_vault_{{ item }}/config/hcv.crt"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0777
+  with_items:
+    - 1
+    - 2
+    - 3
+
+- name: copy certificates
+  become: true
+  copy:
+    src: "hcv.key"
+    dest: "{{ docker_hc_vault_docker_storage }}/hc_vault_{{ item }}/config/hcv.key"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0777
   with_items:
     - 1
     - 2

@@ -1,1 +1,189 @@
+#!/bin/sh
 # {{ ansible_managed }}
+# Auto-unseal script for HA Vault cluster using vault CLI commands
+
+set -e
+
+UNSEAL_KEYS_FILE="/vault/config/vault-init-keys.json"
+
+# Vault nodes in cluster
+NODES="hcv_1:8200 hcv_2:8200 hcv_3:8200"
+
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+}
+
+wait_for_vault() {
+  local node=$1
+  local max_attempts=60
+  local attempt=0
+  
+  log "Waiting for Vault node $node to be ready..."
+  while [ $attempt -lt $max_attempts ]; do
+    # vault status returns: 0=unsealed, 2=sealed, 1=error
+    VAULT_ADDR="https://$node" vault status >/dev/null 2>&1
+    exit_code=$?
+    if [ $exit_code -eq 0 ] || [ $exit_code -eq 2 ]; then
+      log "Vault node $node is ready"
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    sleep 2
+  done
+  
+  log "ERROR: Vault node $node failed to become ready after $max_attempts attempts"
+  return 1
+}
+
+get_unseal_keys() {
+  if [ ! -f "$UNSEAL_KEYS_FILE" ]; then
+    log "ERROR: Unseal keys file not found at $UNSEAL_KEYS_FILE"
+    return 1
+  fi
+  
+  # Extract unseal_keys_b64 array from JSON
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.unseal_keys_b64[]' "$UNSEAL_KEYS_FILE"
+  else
+    # Grep-based extraction: find unseal_keys_b64 array and extract quoted strings
+    sed -n '/"unseal_keys_b64"/,/\]/p' "$UNSEAL_KEYS_FILE" | grep -o '"[^"]*"' | grep -v 'unseal_keys_b64' | tr -d '"'
+  fi
+}
+
+get_unseal_threshold() {
+  if [ ! -f "$UNSEAL_KEYS_FILE" ]; then
+    log "ERROR: Unseal keys file not found at $UNSEAL_KEYS_FILE"
+    return 1
+  fi
+  
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.unseal_threshold' "$UNSEAL_KEYS_FILE" 2>/dev/null
+  else
+    grep -o '"unseal_threshold"[ ]*:[ ]*[0-9]*' "$UNSEAL_KEYS_FILE" | grep -o '[0-9]*$'
+  fi
+}
+
+unseal_node() {
+  local node=$1
+  local unseal_keys=$2
+  local threshold=$3
+  local keys_submitted=0
+  local temp_keys_file
+  
+  # Validate threshold parameter
+  if [ -z "$threshold" ]; then
+    log "ERROR: threshold parameter is empty in unseal_node"
+    return 1
+  fi
+  
+  log "Unsealing $node (need $threshold keys)..."
+  
+  # Write keys to temp file to avoid subshell issues with pipe
+  temp_keys_file=$(mktemp)
+  echo "$unseal_keys" > "$temp_keys_file"
+  
+  # Submit unseal keys until we reach threshold or unsealed
+  while read -r key && [ "$keys_submitted" -lt "$threshold" ]; do
+    [ -z "$key" ] && continue
+    
+    log "DEBUG: Submitting key #$((keys_submitted + 1)) to $node"
+    
+    # Submit key to the vault node
+    if ! VAULT_ADDR="https://$node" vault operator unseal "$key" 2>&1 | tee -a /tmp/unseal-debug.log; then
+      log "WARNING: Failed to submit key to $node"
+    fi
+    
+    # Check if fully unsealed
+    if VAULT_ADDR="https://$node" vault status 2>/dev/null | grep -q "Sealed.*false"; then
+      rm -f "$temp_keys_file"
+      log "Successfully unsealed $node"
+      return 0
+    fi
+    
+    keys_submitted=$((keys_submitted + 1))
+  done < "$temp_keys_file"
+  
+  rm -f "$temp_keys_file"
+  
+  # Check final status
+  if VAULT_ADDR="https://$node" vault status 2>/dev/null | grep -q "Sealed.*false"; then
+    log "Successfully unsealed $node"
+    return 0
+  else
+    log "WARNING: $node may still be sealed"
+    return 1
+  fi
+}
+
+check_vault_status() {
+  local node=$1
+  
+  if VAULT_ADDR="https://$node" vault status 2>/dev/null | grep -q "Sealed.*false"; then
+    log "$node is unsealed"
+    return 0
+  else
+    log "$node is sealed"
+    return 1
+  fi
+}
+
+main() {
+  log "Starting Vault auto-unseal process for HA cluster"
+  
+  # Get unseal keys and threshold
+  unseal_keys=$(get_unseal_keys) || exit 1
+  threshold=$(get_unseal_threshold)
+  
+  if [ -z "$threshold" ]; then
+    log "ERROR: Failed to read unseal threshold from $UNSEAL_KEYS_FILE"
+    exit 1
+  fi
+  
+  log "Loaded $threshold-of-5 unseal threshold"
+  
+  # Wait for all Vault nodes to be ready
+  for node in $NODES; do
+    wait_for_vault "$node" || exit 1
+  done
+  
+  # Unseal each node
+  for node in $NODES; do
+    unseal_node "$node" "$unseal_keys" "$threshold" || log "WARNING: Failed to unseal $node"
+    sleep 2
+  done
+  
+  # Verify all nodes are unsealed
+  log "Verifying all nodes are unsealed..."
+  sleep 5
+  
+  all_unsealed=true
+  for node in $NODES; do
+    if ! check_vault_status "$node"; then
+      all_unsealed=false
+    fi
+  done
+  
+  if [ "$all_unsealed" = "true" ]; then
+    log "SUCCESS: All Vault nodes are unsealed"
+  else
+    log "WARNING: Some nodes may still be sealed"
+  fi
+  
+  # Monitor loop - periodically check if nodes need unsealing
+  log "Entering monitoring mode..."
+  while true; do
+    sleep 300
+    
+    for node in $NODES; do
+      if ! check_vault_status "$node"; then
+        log "Node $node is sealed, attempting to unseal..."
+        unseal_node "$node" "$unseal_keys" "$threshold" || log "Failed to unseal $node"
+      fi
+    done
+  done
+}
+
+main "$@"
+
+
+

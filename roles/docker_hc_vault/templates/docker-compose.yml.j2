@@ -11,12 +11,11 @@ services:
     environment:
       - VAULT_ADDR=https://127.0.0.1:8200
       - VAULT_CACERT=/vault/config/root-ca.crt
+      - VAULT_CLIENT_CERT=/vault/config/hcv.crt
+      - VAULT_CLIENT_KEY=/vault/config/hcv.key
     volumes:
       - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config:/vault/config
       - {{ docker_hc_vault_docker_storage }}/hc_vault_1/data:/vault/data
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/cert.crt:/opt/vault/tls/vault-cert.pem 
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/cert.key:/opt/vault/tls/vault-key.pem
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/root-ca.crt:/opt/vault/tls/vault-ca.pem
     networks:
       - traefik_proxy
       - hc_vault
@@ -25,10 +24,9 @@ services:
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.services.hc-vault.loadbalancer.server.port=8200"
       - "traefik.http.services.hc-vault.loadbalancer.server.scheme=https"
-      - "traefik.http.services.hc-vault.loadbalancer.server.insecureSkipVerify=true"
       - "traefik.http.routers.hc-vault.service=hc-vault"
       - "traefik.http.routers.hc-vault.entrypoints=web-secure"
-      - "traefik.http.routers.hc-vault.rule=Host(`hc_vault.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.hc-vault.rule=Host(`hc-vault.{{ all_ext_domain }}`)"
       - "traefik.http.routers.hc-vault.tls=true"
       - "traefik.http.routers.hc-vault.tls.certresolver=route53"
       - "traefik.http.routers.hc-vault.tls.domains[0].main={{ all_ext_domain }}"
@@ -54,12 +52,11 @@ services:
     environment:
       - VAULT_ADDR=https://127.0.0.1:8200
       - VAULT_CACERT=/vault/config/root-ca.crt
+      - VAULT_CLIENT_CERT=/vault/config/hcv.crt
+      - VAULT_CLIENT_KEY=/vault/config/hcv.key
     volumes:
       - {{ docker_hc_vault_docker_storage }}/hc_vault_2/data:/vault/data
       - {{ docker_hc_vault_docker_storage }}/hc_vault_2/config:/vault/config
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_2/config/cert.crt:/opt/vault/tls/vault-cert.pem 
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_2/config/cert.key:/opt/vault/tls/vault-key.pem
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_2/config/root-ca.crt:/opt/vault/tls/vault-ca.pem
     networks:
       - traefik_proxy
       - hc_vault
@@ -68,10 +65,9 @@ services:
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.services.hc-vault.loadbalancer.server.port=8200"
       - "traefik.http.services.hc-vault.loadbalancer.server.scheme=https"
-      - "traefik.http.services.hc-vault.loadbalancer.server.insecureSkipVerify=true"
       - "traefik.http.routers.hc-vault.service=hc-vault"
       - "traefik.http.routers.hc-vault.entrypoints=web-secure"
-      - "traefik.http.routers.hc-vault.rule=Host(`hc_vault.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.hc-vault.rule=Host(`hc-vault.{{ all_ext_domain }}`)"
       - "traefik.http.routers.hc-vault.tls=true"
       - "traefik.http.routers.hc-vault.tls.certresolver=route53"
       - "traefik.http.routers.hc-vault.tls.domains[0].main={{ all_ext_domain }}"
@@ -97,12 +93,11 @@ services:
     environment:
       - VAULT_ADDR=https://127.0.0.1:8200
       - VAULT_CACERT=/vault/config/root-ca.crt
+      - VAULT_CLIENT_CERT=/vault/config/hcv.crt
+      - VAULT_CLIENT_KEY=/vault/config/hcv.key
     volumes:
       - {{ docker_hc_vault_docker_storage }}/hc_vault_3/data:/vault/data
       - {{ docker_hc_vault_docker_storage }}/hc_vault_3/config:/vault/config
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_3/config/cert.crt:/opt/vault/tls/vault-cert.pem 
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_3/config/cert.key:/opt/vault/tls/vault-key.pem
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_3/config/root-ca.crt:/opt/vault/tls/vault-ca.pem
     networks:
       - traefik_proxy
       - hc_vault
@@ -111,10 +106,9 @@ services:
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.services.hc-vault.loadbalancer.server.port=8200"
       - "traefik.http.services.hc-vault.loadbalancer.server.scheme=https"
-      - "traefik.http.services.hc-vault.loadbalancer.server.insecureSkipVerify=true"
       - "traefik.http.routers.hc-vault.service=hc-vault"
       - "traefik.http.routers.hc-vault.entrypoints=web-secure"
-      - "traefik.http.routers.hc-vault.rule=Host(`hc_vault.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.hc-vault.rule=Host(`hc-vault.{{ all_ext_domain }}`)"
       - "traefik.http.routers.hc-vault.tls=true"
       - "traefik.http.routers.hc-vault.tls.certresolver=route53"
       - "traefik.http.routers.hc-vault.tls.domains[0].main={{ all_ext_domain }}"
@@ -130,19 +124,18 @@ services:
         limits:
           cpus: '1'
           memory: 1G
-  vault-unsealer:
+  hcv_unsealer:
     image: hashicorp/vault:{{ docker_hc_vault_version }}
-    container_name: vault-unsealer
+    container_name: hcv_unsealer
     restart: unless-stopped
     volumes:
       - ./auto-unseal-monitor.sh:/usr/local/bin/auto-unseal-monitor.sh:ro
       - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config:/vault/config:ro
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_2/config:/vault/config-2:ro
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_3/config:/vault/config-3:ro
     entrypoint: sh /usr/local/bin/auto-unseal-monitor.sh
     environment:
-      - VAULT_ADDR=https://127.0.0.1:8200
       - VAULT_CACERT=/vault/config/root-ca.crt
+      - VAULT_CLIENT_CERT=/vault/config/hcv.crt
+      - VAULT_CLIENT_KEY=/vault/config/hcv.key
     depends_on:
       - hcv_3
       - hcv_2

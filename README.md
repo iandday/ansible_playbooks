@@ -146,3 +146,67 @@ backup lxc
 rename template 
 
 `mv vzdump-lxc-111-2023_05_13-12_17_07.tar.gz ubuntu-22.04-standard_22.04-1_amd64_ansible.tar.zst`
+
+## Root CA Creation
+
+```
+
+# create root CA certificate conf file using cat <<EOF > root-ca.conf
+cat <<EOF > root-ca.conf
+[ req ]
+distinguished_name = root_ca_dn
+x509_extensions = v3_ca
+prompt = no
+
+[ root_ca_dn ]
+C = US
+ST = Kansas
+L = Clown
+O = Bob
+CN = Root CA
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+EOF
+
+
+
+# create conf file using cat <<EOF > vault-node.conf
+cat <<EOF > vault-node.conf
+
+[ req ]
+distinguished_name = hcv_1
+req_extensions = v3_req
+prompt = no
+
+[ hcv_1 ]
+C = US
+ST = Kansas
+L = Clown
+O = Bob
+CN = hcv_1
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = hcv_1
+DNS.2 = hcv_2
+DNS.3 = hcv_3
+IP.1 = 127.0.0.1
+EOF
+
+
+openssl ecparam -name prime256v1 -genkey -noout -out root-ca.key
+openssl req -x509 -new -sha256 -key root-ca.key -config root-ca.conf -days 3650 -out root-ca.crt
+openssl ecparam -name prime256v1 -genkey -noout -out vault-node.key
+openssl req -new -sha256 -key vault-node.key -config vault-node.conf -out vault-node.csr
+openssl x509 -req -in vault-node.csr -CA root-ca.crt -CAkey root-ca.key -CAcreateserial -extfile vault-node.conf -extensions v3_req -days 365 -out vault-node.crt
+cat vault-node.crt root-ca.crt > vault-node-fullchain.crt
+```

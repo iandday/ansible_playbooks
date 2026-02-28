@@ -95,31 +95,6 @@ EOF
 echo "✅ Credentials saved to: $BACKUP_FILE"
 echo ""
 
-# Generate unseal.sh for hcv_1
-echo "📝 Generating unseal.sh scripts..."
-
-cat > {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/unseal.sh << EOF
-#!/bin/sh
-set -e
-vault operator unseal $UNSEAL_KEY_1
-vault operator unseal $UNSEAL_KEY_2
-vault operator unseal $UNSEAL_KEY_3
-echo "✅ Vault unsealed successfully"
-EOF
-
-chmod +x {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/unseal.sh
-
-# Copy to hcv_2
-cp {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/unseal.sh {{ docker_hc_vault_docker_storage }}/hc_vault_2/config/unseal.sh
-
-# Copy to hcv_3
-cp {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/unseal.sh {{ docker_hc_vault_docker_storage }}/hc_vault_3/config/unseal.sh
-
-echo "✅ Created unseal.sh in hcv_1/config/"
-echo "✅ Created unseal.sh in hcv_2/config/"
-echo "✅ Created unseal.sh in hcv_3/config/"
-echo ""
-
 # Also save JSON format for automation
 echo "$INIT_OUTPUT" | jq '.' > {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/vault-init-keys.json
 echo "✅ Saved JSON format to: {{ docker_hc_vault_docker_storage }}/hc_vault_1/config/vault-init-keys.json"
@@ -128,12 +103,4 @@ echo ""
 echo "════════════════════════════════════════════════════════════════"
 echo "🎉 Initialization Complete!"
 echo "════════════════════════════════════════════════════════════════"
-echo ""
-echo "Next steps:"
-echo "  1. Secure the credentials file: $BACKUP_FILE"
-echo "  2. Run: task setup-cluster"
-echo "  3. Or manually:"
-echo "     - task unseal-hcv_1"
-echo "     - task join-hcv_2 && task unseal-hcv_2"
-echo "     - task join-hcv_3 && task unseal-hcv_3"
 echo ""
