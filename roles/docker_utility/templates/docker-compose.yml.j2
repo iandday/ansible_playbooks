@@ -82,7 +82,7 @@ services:
       - "traefik.enable=false"
   authentik_server:
     container_name: authentik_server
-    image: ghcr.io/goauthentik/server:2025.12.4
+    image: ghcr.io/goauthentik/server:2026.2.1
     restart: unless-stopped
     command: server
     environment:
@@ -129,7 +129,7 @@ services:
       - authentik_redis
   authentik_worker:
     container_name: authentik_worker
-    image: ghcr.io/goauthentik/server:2025.12.4
+    image: ghcr.io/goauthentik/server:2026.2.1
     restart: unless-stopped
     command: worker
     environment:
@@ -205,6 +205,7 @@ services:
       - "traefik.http.routers.secrets-secure.entrypoints=web-secure"
       - "traefik.http.routers.secrets-secure.rule=Host(`secrets.{{ all_ext_domain }}`)"
       - "traefik.http.routers.secrets-secure.tls=true"
+      - "traefik.http.routers.secrets-secure.tls.options=mtls-client-auth@file"
       - "traefik.http.routers.secrets-secure.tls.certresolver=route53"
       - "traefik.http.routers.secrets-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.secrets-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
@@ -289,7 +290,7 @@ services:
 
   traefik:
     hostname: traefik
-    image: traefik:v3.5
+    image: traefik:v3.6.9
     container_name: traefik
     restart: always
     domainname: {{ all_ext_domain }}
@@ -301,6 +302,7 @@ services:
       - "443:443"
       - "3012:3012"
     environment:
+      - TZ={{ docker_utility_timezone }}
       - AWS_ACCESS_KEY_ID={{ vault_docker_utility_aws_id }}
       - AWS_SECRET_ACCESS_KEY={{ vault_docker_utility_aws_key }}
       - AWS_REGION=us-east-1

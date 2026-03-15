@@ -1,5 +1,12 @@
 ---
 # {{ ansible_managed }}
+tls:
+  options:
+    mtls-client-auth: 
+      clientAuth:
+        caFiles:
+          - "/etc/traefik/root-ca.crt"
+        clientAuthType: RequireAndVerifyClientCert 
 http:
   middlewares:
     authentik:
