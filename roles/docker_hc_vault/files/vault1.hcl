@@ -1,10 +1,10 @@
 ui = true
 api_addr = "https://hcv_1:8200"
 cluster_addr = "https://hcv_1:8201"
-disable_mlock = false
-log_level = "debug"
+disable_mlock = true
+log_level = "info"
 storage "raft" {
-  path = "/vault/file"
+  path = "/vault/data"
   node_id = "hcv_1"
 }
 

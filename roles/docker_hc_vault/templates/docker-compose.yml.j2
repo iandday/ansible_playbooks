@@ -5,6 +5,7 @@ services:
     image: hashicorp/vault:{{ docker_hc_vault_version }}
     container_name: hcv_1
     restart: unless-stopped
+    user: "{{ docker_uid }}:{{ docker_gid }}"
     cap_add:
       - IPC_LOCK    
     command: vault server -config=/vault/config/vault.hcl
@@ -13,9 +14,10 @@ services:
       - VAULT_CACERT=/vault/config/root-ca.crt
       - VAULT_CLIENT_CERT=/vault/config/hcv.crt
       - VAULT_CLIENT_KEY=/vault/config/hcv.key
+      - SKIP_SETCAP=true
+      - SKIP_CHOWN=true
     volumes:
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config:/vault/config
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_1/data:/vault/data
+      - {{ docker_hc_vault_docker_storage }}/hc_vault_1:/vault
     networks:
       - traefik_proxy
       - hc_vault
@@ -46,6 +48,7 @@ services:
     image: hashicorp/vault:{{ docker_hc_vault_version }}
     container_name: hcv_2
     restart: unless-stopped
+    user: "{{ docker_uid }}:{{ docker_gid }}"
     cap_add:
       - IPC_LOCK    
     command: vault server -config=/vault/config/vault.hcl
@@ -54,9 +57,10 @@ services:
       - VAULT_CACERT=/vault/config/root-ca.crt
       - VAULT_CLIENT_CERT=/vault/config/hcv.crt
       - VAULT_CLIENT_KEY=/vault/config/hcv.key
+      - SKIP_SETCAP=true
+      - SKIP_CHOWN=true
     volumes:
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_2/data:/vault/data
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_2/config:/vault/config
+      - {{ docker_hc_vault_docker_storage }}/hc_vault_2:/vault
     networks:
       - traefik_proxy
       - hc_vault
@@ -87,6 +91,7 @@ services:
     image: hashicorp/vault:{{ docker_hc_vault_version }}
     container_name: hcv_3
     restart: unless-stopped
+    user: "{{ docker_uid }}:{{ docker_gid }}"
     cap_add:
       - IPC_LOCK    
     command: vault server -config=/vault/config/vault.hcl
@@ -95,9 +100,10 @@ services:
       - VAULT_CACERT=/vault/config/root-ca.crt
       - VAULT_CLIENT_CERT=/vault/config/hcv.crt
       - VAULT_CLIENT_KEY=/vault/config/hcv.key
+      - SKIP_SETCAP=true
+      - SKIP_CHOWN=true
     volumes:
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_3/data:/vault/data
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_3/config:/vault/config
+      - {{ docker_hc_vault_docker_storage }}/hc_vault_3:/vault
     networks:
       - traefik_proxy
       - hc_vault
@@ -128,14 +134,17 @@ services:
     image: hashicorp/vault:{{ docker_hc_vault_version }}
     container_name: hcv_unsealer
     restart: unless-stopped
+    user: "{{ docker_uid }}:{{ docker_gid }}"
     volumes:
       - ./auto-unseal-monitor.sh:/usr/local/bin/auto-unseal-monitor.sh:ro
-      - {{ docker_hc_vault_docker_storage }}/hc_vault_1/config:/vault/config:ro
+      - {{ docker_hc_vault_docker_storage }}/hc_vault_1:/vault:ro
     entrypoint: sh /usr/local/bin/auto-unseal-monitor.sh
     environment:
       - VAULT_CACERT=/vault/config/root-ca.crt
       - VAULT_CLIENT_CERT=/vault/config/hcv.crt
       - VAULT_CLIENT_KEY=/vault/config/hcv.key
+      - SKIP_SETCAP=true
+      - SKIP_CHOWN=true
     depends_on:
       - hcv_3
       - hcv_2
