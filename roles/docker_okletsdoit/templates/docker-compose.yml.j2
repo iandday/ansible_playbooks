@@ -40,8 +40,18 @@ services:
       - SERVICE_TOKEN={{ vault_docker_okletsdoit_api_backend_token }}
       - VITE_ALLOWED_HOSTS=aboutdayumtime.com
       - BODY_SIZE_LIMIT=1G  
-    ports:
-      - "8008:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.okletsdoit-frontend-secure.entrypoints=web-secure"
+      - "traefik.http.routers.okletsdoit-frontend-secure.rule=Host(`aboutdayumtime.com`) || Host(`www.aboutdayumtime.com`)"
+      - "traefik.http.routers.okletsdoit-frontend-secure.priority=10"
+      - "traefik.http.routers.okletsdoit-frontend-secure.tls=true"
+      - "traefik.http.routers.okletsdoit-frontend-secure.tls.certresolver=route53"
+      - "traefik.http.routers.okletsdoit-frontend-secure.tls.domains[0].main=aboutdayumtime.com"
+      - "traefik.http.routers.okletsdoit-frontend-secure.tls.domains[0].sans=*.aboutdayumtime.com"
+      - "traefik.http.services.okletsdoit-frontend-secure.loadbalancer.server.port=3000"
+      - "traefik.http.routers.okletsdoit-frontend-secure.middlewares=file-upload@file"
     networks:
       - traefik_proxy
       - default
@@ -90,13 +100,21 @@ services:
       - EMAIL_URL_BASE=https://aboutdayumtime.com
       - PERSONALIZED_RSVP_BASE_URL=https://aboutdayumtime.com
       - RSVP_URL=https://aboutdayumtime.com/rsvp
-    ports:
-      - "8006:8000"
     networks:
       - traefik_proxy
       - default
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.okletsdoit-secure.entrypoints=web-secure"
+      - "traefik.http.routers.okletsdoit-secure.rule=Host(`aboutdayumtime.com`) || Host(`www.aboutdayumtime.com`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
+      - "traefik.http.routers.okletsdoit-secure.priority=35"
+      - "traefik.http.routers.okletsdoit-secure.tls=true"
+      - "traefik.http.routers.okletsdoit-secure.tls.certresolver=route53"
+      - "traefik.http.routers.okletsdoit-secure.tls.domains[0].main=aboutdayumtime.com"
+      - "traefik.http.routers.okletsdoit-secure.tls.domains[0].sans=*.aboutdayumtime.com"
+      - "traefik.http.services.okletsdoit-secure.loadbalancer.server.port=8000"
+      - "traefik.http.routers.okletsdoit-secure.middlewares=file-upload@file"
     depends_on:
       - okletsdoit-postgres
   okletsdoit-worker:

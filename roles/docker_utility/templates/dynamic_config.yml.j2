@@ -37,7 +37,6 @@ http:
       middlewares:
         - authentik
       service: cctv-service
-
       tls:
         certresolver: route53
         domains:
@@ -77,18 +76,6 @@ http:
           - main: "{{ all_ext_domain }}"
             sans:
               - "*.{{ all_ext_domain }}"
-#    photoprisim-https:
-#      rule: "Host(`photos.{{ all_ext_domain }}`)"
-#      entryPoints:
-#        - web-secure
-#      service: photoprisim-service
-#      tls:
-#        certresolver: route53
-#        domains:
-#          - main: "{{ all_ext_domain }}"
-#            sans:
-#              - "*.{{ all_ext_domain }}"
-
     plants-https:
       rule: "Host(`plants.{{ all_ext_domain }}`)"
       entryPoints:
@@ -105,45 +92,6 @@ http:
       entryPoints:
         - web-secure
       service: hortusfox-service
-      tls:
-        certresolver: route53
-        domains:
-          - main: "{{ all_ext_domain }}"
-            sans:
-              - "*.{{ all_ext_domain }}"
-    okletsdoit-backend-https:
-      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
-      priority: 35
-      entryPoints:
-        - web-secure
-      middlewares:
-        - file-upload
-      service: okletsdoit-backend-service
-      tls:
-        certresolver: route53
-        domains:
-          - main: "aboutdayumtime.com"
-            sans:
-              - "*.aboutdayumtime.com"
-    okletsdoit-frontend-https:
-      rule: "HostRegexp(`(?:www.)?aboutdayumtime.com`)"
-      priority: 10
-      entryPoints:
-        - web-secure
-      middlewares:
-        - file-upload
-      service: okletsdoit-frontend-service
-      tls:
-        certresolver: route53
-        domains:
-          - main: "aboutdayumtime.com"
-            sans:
-              - "*.aboutdayumtime.com"
-    homebox-https:
-      rule: "Host(`stuff.{{ all_ext_domain }}`)"
-      entryPoints:
-        - web-secure
-      service: homebox-service
       tls:
         certresolver: route53
         domains:
@@ -169,11 +117,6 @@ http:
         serversTransport: mytransport
         servers:
           - url: https://10.168.1.206:8971
-    wedding-frontend-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.7:8007
     plants-service:
       loadBalancer:
         serversTransport: mytransport
@@ -184,21 +127,6 @@ http:
         serversTransport: mytransport
         servers:
           - url: http://10.168.1.7:8005
-    okletsdoit-backend-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.7:8006
-    okletsdoit-frontend-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.7:8008
-    homebox-service:
-      loadBalancer:
-        serversTransport: mytransport
-        servers:
-          - url: http://10.168.1.7:8011
   serversTransports:
     mytransport:
       insecureSkipVerify: true

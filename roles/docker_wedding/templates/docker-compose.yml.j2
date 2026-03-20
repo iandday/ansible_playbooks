@@ -45,7 +45,7 @@ services:
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.wedding-frontend-secure.entrypoints=web-secure"
       - "traefik.http.routers.wedding-frontend-secure.rule=Host(`wedding.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.wedding-frontend-secure.priority=35"
+      - "traefik.http.routers.wedding-frontend-secure.priority=10"
       - "traefik.http.routers.wedding-frontend-secure.tls=true"
       - "traefik.http.routers.wedding-frontend-secure.tls.certresolver=route53"
       - "traefik.http.routers.wedding-frontend-secure.tls.domains[0].main={{ all_ext_domain }}"
