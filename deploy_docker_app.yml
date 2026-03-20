@@ -16,10 +16,10 @@
   roles:
     - docker
     # - docker_portainer_agent
-    # - docker_nextcloud
-    # - docker_paperless_ngx
-    - docker_wedding
+    # - docker_nextcloud migrated
+    # - docker_paperless_ngx migrated
+    # - docker_wedding migrated
     # - docker_plants
     # - docker_hortusfox
     - docker_okletsdoit
-    - docker_immich
+    #- docker_immich migrated

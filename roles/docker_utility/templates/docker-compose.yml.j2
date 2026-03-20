@@ -287,7 +287,6 @@ services:
       - "traefik.http.services.bitwarden-ws.loadbalancer.server.port=3012"
     networks:
       - traefik_proxy
-
   traefik:
     hostname: traefik
     image: traefik:v3.6.9

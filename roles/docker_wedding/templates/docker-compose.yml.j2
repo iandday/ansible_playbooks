@@ -40,8 +40,18 @@ services:
       - VITE_ALLOWED_HOSTS=wedding.{{ all_ext_domain }}
       - NODE_ENV=development
       - BODY_SIZE_LIMIT=1G  
-    ports:
-      - "8007:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.wedding-frontend-secure.entrypoints=web-secure"
+      - "traefik.http.routers.wedding-frontend-secure.rule=Host(`wedding.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.wedding-frontend-secure.priority=35"
+      - "traefik.http.routers.wedding-frontend-secure.tls=true"
+      - "traefik.http.routers.wedding-frontend-secure.tls.certresolver=route53"
+      - "traefik.http.routers.wedding-frontend-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.wedding-frontend-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.wedding-frontend-secure.loadbalancer.server.port=3000"
+      - "traefik.http.routers.wedding-frontend-secure.middlewares=file-upload@file"
     networks:
       - traefik_proxy
       - default
@@ -89,13 +99,21 @@ services:
       - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
       - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
       - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
-    ports:
-      - "8003:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.wedding-secure.entrypoints=web-secure"
+      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
+      - "traefik.http.routers.wedding-secure.priority=35"
+      - "traefik.http.routers.wedding-secure.tls=true"
+      - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
+      - "traefik.http.routers.wedding-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.wedding-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.wedding-secure.loadbalancer.server.port=8000"
+      - "traefik.http.routers.weddding-secure.middlewares=file-upload@file"
     networks:
       - traefik_proxy
       - default
-    labels:
-      - "traefik.enable=false"
     depends_on:
       - wedding-postgres
   wedding-worker:

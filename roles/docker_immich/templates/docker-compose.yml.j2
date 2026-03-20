@@ -18,14 +18,22 @@ services:
       - DB_HOSTNAME=immich_postgres
       - TZ=America/New_York
       - REDIS_HOSTNAME=immich_redis
-    ports:
-      - '8009:2283'
+    #ports:
+    #  - '8009:2283'
     networks:
       traefik_proxy: {}
       immich:
         ipv4_address: 172.24.0.13
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.immich-secure.entrypoints=web-secure"
+      - "traefik.http.routers.immich-secure.rule=Host(`photos.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.immich-secure.tls=true"
+      - "traefik.http.routers.immich-secure.tls.certresolver=route53"
+      - "traefik.http.routers.immich-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.immich-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.immich-secure.loadbalancer.server.port=2283"
     depends_on:
       - redis
       - database
@@ -132,6 +140,16 @@ services:
       - KIOSK_SHOW_IMAGE_LOCATION=true
       - KIOSK_BACKGROUND_BLUR=false
       - KIOSK_HIDE_CURSOR=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.immich-frame-secure.entrypoints=web-secure"
+      - "traefik.http.routers.immich-frame-secure.rule=Host(`immichframe.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.immich-frame-secure.tls=true"
+      - "traefik.http.routers.immich-frame-secure.tls.certresolver=route53"
+      - "traefik.http.routers.immich-frame-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.immich-frame-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.immich-frame-secure.loadbalancer.server.port=3000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s

@@ -49,8 +49,6 @@ services:
       - traefik_proxy
     volumes:
       - {{ docker_nextcloud_docker_storage }}/nextcloud_d_data:/var/www/html:z,ro
-    ports:
-      - "8000:80"
     depends_on:
       - nc-app
     labels:

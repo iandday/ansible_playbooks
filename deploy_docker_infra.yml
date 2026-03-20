@@ -14,7 +14,11 @@
     - name: gather KVM facts
       gather_facts:
   roles:
-    - docker
-    #- docker_utility
+    #- docker
+    - docker_utility
+    #- docker_paperless_ngx
+    #- docker_immich
+    #- docker_nextcloud
+    - docker_wedding
     #- docker_garage
-    - docker_hc_vault
+    #- docker_hc_vault
