@@ -7,8 +7,8 @@ services:
     restart: always
     command: -H unix:///var/run/docker.sock
     ports:
-      - target: 9000
-        published: 9002
+      - target: 9443
+        published: 9443
         protocol: tcp
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -26,6 +26,15 @@ services:
       - "traefik.http.routers.portainer-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.portainer-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Portainer"
+      - "homepage.icon=sh-portainer-v1"
+      - "homepage.href=https://docker-infra-01.{{ all_ext_domain }}:9443"
+      - "homepage.description=Docker environment management"
+      - "homepage.widget.type=portainer"
+      - "homepage.widget.url=https://portainer:9443"
+      - "homepage.widget.env=1" 
+      - 'homepage.widget.key={{ vault_docker_utility_portainer_api_key }}'
   mail:
     container_name: mail
     restart: always
@@ -124,6 +133,11 @@ services:
       - "traefik.http.routers.authentik-rtr-outpost.tls.certresolver=route53"
       - "traefik.http.routers.authentik-rtr-outpost.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.authentik-rtr-outpost.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "homepage.group=Services"
+      - "homepage.name=Authentik"
+      - "homepage.icon=sh-authentik"
+      - "homepage.href=https://auth.{{ all_ext_domain }}/"
+      - "homepage.description=Authentication and authorization server"
     depends_on:
       - authentik_postgresql
       - authentik_redis
@@ -163,23 +177,22 @@ services:
       - traefik_proxy
     labels:
       - "traefik.enable=false"
-  dashy:
-    container_name: dashy
-    restart: always
-    image: lissy93/dashy:latest
-    volumes:
-      - {{ all_docker_storage }}/dashy/dashy-config.yml:/app/user-data/conf.yml
-    environment:
-      - UID={{ docker_uid }}
-      - GID={{ docker_gid }}
-    healthcheck:
-      test: ['CMD', 'node', '/app/services/healthcheck']
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    ports:
+      - 3000:3000
     networks:
       - traefik_proxy
+    volumes:
+      - {{ all_docker_storage }}/homepage_config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro 
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: start.{{ all_ext_domain }}
+      PUID: {{ docker_uid }}
+      PGID: {{ docker_gid }}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashy-secure.entrypoints=web-secure"
@@ -188,7 +201,7 @@ services:
       - "traefik.http.routers.dashy-secure.tls.certresolver=route53"
       - "traefik.http.routers.dashy-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.dashy-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.dashy-secure.loadbalancer.server.port=8080"
+      - "traefik.http.services.dashy-secure.loadbalancer.server.port=3000"
   secrets:
     container_name: secrets
     restart: always
@@ -210,6 +223,9 @@ services:
       - "traefik.http.routers.secrets-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.secrets-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.secrets-secure.loadbalancer.server.port=5000"
+      - "homepage.group=Apps"
+      - "homepage.name=Snappass"
+      - "homepage.icon=sh-onetime-secret"
   redis:
     container_name: redis
     restart: always
@@ -285,6 +301,11 @@ services:
       - "traefik.http.routers.bitwarden-ws.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.routers.bitwarden-ws.service=bitwarden-ws"
       - "traefik.http.services.bitwarden-ws.loadbalancer.server.port=3012"
+      - "homepage.group=Apps"
+      - "homepage.name=Bitwarden"
+      - "homepage.icon=sh-bitwarden"
+      - "homepage.href=https://vault.{{ all_ext_domain }}/"
+      - "homepage.description=Password manager"
     networks:
       - traefik_proxy
   traefik:
@@ -316,6 +337,15 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users={{ docker_utility_trafik_dashboard_auth }}"
+      - "homepage.group=Services"
+      - "homepage.name=Traefik Dashboard"
+      - "homepage.icon=sh-traefik"
+      - "homepage.href=https://traefik.{{ all_ext_domain }}/"
+      - "homepage.description=Traefik reverse proxy dashboard"
+      - "homepage.widget.type=traefik"
+      - "homepage.widget.url=http://traefik:8080"
+      - "homepage.widget.username={{ vault_docker_utility_traefik_dashboard_username }}"
+      - "homepage.widget.password={{ vault_docker_utility_traefik_dashboard_password }}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - {{ all_docker_storage }}/traefik:/etc/traefik
