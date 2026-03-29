@@ -107,7 +107,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.okletsdoit-secure.entrypoints=web-secure"
-      - "traefik.http.routers.okletsdoit-secure.rule=Host(`aboutdayumtime.com`) || Host(`www.aboutdayumtime.com`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
+      - "traefik.http.routers.okletsdoit-secure.rule=(Host(`aboutdayumtime.com`) || Host(`www.aboutdayumtime.com`)) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
       - "traefik.http.routers.okletsdoit-secure.priority=35"
       - "traefik.http.routers.okletsdoit-secure.tls=true"
       - "traefik.http.routers.okletsdoit-secure.tls.certresolver=route53"

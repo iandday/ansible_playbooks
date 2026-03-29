@@ -109,8 +109,8 @@ services:
       - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
       - "traefik.http.routers.wedding-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.wedding-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.routers.wedding-secure.middlewares=file-upload@file"
       - "traefik.http.services.wedding-secure.loadbalancer.server.port=8000"
-      - "traefik.http.routers.weddding-secure.middlewares=file-upload@file"
     networks:
       - traefik_proxy
       - default
