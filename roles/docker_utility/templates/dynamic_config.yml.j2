@@ -28,7 +28,17 @@ http:
     file-upload:
       buffering:
         maxRequestBodyBytes: 1073741824 
-        memRequestBodyBytes: 107374182 
+        memRequestBodyBytes: 107374182     
+    crowdsec:
+      plugin:
+        bouncer:
+          enabled: true
+          crowdsecLapiKey: {{ vault_docker_crowdsec_lapi_key }}
+          crowdsecLapiHost: crowdsec:8080
+          crowdsecAppsecEnabled: true
+          crowdsecAppsecHost: crowdsec:7422
+          crowdsecAppsecFailureBlock: true
+          crowdsecAppsecUnreachableBlock: true
   routers:
     cctv-https:
       rule: "Host(`cctv.{{ all_ext_domain }}`)"

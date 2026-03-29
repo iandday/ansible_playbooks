@@ -36,6 +36,12 @@ log:
   filePath: "/logs/traefik.log"
 accessLog:
   filePath: "/logs/access.log"
+  format: json
+  fields:
+    headers:
+      defaultMode: drop # drop all headers per default
+      names:
+          User-Agent: keep # log user agent strings
 api:
   dashboard: true
   insecure: true
@@ -46,3 +52,8 @@ providers:
   file:
     filename: /etc/traefik/dynamic_config.yml
     watch: true
+experimental:
+  plugins:
+    bouncer:
+      moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      version: v1.5.1

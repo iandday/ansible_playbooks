@@ -308,9 +308,26 @@ services:
       - "homepage.description=Password manager"
     networks:
       - traefik_proxy
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.7.6
+    container_name: crowdsec
+    restart: unless-stopped
+    environment:
+      COLLECTIONS: crowdsecurity/traefik crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-generic-rules
+      CUSTOM_HOSTNAME: crowdsec
+      BOUNCER_KEY_TRAEFIK: {{ vault_docker_crowdsec_lapi_key }}
+    volumes:
+      - {{ all_docker_storage }}/crowdsec_etc/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - {{ all_docker_storage }}/logs/traefik:/var/log/traefik:ro
+      - {{ all_docker_storage }}/crowdsec_data:/var/lib/crowdsec/data/
+      - {{ all_docker_storage }}/crowdsec_etc:/etc/crowdsec/
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=false"
   traefik:
     hostname: traefik
-    image: traefik:v3.6.9
+    image: traefik:v3.6.11
     container_name: traefik
     restart: always
     domainname: {{ all_ext_domain }}
@@ -350,6 +367,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - {{ all_docker_storage }}/traefik:/etc/traefik
       - {{ all_docker_storage }}/logs/traefik:/logs/
+    depends_on:
+      - 'crowdsec'
   traefik-certs-dumper:
     image: ldez/traefik-certs-dumper:v2.8.3
     entrypoint: sh -c '

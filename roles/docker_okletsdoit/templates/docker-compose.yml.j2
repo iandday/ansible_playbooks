@@ -51,7 +51,7 @@ services:
       - "traefik.http.routers.okletsdoit-frontend-secure.tls.domains[0].main=aboutdayumtime.com"
       - "traefik.http.routers.okletsdoit-frontend-secure.tls.domains[0].sans=*.aboutdayumtime.com"
       - "traefik.http.services.okletsdoit-frontend-secure.loadbalancer.server.port=3000"
-      - "traefik.http.routers.okletsdoit-frontend-secure.middlewares=file-upload@file"
+      - "traefik.http.routers.okletsdoit-frontend-secure.middlewares=file-upload@file,crowdsec@file"
     networks:
       - traefik_proxy
       - default
@@ -114,7 +114,7 @@ services:
       - "traefik.http.routers.okletsdoit-secure.tls.domains[0].main=aboutdayumtime.com"
       - "traefik.http.routers.okletsdoit-secure.tls.domains[0].sans=*.aboutdayumtime.com"
       - "traefik.http.services.okletsdoit-secure.loadbalancer.server.port=8000"
-      - "traefik.http.routers.okletsdoit-secure.middlewares=file-upload@file"
+      - "traefik.http.routers.okletsdoit-secure.middlewares=file-upload@file,crowdsec@file"
     depends_on:
       - okletsdoit-postgres
   okletsdoit-worker:

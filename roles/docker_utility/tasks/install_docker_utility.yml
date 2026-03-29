@@ -15,6 +15,8 @@
     - "{{ docker_utility_docker_storage }}/duo"
     - "{{ docker_utility_docker_storage }}/traefik"
     - "{{ docker_utility_docker_storage }}/logs"
+    - "{{ docker_utility_docker_storage }}/crowdsec_etc"
+    - "{{ docker_utility_docker_storage }}/crowdsec_data"
 
 - name: copy compose files
   template:
@@ -70,6 +72,15 @@
     mode: 0600
   with_items:
     - root-ca.crt
+  become: true
+
+- name: copy crowdsec acquis config
+  template:
+    src: acquis.yaml.j2
+    dest: "{{ docker_utility_docker_storage }}/crowdsec_etc/acquis.yaml"
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0600
   become: true
 
 - name: Ensure logrotate is installed

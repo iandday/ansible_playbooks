@@ -1,9 +1,10 @@
+compress
 {{ docker_utility_docker_storage }}/logs/traefik/*.log {
-    daily
-    rotate 7
-    compress
-    delaycompress
-    missingok
-    notifempty
-    create 0640 {{ docker_uid }} {{ docker_gid }}
+  size 20M
+  daily
+  rotate 14
+  missingok
+  notifempty postrotate
+  docker kill --signal="USR1" traefik
+  endscript
 }

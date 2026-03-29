@@ -20,6 +20,6 @@
     #- docker_immich
     #- docker_nextcloud
     #- docker_wedding
-    #- docker_okletsdoit
+    - docker_okletsdoit
     #- docker_garage
     #- docker_hc_vault
