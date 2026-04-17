@@ -1,0 +1,108 @@
+# {{ ansible_managed }}
+services:
+  ncc-db:
+    image: postgres:17-alpine
+    restart: always
+    hostname: ncc-db
+    networks:
+      - traefik_proxy
+    volumes:
+      - {{ docker_nextcloud_community_docker_storage }}/nextcloud_com_d_db:/var/lib/postgresql/data:Z
+    environment:
+      - POSTGRES_PASSWORD={{ vault_nextcloud_community_postgres_password }}
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+  ncc-redis:
+    image: redis:alpine
+    restart: always
+    hostname: ncc-redis
+    networks:
+      - traefik_proxy
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - {{ docker_nextcloud_community_docker_storage }}/nextcloud_com_d_redis:/data
+    environment:
+      - REDIS_ARGS=--save 60 10
+
+  ncc-web:
+    image: nginx:1.29-alpine
+    restart: always
+    hostname: ncc-web
+    networks:
+      - traefik_proxy
+    volumes:
+      - {{ docker_nextcloud_community_docker_builds }}/nextcloud_community/nginx.conf:/etc/nginx/nginx.conf:ro
+    volumes_from:
+      - ncc-app
+    depends_on:
+      - ncc-app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.middlewares.ncc-rep.redirectregex.regex=https://(.*)/.well-known/(card|cal)dav"
+      - "traefik.http.middlewares.ncc-rep.redirectregex.replacement=https://$$1/remote.php/dav/"
+      - "traefik.http.middlewares.ncc-rep.redirectregex.permanent=true"
+      - "traefik.http.middlewares.ncc-header.headers.referrerPolicy=no-referrer"
+      - "traefik.http.middlewares.ncc-header.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.ncc-header.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.ncc-header.headers.stsPreload=true"
+      - "traefik.http.middlewares.ncc-header.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.ncc-header.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.ncc-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.nextcloudc-secure.middlewares=ncc-rep,ncc-header"
+      - "traefik.http.routers.nextcloudc-secure.entrypoints=web-secure"
+      - "traefik.http.routers.nextcloudc-secure.rule=Host(`cloud.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.nextcloudc-secure.tls=true"
+      - "traefik.http.routers.nextcloudc-secure.tls.certresolver=route53"
+      - "traefik.http.routers.nextcloudc-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.nextcloudc-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.nextcloudc-secure.loadbalancer.server.port=80" 
+  ncc-app:
+    image: nextcloud:33.0.2-fpm
+    restart: always
+    hostname: ncc_app
+    volumes:
+      - {{ docker_nextcloud_community_docker_storage }}/nextcloud_com_d_data:/var/www/html
+    environment:
+      - POSTGRES_HOST=ncc-db
+      - POSTGRES_PASSWORD={{ vault_nextcloud_community_postgres_password }}
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+      - REDIS_HOST=ncc-redis
+      - PHP_MEMORY_LIMIT=1024M
+      - NEXTCLOUD_ADMIN_USER={{ vault_nextcloud_community_admin_user }}
+      - NEXTCLOUD_ADMIN_PASSWORD={{ vault_nextcloud_community_admin_password }}
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.{{ all_ext_domain }}
+      - NEXTCLOUD_INIT_HTACCESS=true
+      - SMTP_HOST={{ vault_docker_utility_authentik_email_server }}
+      - SMTP_SECURE=tls
+      - SMTP_PORT={{ vault_docker_utility_authentik_email_port }}
+      - SMTP_NAME={{ vault_docker_utility_authentik_email_username }}
+      - SMTP_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - MAIL_FROM_ADDRESS={{ vault_docker_utility_authentik_email_username }}
+    networks:
+      - traefik_proxy
+    depends_on:
+      - ncc-db
+      - ncc-redis
+  ncc-cron:
+    image: nextcloud:33.0.2-fpm
+    restart: always
+    hostname: ncc-cron
+    networks:
+      - traefik_proxy
+    volumes_from:
+      - ncc-app
+    entrypoint: /cron.sh
+    environment:
+      - PHP_MEMORY_LIMIT=1024M
+    depends_on:
+      - ncc-db
+      - ncc-redis
+networks:
+  traefik_proxy:
+      name: traefik_proxy
+      external: true
+  default:
+    driver: bridge

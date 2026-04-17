@@ -1,0 +1,58 @@
+---
+#
+# roles/docker_nextcloud_community/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_nextcloud_community_docker_builds }}/nextcloud_community"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_nextcloud_community_docker_builds }}/nextcloud_community/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+    #- Dockerfile-web
+    #- Dockerfile-app
+
+- name: copy files
+  become: true
+  copy:
+    src: "nginx.conf"
+    dest: "{{ docker_nextcloud_community_docker_builds }}/nextcloud_community/nginx.conf"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+# - name: create config storage directory
+#   become: true
+#   file:
+#     path: "{{ item }}"
+#     state: directory
+#     owner: "{{ docker_uid }}"
+#     group: "{{ docker_gid }}"
+#     mode: 0700
+#   with_items:
+#     - "{{ docker_nextcloud_community_docker_storage }}/nextcloud_data"
+#     - "{{ docker_nextcloud_community_docker_storage }}/nextcloud_d_config"
+
+# - name: copy files
+#   become: true
+#   copy:
+#     src: "php.ini"
+#     dest: "{{ docker_nextcloud_community_docker_storage }}/nextcloud_d_config/php.ini"
+#     backup: true
+#     owner: "{{ docker_uid }}"
+#     group: "{{ docker_gid }}"
+#     mode: 0700

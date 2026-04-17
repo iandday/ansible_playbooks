@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_nextcloud_community/defaults/main.yml
+#
+
+docker_nextcloud_community_required_vars:
+  - docker_uid
+  - docker_gid
+docker_nextcloud_community_docker_builds: "{{ all_docker_builds }}"
+docker_nextcloud_community_docker_storage: "{{ all_docker_storage }}"
