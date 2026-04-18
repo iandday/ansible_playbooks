@@ -1,0 +1,79 @@
+# {{ ansible_managed }}
+
+services:
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:0.25.0-rootless
+    container_name: homebox
+    restart: unless-stopped
+    depends_on:
+      homebox-postgres:
+        condition: service_healthy
+    environment:
+      - HBOX_WEB_MAX_UPLOAD_SIZE=100
+      - HBOX_MAILER_HOST={{ all_internal_mail_server}}
+      - HBOX_MAILER_PORT={{ all_internal_mail_port }}
+      - HBOX_MAILER_FROM={{ all_notification_email_from }}
+      - HBOX_OPTIONS_ALLOW_REGISTRATION=false
+      - TZ=UTC
+      - HBOX_LOG_LEVEL=info
+      - HBOX_LOG_FORMAT=text
+      - HBOX_WEB_MAX_UPLOAD_SIZE=100
+      - HBOX_DATABASE_DRIVER=postgres
+      - HBOX_DATABASE_HOST=homebox-postgres
+      - HBOX_DATABASE_PORT=5432
+      - HBOX_DATABASE_USERNAME={{ vault_docker_homebox_db_user }}
+      - HBOX_DATABASE_PASSWORD={{ vault_docker_homebox_db_password }}
+      - HBOX_DATABASE_DATABASE=homebox
+      - HBOX_DATABASE_SSL_MODE=disable
+      - HBOX_STORAGE_CONN_STRING={{ vault_docker_homebox_storage_conn_string }}
+      - AWS_ACCESS_KEY_ID={{ vault_docker_homebox_garage_access_key_id }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_homebox_garage_secret_access_key }}
+      - HBOX_OIDC_ENABLED=true
+      - HBOX_OIDC_ISSUER_URL={{ vault_docker_homebox_oidc_issuer_url }}
+      - HBOX_OIDC_CLIENT_ID={{ vault_docker_homebox_oidc_client_id }}
+      - HBOX_OIDC_CLIENT_SECRET={{ vault_docker_homebox_oidc_client_secret }}
+      - HBOX_OIDC_AUTO_REDIRECT=true
+      - HBOX_OIDC_BUTTON_TEXT=Sign in with Authentik
+      - HBOX_OPTIONS_ALLOW_LOCAL_LOGIN=true
+      - HBOX_OPTIONS_TRUST_PROXY=true
+      - HBOX_OPTIONS_ALLOW_REGISTRATION=true
+      - HBOX_BARCODE_TOKEN_BARCODESPIDER={{ vault_docker_homebox_barcode_spider_token }}
+      - HBOX_OPTIONS_HOSTNAME=inventory.{{ all_ext_domain }}
+    networks:
+      - traefik_proxy
+      - homebox
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.homebox-secure.entrypoints=web-secure"
+      - "traefik.http.routers.homebox-secure.rule=Host(`inventory.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.homebox-secure.tls=true"
+      - "traefik.http.routers.homebox-secure.tls.certresolver=route53"
+      - "traefik.http.routers.homebox-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.homebox-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.homebox-secure.loadbalancer.server.port=7745"
+      - "traefik.http.routers.homebox-secure.middlewares=forward-headers"
+      - "traefik.http.middlewares.forward-headers.headers.customrequestheaders.X-Forwarded-Proto=http"
+
+  homebox-postgres:
+    image: postgres:17-alpine
+    container_name: homebox-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER={{ vault_docker_homebox_db_user }}
+      - POSTGRES_PASSWORD={{ vault_docker_homebox_db_password }}
+      - POSTGRES_DB=homebox
+    volumes:
+      - {{ docker_homebox_docker_storage }}/homebox_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U homebox -d homebox" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - homebox
+networks:
+  traefik_proxy:
+      external: true
+      name: traefik_proxy
+  homebox:

@@ -23,4 +23,5 @@
     #- docker_okletsdoit
     #- docker_garage
     #- docker_hc_vault
-    - docker_nextcloud_community
+    #- docker_nextcloud_community
+    - docker_homebox
