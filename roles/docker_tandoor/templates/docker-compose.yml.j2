@@ -10,7 +10,7 @@ services:
         condition: service_healthy
     environment:
       - SECRET_KEY={{ vault_docker_tandoor_secret_key }}
-      - ALLOWED_HOSTS=recipes.{{ all_ext_domain }}
+      - ALLOWED_HOSTS=recipes.{{ all_ext_domain }},tandoor
       - DATABASE_URL=postgres://{{ vault_docker_tandoor_db_user }}:{{ vault_docker_tandoor_db_password }}@tandoor-postgres:5432/tandoor
       - ENABLE_SIGNUP=0
       - ALLAUTH_TRUSTED_PROXY_COUNT=2
@@ -52,6 +52,9 @@ services:
       - "homepage.icon=sh-tandoor-recipes"
       - "homepage.href=https://recipes.{{ all_ext_domain }}/"
       - "homepage.description=Recipe management, meal planning, and shopping lists"
+      - "homepage.widget.type=tandoor"
+      - "homepage.widget.url=http://tandoor"
+      - "homepage.widget.key={{ vault_docker_tandoor_homepage_widget_api_key }}"
   
   tandoor-postgres:
     image: postgres:17-alpine

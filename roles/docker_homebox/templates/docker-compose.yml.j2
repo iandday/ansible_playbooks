@@ -59,6 +59,10 @@ services:
       - "homepage.icon=sh-homebox"
       - "homepage.href=https://inventory.{{ all_ext_domain }}/"
       - "homepage.description=Home inventory management"
+      - "homepage.widget.type=homebox"
+      - "homepage.widget.url=http://homebox:7745"
+      - "homepage.widget.username={{ vault_docker_homebox_homepage_widget_username }}"
+      - "homepage.widget.password={{ vault_docker_homebox_homepage_widget_password }}"
 
   homebox-postgres:
     image: postgres:17-alpine
