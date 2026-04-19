@@ -54,6 +54,11 @@ services:
       - "traefik.http.services.homebox-secure.loadbalancer.server.port=7745"
       - "traefik.http.routers.homebox-secure.middlewares=forward-headers"
       - "traefik.http.middlewares.forward-headers.headers.customrequestheaders.X-Forwarded-Proto=http"
+      - "homepage.group=Apps"
+      - "homepage.name=Homebox"
+      - "homepage.icon=sh-homebox"
+      - "homepage.href=https://inventory.{{ all_ext_domain }}/"
+      - "homepage.description=Home inventory management"
 
   homebox-postgres:
     image: postgres:17-alpine

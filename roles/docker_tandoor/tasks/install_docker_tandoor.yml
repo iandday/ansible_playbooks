@@ -1,0 +1,26 @@
+---
+#
+# roles/docker_tandoor/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_tandoor_docker_builds }}/tandoor"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_tandoor_docker_builds }}/tandoor/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+    - oidc.json

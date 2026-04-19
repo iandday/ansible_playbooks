@@ -1,0 +1,83 @@
+# {{ ansible_managed }}
+
+services:
+  tandoor:
+    image: vabene1111/recipes:{{ docker_tandoor_version }}
+    container_name: tandoor
+    restart: unless-stopped
+    depends_on:
+      tandoor-postgres:
+        condition: service_healthy
+    environment:
+      - SECRET_KEY={{ vault_docker_tandoor_secret_key }}
+      - ALLOWED_HOSTS=recipes.{{ all_ext_domain }}
+      - DATABASE_URL=postgres://{{ vault_docker_tandoor_db_user }}:{{ vault_docker_tandoor_db_password }}@tandoor-postgres:5432/tandoor
+      - ENABLE_SIGNUP=0
+      - ALLAUTH_TRUSTED_PROXY_COUNT=2
+      - HIDE_LOGIN_FORM=1
+      - EMAIL_HOST={{ all_internal_mail_server}}
+      - EMAIL_PORT={{ all_internal_mail_port }}
+      - EMAIL_USE_TLS=0
+      - EMAIL_USE_SSL=0
+      - S3_ACCESS_KEY={{ vault_docker_tandoor_s3_key }}
+      - S3_SECRET_ACCESS_KEY={{ vault_docker_tandoor_s3_secret }}
+      - S3_BUCKET_NAME=tandoor-media
+      - S3_REGION_NAME=garage
+      - S3_ENDPOINT_URL={{ vault_docker_tandoor_s3_endpoint_url }}
+      - SPACE_AI_ENABLED=0
+      - FDC_API_KEY={{ vault_docker_tandoor_food_central_api_key }}
+      - SOCIAL_PROVIDERS=allauth.socialaccount.providers.openid_connect
+      - SOCIALACCOUNT_PROVIDERS_FILE=/run/secrets/socialaccount_providers.json
+      - SOCIALACCOUNT_LOGIN_ON_GET=1
+      - SOCIALACCOUNT_EMAIL_AUTHENTICATION=1
+      - SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT=1
+    secrets:
+      - socialaccount_providers.json
+    volumes:
+      - tandoor_staticfiles:/opt/recipes/staticfiles
+    networks:
+      - traefik_proxy
+      - tandoor
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.tandoor-secure.entrypoints=web-secure"
+      - "traefik.http.routers.tandoor-secure.rule=Host(`recipes.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.tandoor-secure.tls=true"
+      - "traefik.http.routers.tandoor-secure.tls.certresolver=route53"
+      - "traefik.http.routers.tandoor-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.tandoor-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "homepage.group=Apps"
+      - "homepage.name=Tandoor Recipes and Shopping List"
+      - "homepage.icon=sh-tandoor-recipes"
+      - "homepage.href=https://recipes.{{ all_ext_domain }}/"
+      - "homepage.description=Recipe management, meal planning, and shopping lists"
+  
+  tandoor-postgres:
+    image: postgres:17-alpine
+    container_name: tandoor-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER={{ vault_docker_tandoor_db_user }}
+      - POSTGRES_PASSWORD={{ vault_docker_tandoor_db_password }}
+      - POSTGRES_DB=tandoor
+    volumes:
+      - {{ docker_tandoor_docker_storage }}/tandoor_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tandoor -d tandoor" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tandoor
+
+volumes:
+  tandoor_staticfiles:
+secrets:
+  socialaccount_providers.json:
+    file: "{{ docker_tandoor_docker_builds }}/tandoor/oidc.json"
+networks:
+  traefik_proxy:
+      external: true
+      name: traefik_proxy
+  tandoor:

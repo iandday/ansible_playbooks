@@ -58,6 +58,11 @@ services:
       - "traefik.http.routers.nextcloudc-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.nextcloudc-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.nextcloudc-secure.loadbalancer.server.port=80" 
+      - "homepage.group=Apps"
+      - "homepage.name=Nextcloud"
+      - "homepage.icon=sh-nextcloud"
+      - "homepage.href=https://cloud.{{ all_ext_domain }}/"
+      - "homepage.description=File sharing, calendar, contacts, and more"
   ncc-app:
     image: nextcloud:33.0.2-fpm
     restart: always

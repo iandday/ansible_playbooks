@@ -15,13 +15,14 @@
       gather_facts:
   roles:
     #- docker
-    - docker_utility
+    #- docker_utility
     #- docker_paperless_ngx
-    #- docker_immich
+    - docker_immich
     #- docker_nextcloud
     #- docker_wedding
     #- docker_okletsdoit
     #- docker_garage
     #- docker_hc_vault
     #- docker_nextcloud_community
-    - docker_homebox
+    #- docker_homebox
+    #- docker_tandoor

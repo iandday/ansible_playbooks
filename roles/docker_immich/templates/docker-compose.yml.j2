@@ -34,6 +34,11 @@ services:
       - "traefik.http.routers.immich-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.immich-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.immich-secure.loadbalancer.server.port=2283"
+      - "homepage.group=Apps"
+      - "homepage.name=Immich"
+      - "homepage.icon=sh-immich"
+      - "homepage.href=https://photos.{{ all_ext_domain }}/"
+      - "homepage.description=Photo management and sharing"
     depends_on:
       - redis
       - database
@@ -150,6 +155,7 @@ services:
       - "traefik.http.routers.immich-frame-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.immich-frame-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.immich-frame-secure.loadbalancer.server.port=3000"
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
