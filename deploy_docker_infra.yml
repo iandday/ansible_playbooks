@@ -16,8 +16,8 @@
   roles:
     #- docker
     #- docker_utility
-    #- docker_paperless_ngx
-    - docker_immich
+    - docker_paperless_ngx
+    #- docker_immich
     #- docker_nextcloud
     #- docker_wedding
     #- docker_okletsdoit

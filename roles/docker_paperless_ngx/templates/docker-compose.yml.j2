@@ -2,7 +2,7 @@
 services:
   paperless:
     container_name: paperless
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.20.14
     restart: unless-stopped
     networks:
       - default
@@ -14,8 +14,6 @@ services:
       - postgres
       - gotenberg
       - tika
-    #ports:
-    #  - "8002:8000"
     volumes:
       - {{ docker_paperless_docker_storage }}/paperless_data:/usr/src/paperless/data # Docker container data
       - {{ docker_paperless_docker_storage }}/paperless_media:/usr/src/paperless/media # Location of your documents
@@ -35,7 +33,7 @@ services:
       - PAPERLESS_SECRET_KEY=f8txhKqA9cuG@#GVQiZ#pmF8k2iP^RhxnsgjLea&6MAq4ESJBY4Ktfb!5wuJGKsffS
       - PAPERLESS_FILENAME_FORMAT={created_year}/{correspondent}/{created} {title}/
       - PAPERLESS_URL=https://paperless.{{ all_ext_domain }}
-      - PAPERLESS_ALLOWED_HOSTS=paperless.{{ all_ext_domain }}
+      - PAPERLESS_ALLOWED_HOSTS=paperless.{{ all_ext_domain }},paperless
       - PAPERLESS_ADMIN_USER=paperless_admin
       - PAPERLESS_ADMIN_PASSWORD={{ vault_docker_paperless_admin_password }}
       - PAPERLESS_CONSUMER_RECURSIVE=True
@@ -57,6 +55,9 @@ services:
       - "homepage.icon=sh-paperless-ngx"
       - "homepage.href=https://paperless.{{ all_ext_domain }}/"
       - "homepage.description=Document management and OCR processing"
+      - "homepage.widget.type=paperlessngx"
+      - "homepage.widget.url=http://paperless:8000"
+      - "homepage.widget.key={{ vault_docker_paperless_homepage_widget_api_key }}"
   redis:
     container_name: paperless-redis
     image: redis:7.2-alpine
