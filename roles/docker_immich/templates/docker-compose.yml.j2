@@ -39,6 +39,10 @@ services:
       - "homepage.icon=sh-immich"
       - "homepage.href=https://photos.{{ all_ext_domain }}/"
       - "homepage.description=Photo management and sharing"
+      - "homepage.widget.type=immich"
+      - "homepage.widget.url=https://photos.{{ all_ext_domain }}/"
+      - "homepage.widget.key={{ vault_docker_immich_homepage_widget_api_key }}"
+      - "homepage.widget.version=2"
     depends_on:
       - redis
       - database
