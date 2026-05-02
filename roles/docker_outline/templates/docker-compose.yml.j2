@@ -1,0 +1,94 @@
+# {{ ansible_managed }}
+
+services:
+  outline-postgres:
+    image: postgres:18-alpine
+    container_name: outline-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER={{ vault_docker_outline_db_user }}
+      - POSTGRES_PASSWORD={{ vault_docker_outline_db_password }}
+      - POSTGRES_DB=outline
+    volumes:
+      - {{ docker_outline_docker_storage }}/outline_postgres:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U outline -d outline" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "5432"
+    networks:
+      - outline
+  outline-redis:
+    image: redis:7-alpine
+    container_name: outline-redis
+    expose:
+      - "6379"
+    networks:
+      - outline
+    command: ["redis-server"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:{{ docker_outline_version }}
+    container_name: outline
+    restart: unless-stopped
+    depends_on:
+      outline-postgres:
+        condition: service_healthy
+      outline-redis:
+        condition: service_healthy
+    environment:
+      - SECRET_KEY={{ vault_docker_outline_secret_key }}
+      - UTILS_SECRET={{ vault_docker_outline_utils_secret_key }}
+      - DATABASE_URL=postgres://{{ vault_docker_outline_db_user }}:{{ vault_docker_outline_db_password }}@outline-postgres:5432/outline
+      - PGSSLMODE=disable
+      - REDIS_URL=redis://outline-redis:6379
+      - URL=https://notes.{{ all_ext_domain }}
+      - PORT=3000
+      - WEB_CONCURRENCY=1
+      - FORCE_HTTPS=false
+      - PROXY_IP_HEADER="X-Real-IP"
+      - FILE_STORAGE=s3
+      - AWS_ACCESS_KEY_ID={{ vault_docker_outline_s3_key }}
+      - AWS_SECRET_ACCESS_KEY={{ vault_docker_outline_s3_secret }}
+      - AWS_REGION=garage
+      - AWS_S3_UPLOAD_BUCKET_URL={{ vault_docker_outline_s3_endpoint_url }}
+      - AWS_S3_UPLOAD_BUCKET_NAME=outline-media
+      - AWS_S3_FORCE_PATH_STYLE=true
+      - AWS_S3_ACL=private
+      - SMTP_SERVICE=Gmail
+      - SMTP_USERNAME={{ vault_docker_utility_authentik_email_username }}
+      - SMTP_PASSWORD={{ vault_docker_utility_authentik_email_password }}
+      - SMTP_FROM_EMAIL={{ vault_docker_utility_authentik_email_username }}
+      - OIDC_CLIENT_ID={{ vault_docker_outline_oidc_client_id }}
+      - OIDC_CLIENT_SECRET={{ vault_docker_outline_oidc_client_secret }}
+      - OIDC_ISSUER_URL={{ vault_docker_outline_oidc_issuer_url }}
+      - OIDC_DISPLAY_NAME=Authentik
+      - OIDC_SCOPES=openid profile email
+    networks:
+      - traefik_proxy
+      - outline
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.outline-secure.entrypoints=web-secure"
+      - "traefik.http.routers.outline-secure.rule=Host(`notes.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.outline-secure.tls=true"
+      - "traefik.http.routers.outline-secure.tls.certresolver=route53"
+      - "traefik.http.routers.outline-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.outline-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "homepage.group=Apps"
+      - "homepage.name=Notes"
+      - "homepage.icon=sh-outline"
+      - "homepage.href=https://notes.{{ all_ext_domain }}/"
+      - "homepage.description=Notes and documentation wiki"
+networks:
+  traefik_proxy:
+      external: true
+      name: traefik_proxy
+  outline:
