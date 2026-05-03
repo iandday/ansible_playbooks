@@ -1,0 +1,97 @@
+# {{ ansible_managed }}
+
+services:
+  donetick-postgres:
+    image: postgres:18-alpine
+    container_name: donetick-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER={{ vault_docker_donetick_db_user }}
+      - POSTGRES_PASSWORD={{ vault_docker_donetick_db_password }}
+      - POSTGRES_DB=donetick
+    volumes:
+      - {{ docker_donetick_docker_storage }}/donetick_postgres:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U {{ vault_docker_donetick_db_user }} -d donetick" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "5432"
+    networks:
+      - donetick
+  donetick:
+    image: donetick/donetick:{{ docker_donetick_version }}
+    container_name: donetick
+    restart: unless-stopped
+    environment:
+      - DT_ENV=selfhosted
+      - TZ=America/New_York
+      - DT_NAME=donetick
+      - DT_IS_DONE_TICK_DOT_COM=false
+      - DT_IS_USER_CREATION_DISABLED=false
+      - DT_DATABASE_TYPE=postgres
+      - DT_DATABASE_MIGRATION=true
+      - DT_DATABASE_HOST=donetick-postgres
+      - DT_DATABASE_PORT=5432
+      - DT_DATABASE_USER={{ vault_docker_donetick_db_user }}
+      - DT_DATABASE_PASSWORD={{ vault_docker_donetick_db_password }}
+      - DT_DATABASE_NAME=donetick
+      - DT_JWT_SECRET={{ vault_docker_donetick_jwt_secret }}
+      - DT_JWT_SESSION_TIME=168h
+      - DT_JWT_MAX_REFRESH=1440h
+      - DT_SERVER_PORT=2021
+      - DT_SERVER_READ_TIMEOUT=10s
+      - DT_SERVER_WRITE_TIMEOUT=10s
+      - DT_SERVER_RATE_PERIOD=60s
+      - DT_SERVER_RATE_LIMIT=300
+      - DT_SERVER_CORS_ALLOW_ORIGINS=http://localhost:5173,http://localhost:7926,https://localhost,http://localhost,capacitor://localhost
+      - DT_SERVER_SERVE_FRONTEND=true
+      - DT_SERVER_SERVE_SWAGGER=true
+      - DT_SERVER_PUBLIC_HOST=https://tasks.{{ all_ext_domain }}
+      - DT_LOGGING_LEVEL=info
+      - DT_LOGGING_ENCODING=json
+      - DT_LOGGING_DEVELOPMENT=false
+      - DT_SCHEDULER_JOBS_DUE_JOB=30m
+      - DT_SCHEDULER_JOBS_OVERDUE_JOB=3h
+      - DT_SCHEDULER_JOBS_PRE_DUE_JOB=3h
+      - DT_OAUTH2_CLIENT_ID={{ vault_docker_donetick_oidc_client_id }}
+      - DT_OAUTH2_CLIENT_SECRET={{ vault_docker_donetick_oidc_client_secret }}
+      - DT_OAUTH2_AUTH_URL={{ vault_docker_donetick_oidc_auth_url }}
+      - DT_OAUTH2_TOKEN_URL={{ vault_docker_donetick_oidc_token_url }}
+      - DT_OAUTH2_USER_INFO_URL={{ vault_docker_donetick_oidc_user_info_url }}
+      - DT_OAUTH2_NAME=Authentik
+      - DT_STORAGE_STORAGE_TYPE=remote
+      - DT_STORAGE_BUCKET_NAME=donetick
+      - DT_STORAGE_REGION=garage
+      - DT_STORAGE_ACCESS_KEY={{ vault_docker_donetick_s3_key }}
+      - DT_STORAGE_SECRET_KEY={{ vault_docker_donetick_s3_secret }}
+      - DT_STORAGE_ENDPOINT={{ vault_docker_donetick_s3_endpoint_url }}
+      - DT_STORAGE_MAX_USER_STORAGE=104857600
+      - DT_STORAGE_MAX_FILE_SIZE=2097152
+    networks:
+      - traefik_proxy
+      - donetick
+    depends_on:
+      donetick-postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.donetick-secure.entrypoints=web-secure"
+      - "traefik.http.routers.donetick-secure.rule=Host(`tasks.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.donetick-secure.tls=true"
+      - "traefik.http.routers.donetick-secure.tls.certresolver=route53"
+      - "traefik.http.routers.donetick-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.donetick-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.donetick-secure.loadbalancer.server.port=2021"
+      - "homepage.group=Apps"
+      - "homepage.name=Tasks"
+      - "homepage.icon=sh-donetick"
+      - "homepage.href=https://tasks.{{ all_ext_domain }}/"
+      - "homepage.description=Task management"
+networks:
+  traefik_proxy:
+      external: true
+      name: traefik_proxy
+  donetick:

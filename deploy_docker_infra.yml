@@ -26,4 +26,5 @@
     #- docker_nextcloud_community
     #- docker_homebox
     #- docker_tandoor
-    - docker_outline
+    #- docker_outline
+    - docker_donetick

@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_donetick/defaults/main.yml
+#
+
+docker_donetick_required_vars:
+  - docker_uid
+  - docker_gid
+docker_donetick_docker_builds: "{{ all_docker_builds }}"
+docker_donetick_docker_storage: "{{ all_docker_storage }}"
