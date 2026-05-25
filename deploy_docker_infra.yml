@@ -27,4 +27,5 @@
     #- docker_homebox
     #- docker_tandoor
     #- docker_outline
-    - docker_donetick
+    #- docker_donetick
+    - docker_netbootxyz

@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_netbootxyz/defaults/main.yml
+#
+
+docker_netbootxyz_required_vars:
+  - docker_uid
+  - docker_gid
+docker_netbootxyz_docker_builds: "{{ all_docker_builds }}"
+docker_netbootxyz_docker_storage: "{{ all_docker_storage }}"
