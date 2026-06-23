@@ -23,3 +23,10 @@
     mode: 0700
   loop:
     - docker-compose.yml
+
+- name: install intel-media-va-driver-non-free
+  become: true
+  apt:
+    name: intel-media-va-driver-non-free
+    state: present
+    update_cache: true

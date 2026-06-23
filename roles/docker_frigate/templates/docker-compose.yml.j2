@@ -6,11 +6,12 @@ services:
     privileged: true
     restart: unless-stopped
     image: ghcr.io/blakeblackshear/frigate:0.17.1
-    shm_size: "256mb"
+    shm_size: "512mb"
     networks:
       - default
     devices:
       - /dev/bus/usb:/dev/bus/usb
+      - /dev/dri/renderD128
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - {{ docker_frigate_docker_storage }}/frigate_config:/config
@@ -26,15 +27,6 @@ services:
       - "1984:1984" # API
       - "8555:8555/tcp" # WebRTC over tcp
       - "8555:8555/udp" # WebRTC over udp
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frigate-secure.entrypoints=web-secure"
-      - "traefik.http.routers.frigate-secure.rule=Host(`frigate.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.frigate-secure.tls=true"
-      - "traefik.http.routers.frigate-secure.tls.certresolver=route53"
-      - "traefik.http.routers.frigate-secure.tls.domains[0].main={{ all_ext_domain }}"
-      - "traefik.http.routers.frigate-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.frigate-secure.loadbalancer.server.port=8971"
     environment:
       - FRIGATE_RTSP_PASSWORD=password
       - PLUS_API_KEY={{vault_frigate_plus_api_key}}

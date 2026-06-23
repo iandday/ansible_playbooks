@@ -15,4 +15,3 @@
       gather_facts:
   roles:
     #- docker
-    - docker_netbootxyz

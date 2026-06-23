@@ -3,17 +3,16 @@
 # roles/docker/tasks/main.yml
 #
 
-- name: add package repo key(s)
-  apt_key:
-    url: "https://download.docker.com/linux/ubuntu/gpg"
-    state: present
+- name: Add docker repository
   become: true
-
-- name: add package repo source(s)
-  apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu noble stable"
-    state: present
-  become: true
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/ubuntu
+    suites: '{{ ansible_facts["distribution_release"] }}'
+    components: stable
+    architectures: "{{ ansible_facts['architecture'] if ansible_facts['architecture'] != 'x86_64' else 'amd64' }}"
+    signed_by: https://download.docker.com/linux/ubuntu/gpg
 
 - name: install packages
   apt:
@@ -114,6 +113,4 @@
   include_role:
     name: common
     tasks_from: rotate_backups
-  vars:
-    - cron_user: root
-    - backup_path: "{{ docker_backup_dir }}"
+  vars: { "cron_user": "root", "backup_path": "{{ docker_backup_dir }}" }

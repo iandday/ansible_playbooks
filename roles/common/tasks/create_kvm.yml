@@ -9,9 +9,11 @@
     api_password: "{{ all_pve_api_password }}"
     api_host: "{{ all_pve_api_host }}"
     node: "{{ kvm_node }}"
+    validate_certs: false
     type: qemu
     name: "{{ inventory_hostname }}"
     config: current
+
   delegate_to: localhost
   register: kvm_check
 
@@ -24,6 +26,7 @@
     name: "{{ inventory_hostname }}"
     clone: "{{ all_kvm_template_name }}"
     storage: "{{ all_kvm_storage_target }}"
+    validate_certs: false
     agent: yes
     full: yes
     reboot: yes
@@ -50,6 +53,7 @@
     memory: "{{ kvm_memory }}"
     net: "{{ kvm_net }}"
     node: "{{ kvm_node }}"
+    validate_certs: false
     update: yes
     agent: yes
     full: yes
@@ -122,6 +126,7 @@
     api_user: "{{ all_pve_api_user }}"
     api_password: "{{ all_pve_api_password }}"
     api_host: "{{ all_pve_api_host }}"
+    validate_certs: false
     state: started
     timeout: 300
   when: kvm_create.changed
