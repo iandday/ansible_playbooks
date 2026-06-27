@@ -81,6 +81,7 @@ dependencies = [
     { name = "ansible" },
     { name = "ansible-core" },
     { name = "ansible-lint" },
+    { name = "ansible-vault" },
     { name = "paramiko" },
     { name = "proxmoxer" },
     { name = "requests" },
@@ -91,9 +92,23 @@ requires-dist = [
     { name = "ansible", specifier = ">=14.1.0" },
     { name = "ansible-core", specifier = ">=2.21.1" },
     { name = "ansible-lint", specifier = ">=26.4.0" },
+    { name = "ansible-vault", specifier = ">=4.1.0" },
     { name = "paramiko", specifier = ">=5.0.0" },
     { name = "proxmoxer", specifier = ">=2.3.0" },
     { name = "requests", specifier = ">=2.34.2" },
+]
+
+[[package]]
+name = "ansible-vault"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ansible-core" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/33/60/bd340a38b7d9fd4fcdd2df4a2b21f5e23af0481c5424c07d30668a7d6ed8/ansible_vault-4.1.0.tar.gz", hash = "sha256:7e985a9329e4728961d7a00f62412fa8ec246a4d832ad6e6d158165e0026529b", size = 15876, upload-time = "2025-05-15T11:50:42.647Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9e/0b/1c4e83665280bde1101862635ee6d69b43886002b30128d2fe82ba63cab7/ansible_vault-4.1.0-py3-none-any.whl", hash = "sha256:ae2e194bb68cc94471d0cdba0705cea9390d9c3dfe6299eeb1d4ee36af602bd9", size = 16062, upload-time = "2025-05-15T11:50:41.435Z" },
 ]
 
 [[package]]

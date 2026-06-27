@@ -2,7 +2,7 @@
 services:
   paperless:
     container_name: paperless
-    image: ghcr.io/paperless-ngx/paperless-ngx:2.20.14
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
     restart: unless-stopped
     networks:
       - default
@@ -40,6 +40,15 @@ services:
       - PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS=True
       - PAPERLESS_CONSUMER_POLLING=300
       - PAPERLESS_FILENAME_DATE_ORDER=MDY
+      - PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
+      - PAPERLESS_SOCIALACCOUNT_PROVIDERS_FILE=/run/secrets/socialaccount_providers.json
+      - PAPERLESS_REDIRECT_LOGIN_TO_SSO=true
+      - PAPERLESS_DISABLE_REGULAR_LOGIN=true
+      - PAPERLESS_ENABLE_SOCIAL_LOGIN=true
+      - PAPERLESS_SOCIAL_AUTO_SIGNUP=true
+      - PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS=true
+    secrets:
+      - socialaccount_providers.json
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
@@ -100,6 +109,9 @@ services:
     restart: unless-stopped
     networks:
       - default
+secrets:
+  socialaccount_providers.json:
+    file: "{{ docker_paperless_docker_builds }}/paperless/oidc.json"
 networks:
   traefik_proxy:
       name: traefik_proxy

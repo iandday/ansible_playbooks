@@ -8,6 +8,7 @@ dependencies = [
     "ansible>=14.1.0",
     "ansible-core>=2.21.1",
     "ansible-lint>=26.4.0",
+    "ansible-vault>=4.1.0",
     "paramiko>=5.0.0",
     "proxmoxer>=2.3.0",
     "requests>=2.34.2",

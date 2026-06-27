@@ -15,8 +15,8 @@
       gather_facts:
   roles:
     #- docker
-    - docker_utility
-    #- docker_paperless_ngx
+    #- docker_utility
+    - docker_paperless_ngx
     #- docker_immich
     #- docker_nextcloud
     #- docker_wedding

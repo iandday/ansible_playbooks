@@ -23,6 +23,7 @@
     mode: 0700
   loop:
     - docker-compose.yml
+    - oidc.json
 
 # - name: create config storage directory
 #   become: true
