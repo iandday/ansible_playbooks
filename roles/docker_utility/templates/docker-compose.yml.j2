@@ -29,7 +29,7 @@ services:
       - "homepage.group=Infrastructure"
       - "homepage.name=Portainer"
       - "homepage.icon=sh-portainer-v1"
-      - "homepage.href=https://docker-infra-01.{{ all_ext_domain }}:9443"
+      - "homepage.href=https://docker-infra-01.{{ all_egxt_domain }}:9443"
       - "homepage.description=Docker environment management"
       - "homepage.widget.type=portainer"
       - "homepage.widget.url=https://portainer:9443"
@@ -91,7 +91,7 @@ services:
       - "traefik.enable=false"
   authentik_server:
     container_name: authentik_server
-    image: ghcr.io/goauthentik/server:2026.5.3
+    image: ghcr.io/goauthentik/server:2026.5.6
     restart: unless-stopped
     command: server
     environment:
@@ -143,7 +143,7 @@ services:
       - authentik_redis
   authentik_worker:
     container_name: authentik_worker
-    image: ghcr.io/goauthentik/server:2026.5.3
+    image: ghcr.io/goauthentik/server:2026.5.6
     restart: unless-stopped
     command: worker
     environment:
