@@ -2,7 +2,7 @@
 
 services:
   portainer:
-    image: portainer/portainer-ce:2.39.4
+    image: portainer/portainer-ce:{{ docker_utility_portainer_version }}
     container_name: portainer
     restart: always
     command: -H unix:///var/run/docker.sock
@@ -29,7 +29,7 @@ services:
       - "homepage.group=Infrastructure"
       - "homepage.name=Portainer"
       - "homepage.icon=sh-portainer-v1"
-      - "homepage.href=https://docker-infra-01.{{ all_egxt_domain }}:9443"
+      - "homepage.href=https://docker-infra-01.{{ all_ext_domain }}:9443"
       - "homepage.description=Docker environment management"
       - "homepage.widget.type=portainer"
       - "homepage.widget.url=https://portainer:9443"
@@ -249,7 +249,7 @@ services:
   #    - traefik_proxy
   bitwarden:
     hostname: bitwarden
-    image: vaultwarden/server:latest
+    image: vaultwarden/server:{{ docker_utility_vault_warden_version }}
     container_name: bitwarden
     restart: always
     volumes:

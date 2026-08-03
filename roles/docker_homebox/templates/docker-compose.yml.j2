@@ -2,7 +2,7 @@
 
 services:
   homebox:
-    image: ghcr.io/sysadminsmedia/homebox:0.25.0-rootless
+    image: ghcr.io/sysadminsmedia/homebox:0.26.2-rootless
     container_name: homebox
     restart: unless-stopped
     depends_on:
@@ -38,7 +38,9 @@ services:
       - HBOX_OPTIONS_TRUST_PROXY=true
       - HBOX_OPTIONS_ALLOW_REGISTRATION=true
       - HBOX_BARCODE_TOKEN_BARCODESPIDER={{ vault_docker_homebox_barcode_spider_token }}
+      - HBOX_BARCODE_OPEN_FOOD_FACTS_CONTACT={{ vault_docker_utility_mail_username }}
       - HBOX_OPTIONS_HOSTNAME=inventory.{{ all_ext_domain }}
+      - HBOX_AUTH_API_KEY_PEPPER={{ vault_docker_homebox_api_key_pepper }}
     networks:
       - traefik_proxy
       - homebox
