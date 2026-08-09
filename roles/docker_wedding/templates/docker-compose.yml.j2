@@ -103,7 +103,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.wedding-secure.entrypoints=web-secure"
-      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`))"
+      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`) || PathPrefix(`/health`) || PathPrefix(`/ws`))"
       - "traefik.http.routers.wedding-secure.priority=35"
       - "traefik.http.routers.wedding-secure.tls=true"
       - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
