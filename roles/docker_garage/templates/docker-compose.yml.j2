@@ -6,9 +6,8 @@ services:
     image: dxflrs/garage:v2.1.0
     container_name: garage-gateway
     networks:
-      traefik_proxy: {}
-      garage:
-        ipv4_address: 172.20.0.10
+      - traefik_proxy
+      - garage
     restart: unless-stopped
     volumes:
       - {{ docker_garage_docker_storage }}/garage_config/garage.toml:/etc/garage.toml
@@ -48,8 +47,7 @@ services:
     image: dxflrs/garage:v2.1.0
     container_name: garage-1
     networks:
-      garage:
-        ipv4_address: 172.20.0.11
+      - garage
     restart: unless-stopped
     volumes:
       - {{ docker_garage_docker_storage }}/garage_config/garage.toml:/etc/garage.toml
@@ -61,8 +59,7 @@ services:
     image: dxflrs/garage:v2.1.0
     container_name: garage-2
     networks:
-      garage:
-        ipv4_address: 172.20.0.12
+      - garage
     restart: unless-stopped
     volumes:
       - {{ docker_garage_docker_storage }}/garage_config/garage.toml:/etc/garage.toml
@@ -74,8 +71,7 @@ services:
     image: dxflrs/garage:v2.1.0
     container_name: garage-3
     networks:
-      garage:
-        ipv4_address: 172.20.0.13
+      - garage
     restart: unless-stopped
     volumes:
       - {{ docker_garage_docker_storage }}/garage_config/garage.toml:/etc/garage.toml
@@ -88,7 +84,5 @@ networks:
     external: true
     name: traefik_proxy
   garage:
-    external: true
-    name: garage
-  #default:
-  #  driver: bridge
+    driver: bridge
+    internal: true 

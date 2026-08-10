@@ -24,17 +24,6 @@
   loop:
     - docker-compose.yml
 
-- name: create docker network with custom subnet
-  become: true
-  docker_network:
-    name: immich
-    driver: bridge
-    ipam_config:
-      - subnet: 172.24.0.0/16
-        gateway: 172.24.0.1
-        iprange: 172.24.0.0/24
-    state: present
-
 - name: mount photo
   include_role:
     name: common

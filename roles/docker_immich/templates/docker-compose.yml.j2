@@ -18,12 +18,9 @@ services:
       - DB_HOSTNAME=immich_postgres
       - TZ=America/New_York
       - REDIS_HOSTNAME=immich_redis
-    #ports:
-    #  - '8009:2283'
     networks:
-      traefik_proxy: {}
-      immich:
-        ipv4_address: 172.24.0.13
+      - traefik_proxy
+      - immich
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
@@ -68,8 +65,7 @@ services:
     healthcheck:
       disable: false
     networks:
-      immich:
-        ipv4_address: 172.24.0.12
+      - immich 
     labels:
       - "traefik.enable=false"
 
@@ -80,8 +76,7 @@ services:
       test: redis-cli ping || exit 1
     restart: always
     networks:
-      immich:
-        ipv4_address: 172.24.0.11
+      - immich
     labels:
       - "traefik.enable=false"
 
@@ -98,8 +93,7 @@ services:
     shm_size: 128mb
     restart: always
     networks:
-      immich:
-        ipv4_address: 172.24.0.10
+      - immich
     labels:
       - "traefik.enable=false"
 
@@ -108,14 +102,13 @@ services:
     image: salvoxia/immich-folder-album-creator:latest
     restart: unless-stopped
     networks:
-      traefik_proxy: {}
-      immich:
-        ipv4_address: 172.24.0.15
+      - traefik_proxy
+      - immich
     volumes:
       - {{ docker_immich_originals_path }}/ian:/mnt/photos/ian
       - {{ docker_immich_originals_path }}/steph:/mnt/photos/steph
     environment:
-      - API_URL=http://172.24.0.13:2283/api
+      - API_URL=http://immich-server:2283/api
       - API_KEY={{ vault_docker_immich_album_creator_api_ian }}:{{ vault_docker_immich_album_creator_api_steph }}
       - ROOT_PATH=/mnt/photos/ian
       - CRON_EXPRESSION=0 * * * *
@@ -129,12 +122,11 @@ services:
     ports:
       - '8010:3000'
     networks:
-      traefik_proxy: {}
-      immich:
-        ipv4_address: 172.24.0.14
+      - traefik_proxy
+      - immich 
     environment:
       - KIOSK_IMMICH_API_KEY={{ vault_docker_immichframe_api_key }}
-      - KIOSK_IMMICH_URL=http://172.24.0.13:2283
+      - KIOSK_IMMICH_URL=http://immich-server:2283
       - KIOSK_IMMICH_EXTERNAL_URL=https://photos.{{ all_ext_domain }}
       - KIOSK_SHOW_ALBUM_NAME=true
       - KIOSK_SHOW_IMAGE_DATE=true
@@ -171,8 +163,8 @@ volumes:
 
 networks:
   immich:
-    external: true
-    name: immich
+    driver: bridge
+    internal: true 
   traefik_proxy:
     external: true
     name: traefik_proxy
