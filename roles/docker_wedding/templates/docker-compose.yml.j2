@@ -18,11 +18,12 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
-  redis:
+  wedding-redis:
     image: redis:7.0
-    command: [ "redis-server", "--save", "60", "1", "--loglevel", "warning" ]
+    container_name: wedding-redis
+    command: [ "redis-server", "--appendonly", "yes", "--save", "60", "1"]
     volumes:
-      - {{ docker_wedding_docker_storage }}/wedding_redis:/data
+      - wedding-redis:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
@@ -88,7 +89,7 @@ services:
       - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_wedding_aws_s3_static_domain_csp }}
       - CONTAINER_ROLE=server
       - LOCAL_DEV=True
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://wedding-redis:6379
       - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
       - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
       - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
@@ -103,13 +104,16 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.wedding-secure.entrypoints=web-secure"
-      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`) || PathPrefix(`/health`) || PathPrefix(`/ws`))"
+      - "traefik.http.routers.wedding-secure.rule=Host(`wedding.{{ all_ext_domain }}`) && (PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`) || PathPrefix(`/health`) || PathPrefix(`/ws`))"
       - "traefik.http.routers.wedding-secure.priority=35"
       - "traefik.http.routers.wedding-secure.tls=true"
       - "traefik.http.routers.wedding-secure.tls.certresolver=route53"
       - "traefik.http.routers.wedding-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.wedding-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.middlewares.django-secure-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.django-secure-headers.headers.customrequestheaders.X-Forwarded-Host=wedding.{{ all_ext_domain }}"
       - "traefik.http.routers.wedding-secure.middlewares=file-upload@file"
+      - "traefik.http.routers.wedding-secure.middlewares=django-secure-headers"
       - "traefik.http.services.wedding-secure.loadbalancer.server.port=8000"
     networks:
       - traefik_proxy
@@ -149,7 +153,7 @@ services:
       - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_wedding_aws_s3_static_domain_csp }}
       - CONTAINER_ROLE=worker
       - LOCAL_DEV=True
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://wedding-redis:6379
       - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
       - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
       - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
@@ -197,7 +201,7 @@ services:
       - AWS_S3_STATIC_DOMAIN_CSP={{ vault_docker_wedding_aws_s3_static_domain_csp }}
       - CONTAINER_ROLE=beats
       - LOCAL_DEV=True
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://wedding-redis:6379
       - SERVICE_TOKEN={{ vault_docker_wedding_api_backend_token }}
       - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
       - EMAIL_HOST={{ vault_docker_utility_authentik_email_server }}
@@ -213,7 +217,9 @@ services:
     depends_on:
       - wedding-postgres
 
-
+volumes:
+  wedding-redis:
+    driver: local
 networks:
   traefik_proxy:
       name: traefik_proxy

@@ -72,6 +72,8 @@ services:
       - TIMEZONE=America/New_York
       - DJANGO_SUPERUSER_EMAIL={{ vault_docker_okletsdoit_admin_email }}
       - DJANGO_SUPERUSER_PASSWORD={{ vault_docker_okletsdoit_admin_password }}
+      - DJANGO_ACCOUNT_ALLOW_REGISTRATION=false
+      - DJANGO_ACCOUNT_ALLOW_SOCIAL_REGISTRATION=false
       - AUTHENTIK_URL={{ vault_docker_wedding_auth_url }}
       - AUTHENTIK_CLIENT_ID={{ vault_docker_wedding_auth_client_id }}
       - AUTHENTIK_CLIENT_SECRET={{ vault_docker_wedding_auth_client_secret }}
@@ -107,15 +109,17 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.okletsdoit-secure.entrypoints=web-secure"
-      - "traefik.http.routers.okletsdoit-secure.rule=(Host(`aboutdayumtime.com`) || Host(`www.aboutdayumtime.com`)) && (PathPrefix(`/be_admin`) || PathPrefix(`/static`) || PathPrefix(`/media`) || PathPrefix(`/api`) || PathPrefix(`/accounts`) || PathPrefix(`/_allauth`) || PathPrefix(`/health`) || PathPrefix(`/ws`))"
-      - "traefik.http.routers.wedding-secure.priority=35"
+      - "traefik.http.routers.okletsdoit-secure.rule=(Host(`aboutdayumtime.com`) || Host(`www.aboutdayumtime.com`)) && PathRegexp(`^/(admin|static|media|api|accounts|_allauth|health|ws)`)"
       - "traefik.http.routers.okletsdoit-secure.priority=35"
       - "traefik.http.routers.okletsdoit-secure.tls=true"
       - "traefik.http.routers.okletsdoit-secure.tls.certresolver=route53"
       - "traefik.http.routers.okletsdoit-secure.tls.domains[0].main=aboutdayumtime.com"
       - "traefik.http.routers.okletsdoit-secure.tls.domains[0].sans=*.aboutdayumtime.com"
+      #- "traefik.http.middlewares.django-secure-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+      #- "traefik.http.middlewares.django-secure-headers.headers.customrequestheaders.X-Forwarded-Host=www.aboutdayumtime.com"
       - "traefik.http.services.okletsdoit-secure.loadbalancer.server.port=8000"
       - "traefik.http.routers.okletsdoit-secure.middlewares=file-upload@file,crowdsec@file"
+      #- "traefik.http.routers.okletsdoit-secure.middlewares=django-secure-headers"
     depends_on:
       - okletsdoit-postgres
   okletsdoit-worker:
