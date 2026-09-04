@@ -126,7 +126,7 @@ configure
 `chown -R ansible:ansible /home/ansible`
 `chmod 0400 /home/ansible/.ssh/authorized_keys`
 `chmod 0700 /home/ansible/.ssh/`
-`echo "ansible ALL=(ALL) NOPASSWD: ALL chmod 0440" >> /etc/sudoers.d/ansible` 
+`echo "ansible ALL=(ALL) NOPASSWD: ALL0" >> /etc/sudoers.d/ansible` 
 `chmod 0440 /etc/sudoers.d/ansible`
 `chown root:root /etc/sudoers.d/ansible`
 
