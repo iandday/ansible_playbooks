@@ -100,6 +100,7 @@ services:
       - EMAIL_URL_BASE=https://wedding.{{ all_ext_domain }}
       - PERSONALIZED_RSVP_BASE_URL=https://wedding.{{ all_ext_domain }}
       - RSVP_URL=https://wedding.{{ all_ext_domain }}/rsvp
+      - BASE_URL=https://wedding.{{ all_ext_domain }}/
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
