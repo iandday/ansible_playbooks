@@ -2,7 +2,7 @@
 services:
   paperless:
     container_name: paperless
-    image: ghcr.io/paperless-ngx/paperless-ngx:2.20.15
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.3.3
     restart: unless-stopped
     networks:
       - default
@@ -27,6 +27,7 @@ services:
       - PAPERLESS_ENABLE_UPDATE_CHECK=true
       - PAPERLESS_REDIS=redis://redis:6379
       - PAPERLESS_DBHOST=postgres
+      - PAPERLESS_DBENGINE=postgresql
       - PAPERLESS_DBNAME=paperless
       - PAPERLESS_DBUSER=paperless
       - PAPERLESS_DBPASS={{ vault_docker_paperless_db_password }}
@@ -38,7 +39,7 @@ services:
       - PAPERLESS_ADMIN_PASSWORD={{ vault_docker_paperless_admin_password }}
       - PAPERLESS_CONSUMER_RECURSIVE=True
       - PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS=True
-      - PAPERLESS_CONSUMER_POLLING=300
+      - PAPERLESS_CONSUMER_POLLING_INTERVAL=300
       - PAPERLESS_FILENAME_DATE_ORDER=MDY
       - PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
       - PAPERLESS_SOCIALACCOUNT_PROVIDERS_FILE=/run/secrets/socialaccount_providers.json

@@ -16,7 +16,7 @@
 
 - name: check current mounts
   set_fact:
-    mount_names: "{{ ansible_mounts | map(attribute='mount') | list}}"
+    mount_names: "{{ ansible_facts['mounts'] | map(attribute='mount') | list}}"
   become: true
 
 - name: mount
