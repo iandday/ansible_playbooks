@@ -1,0 +1,10 @@
+---
+#
+# roles/docker_mealie/defaults/main.yml
+#
+
+docker_mealie_required_vars:
+  - docker_uid
+  - docker_gid
+docker_mealie_docker_builds: "{{ all_docker_builds }}"
+docker_mealie_docker_storage: "{{ all_docker_storage }}"

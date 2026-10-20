@@ -1,0 +1,86 @@
+# {{ ansible_managed }}
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:17
+    restart: always
+    volumes:
+      - {{ docker_mealie_docker_storage }}/mealie_db:/var/lib/postgresql/data
+    networks:
+      - mealie
+    environment:
+      - POSTGRES_PASSWORD={{ vault_docker_mealie_db_password }}
+      - POSTGRES_USER={{ vault_docker_mealie_db_user }}
+      - PGUSER={{ vault_docker_mealie_db_user }}
+      - POSTGRES_DB=mealie
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:v3.28.0  
+    container_name: mealie
+    restart: always
+    networks:
+      - traefik_proxy
+      - mealie
+    deploy:
+      resources:
+        limits:
+          memory: 1000M # 
+    volumes:
+      -  {{ docker_mealie_docker_storage }}/mealie_data:/app/data/
+    environment:
+      - ALLOW_SIGNUP=false
+      - PUID={{ docker_uid }}
+      - PGID={{ docker_gid }}
+      - TZ=America/New_York
+      - BASE_URL=https://mealie.{{ all_ext_domain }}
+      - DB_ENGINE=postgres
+      - POSTGRES_USER={{ vault_docker_mealie_db_user }}
+      - POSTGRES_PASSWORD={{ vault_docker_mealie_db_password }}
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=mealie
+      - SMTP_HOST={{ all_internal_mail_server}}
+      - SMTP_PORT={{ all_internal_mail_port }}
+      - SMTP_FROM_EMAIL=mealie@{{ all_ext_domain }}
+      - SMTP_AUTH_STRATEGY=NONE
+      - OIDC_AUTH_ENABLED=True
+      - OIDC_SIGNUP_ENABLED=True
+      - OIDC_CONFIGURATION_URL=https://auth.{{ all_ext_domain }}/application/o/mealie/.well-known/openid-configuration
+      - OIDC_CLIENT_ID={{ vault_docker_mealie_oidc_client_id }}
+      - OIDC_CLIENT_SECRET={{ vault_docker_mealie_oidc_client_secret }}
+      - OIDC_AUTO_REDIRECT=True
+      - OIDC_PROVIDER_NAME=Authentik
+      - OIDC_REMEMBER_ME=False
+      - OIDC_GROUPS_CLAIM=entitlements
+      - OIDC_USER_GROUP=mealie-users
+      - OIDC_ADMIN_GROUP=mealie-admins
+      - OIDC_REQUIRES_EMAIL_VERIFICATION=false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.mealie-secure.entrypoints=web-secure"
+      - "traefik.http.routers.mealie-secure.rule=Host(`mealie.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.mealie-secure.tls=true"
+      - "traefik.http.routers.mealie-secure.tls.certresolver=route53"
+      - "traefik.http.routers.mealie-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.mealie-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.mealie-secure.loadbalancer.server.port=9000"
+      - "homepage.group=Apps"
+      - "homepage.name=mealie Recipes and Shopping List"
+      - "homepage.icon=sh-mealie"
+      - "homepage.href=https://mealie.{{ all_ext_domain }}/"
+      - "homepage.description=Recipe management, meal planning, and shopping lists"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  traefik_proxy:
+      external: true
+      name: traefik_proxy
+  mealie:
