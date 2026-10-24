@@ -1,6 +1,15 @@
 # {{ ansible_managed }}
 
 services:
+  reostream:
+    image: ghcr.io/volttech21/reostream:latest
+    restart: unless-stopped
+    ports:
+      - "8560:8560"
+      - "8561:8561"
+      - "8562:8562"
+    volumes:
+      - {{ docker_frigate_docker_storage }}/reostream_data:/data
   frigate:
     container_name: frigate
     privileged: true
