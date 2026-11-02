@@ -20,7 +20,7 @@ services:
       timeout: 20s
       retries: 3
   mealie:
-    image: ghcr.io/mealie-recipes/mealie:v3.28.0  
+    image: ghcr.io/mealie-recipes/mealie:v3.30.0  
     container_name: mealie
     restart: always
     networks:
@@ -33,7 +33,7 @@ services:
     volumes:
       -  {{ docker_mealie_docker_storage }}/mealie_data:/app/data/
     environment:
-      - ALLOW_SIGNUP=false
+      - ALLOW_SIGNUP=true
       - PUID={{ docker_uid }}
       - PGID={{ docker_gid }}
       - TZ=America/New_York
@@ -55,11 +55,12 @@ services:
       - OIDC_CLIENT_SECRET={{ vault_docker_mealie_oidc_client_secret }}
       - OIDC_AUTO_REDIRECT=True
       - OIDC_PROVIDER_NAME=Authentik
-      - OIDC_REMEMBER_ME=False
+      - OIDC_REMEMBER_ME=True
       - OIDC_GROUPS_CLAIM=entitlements
       - OIDC_USER_GROUP=mealie-users
       - OIDC_ADMIN_GROUP=mealie-admins
-      - OIDC_REQUIRES_EMAIL_VERIFICATION=false
+      - OIDC_REQUIRES_EMAIL_VERIFICATION=False
+      - ALLOW_PASSWORD_LOGIN=false
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
