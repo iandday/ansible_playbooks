@@ -64,7 +64,7 @@ services:
       - "homepage.href=https://cloud.{{ all_ext_domain }}/"
       - "homepage.description=File sharing, calendar, contacts, and more"
   ncc-app:
-    image: nextcloud:33.0.2-fpm
+    image: nextcloud:35.0.2-fpm
     restart: always
     hostname: ncc_app
     volumes:
@@ -92,7 +92,7 @@ services:
       - ncc-db
       - ncc-redis
   ncc-cron:
-    image: nextcloud:33.0.2-fpm
+    image: nextcloud:35.0.2-fpm
     restart: always
     hostname: ncc-cron
     networks:
