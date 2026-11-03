@@ -3,7 +3,7 @@
 
 services:
   garagegateway:
-    image: dxflrs/garage:v2.1.0
+    image: dxflrs/garage:v2.5.0
     container_name: garage-gateway
     networks:
       traefik_proxy:
@@ -47,7 +47,7 @@ services:
       - "traefik.http.services.garage-static-secure.loadbalancer.server.port=3902"
       - "traefik.http.routers.garage-static-secure.service=garage-static-secure"
   garage1:
-    image: dxflrs/garage:v2.1.0
+    image: dxflrs/garage:v2.5.0
     container_name: garage-1
     networks:
       garage:
@@ -60,7 +60,7 @@ services:
     labels:
       - "traefik.enable=false"
   garage2:
-    image: dxflrs/garage:v2.1.0
+    image: dxflrs/garage:v2.5.0
     container_name: garage-2
     networks:
       garage:
@@ -73,7 +73,7 @@ services:
     labels:
       - "traefik.enable=false"
   garage3:
-    image: dxflrs/garage:v2.1.0
+    image: dxflrs/garage:v2.5.0
     container_name: garage-3
     networks:
       garage:

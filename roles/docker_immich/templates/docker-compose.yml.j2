@@ -151,13 +151,15 @@ services:
       - "traefik.http.routers.immich-frame-secure.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.immich-frame-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
       - "traefik.http.services.immich-frame-secure.loadbalancer.server.port=3000"
-
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "/kiosk", "--healthcheck"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+    depends_on:
+      immich-server:
+        condition: service_healthy
 volumes:
   model-cache:
 

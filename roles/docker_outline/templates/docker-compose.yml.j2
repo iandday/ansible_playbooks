@@ -87,6 +87,12 @@ services:
       - "homepage.icon=sh-outline"
       - "homepage.href=https://notes.{{ all_ext_domain }}/"
       - "homepage.description=Notes and documentation wiki"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/_health | grep -q OK || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s 
 networks:
   traefik_proxy:
       external: true

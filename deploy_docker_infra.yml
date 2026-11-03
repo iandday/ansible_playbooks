@@ -15,15 +15,15 @@
       gather_facts:
   roles:
     #- docker
-    #- docker_utility
-    #- docker_paperless_ngx
-    #- docker_immich
+    #- docker_utility#
+    #- docker_paperless_ngx#
+    #- docker_immich#
     #- docker_wedding
     #- docker_okletsdoit
-    #- docker_garage
+    #- docker_garage#
     #- docker_hc_vault
-    - docker_nextcloud_community
+    #- docker_nextcloud_community#
     #- docker_homebox
     #- docker_outline
-    #- docker_donetick
-    #- docker_mealie
+    #- docker_donetick#
+    #- docker_mealie#
