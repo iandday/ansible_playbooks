@@ -1,0 +1,99 @@
+---
+#
+# roles/docker_dockhand/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ docker_dockhand_docker_builds }}/dockhand"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_dockhand_docker_builds }}/dockhand/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: start compose stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_dockhand_docker_builds }}/dockhand"
+    state: present
+  become: true
+
+- name: Check for completed flag file
+  ansible.builtin.stat:
+    path: "{{ docker_dockhand_docker_builds }}/dockhand/.completed"
+  become: true
+  register: completed_flag_file
+
+- name: Wait for Dockhand API to become responsive
+  ansible.builtin.wait_for:
+    port: "{{ docker_dockhand_host_port }}"
+    delay: 3
+    timeout: 30
+  when: not completed_flag_file.stat.exists
+
+- name: Configure Local Docker Environment Connection
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}:{{ docker_dockhand_host_port }}/api/environments"
+    method: POST
+    body_format: json
+    body:
+      name: "{{ inventory_hostname }}"
+      connection_type: "socket"
+      socket_path: "/var/run/docker.sock"
+    status_code: [200, 201, 409]
+    validate_certs: false
+  delegate_to: localhost
+  when: not completed_flag_file.stat.exists
+
+- name: Create Dockhand admin user
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}:{{ docker_dockhand_host_port }}/api/users"
+    method: POST
+    body_format: json
+    status_code: [200, 201, 409] # 409 means user already exists
+    return_content: true
+    headers:
+      Accept: "application/json"
+    body:
+      username: "{{ vault_docker_dockhand_admin_username }}"
+      password: "{{ vault_docker_dockhand_admin_password }}"
+    validate_certs: false
+  delegate_to: localhost
+  register: new_dockhand_admin_user
+  when: not completed_flag_file.stat.exists
+
+- name: Force Enable Authentication in Dockhand SQLite Database
+  ansible.builtin.command: >
+    docker exec dockhand sqlite3 /app/data/db/dockhand.db 
+    "UPDATE auth_settings SET auth_enabled = 1;"
+  become: true
+  changed_when: true
+  when: not completed_flag_file.stat.exists
+
+- name: Restart Dockhand to Apply Database Changes
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_dockhand_docker_builds }}/dockhand"
+    services:
+      - dockhand
+    state: restarted
+  become: true
+  when: not completed_flag_file.stat.exists
+
+- name: Create completed flag file
+  ansible.builtin.file:
+    path: "{{ docker_dockhand_docker_builds }}/dockhand/.completed"
+    state: touch
+  become: true
+  when: not completed_flag_file.stat.exists

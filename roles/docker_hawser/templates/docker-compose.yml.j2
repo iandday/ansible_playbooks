@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+
+services:
+  hawser:
+    image: ghcr.io/finsys/hawser@sha256:{{ docker_hawser_container_hash }}
+    container_name: hawser
+    restart: unless-stopped
+    ports:
+      - 2376:2376
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOCKHAND_SERVER_URL={{ docker_hawser_dockhand_url }}
+      - TOKEN={{ docker_hawser_token }}
+      - AGENT_NAME={{ docker_hawser_agent_name }}
+    labels:
+      - "traefik.enable=false"
+  

@@ -1,0 +1,36 @@
+# {{ ansible_managed }}
+
+services:
+  dockhand:
+    image: fnsys/dockhand:{{ docker_dockhand_container_label }}
+    container_name: dockhand
+    restart: unless-stopped
+    ports:
+      - {{ docker_dockhand_host_port }}:3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - {{ all_docker_storage }}/dockhand:/app/data
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dockhand-secure.entrypoints=web-secure"
+      - "traefik.http.routers.dockhand-secure.rule=Host(`dockhand.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.dockhand-secure.tls=true"
+      - "traefik.http.routers.dockhand-secure.tls.certresolver=route53"
+      - "traefik.http.routers.dockhand-secure.tls.domains[0].main={{ all_ext_domain }}"
+      - "traefik.http.routers.dockhand-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "traefik.http.services.dockhand-secure.loadbalancer.server.port=3000"
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Dockhand"
+      - "homepage.icon=sh-dockhand"
+      - "homepage.href=http://docker-infra-01.{{ all_ext_domain }}:{{ docker_dockhand_host_port }}"
+      - "homepage.description=Docker environment management"
+      - "homepage.widget.type=dockhand"
+      - "homepage.widget.url=http://docker-infra-01.{{ all_ext_domain }}:{{ docker_dockhand_host_port }}"
+      - 'homepage.widget.username={{ vault_docker_dockhand_admin_username }}'
+      - 'homepage.widget.password={{ vault_docker_dockhand_admin_password }}'
+networks:
+  traefik_proxy:
+      name: traefik_proxy
+      external: true

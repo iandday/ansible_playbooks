@@ -1,0 +1,7 @@
+---
+#
+# roles/docker_dockhand/defaults/main.yml
+#
+
+docker_dockhand_docker_builds: "{{ all_docker_builds }}"
+docker_dockhand_docker_storage: "{{ all_docker_storage }}"

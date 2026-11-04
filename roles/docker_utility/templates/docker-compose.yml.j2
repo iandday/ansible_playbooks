@@ -1,40 +1,7 @@
 # {{ ansible_managed }}
 
 services:
-  portainer:
-    image: portainer/portainer-ce:{{ docker_utility_portainer_version }}
-    container_name: portainer
-    restart: always
-    command: -H unix:///var/run/docker.sock
-    ports:
-      - target: 9443
-        published: 9443
-        protocol: tcp
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - {{ all_docker_storage }}/portainer/:/data
-    environment:
-      - TZ={{ docker_utility_timezone }}
-    networks:
-      - traefik_proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.portainer-secure.entrypoints=web-secure"
-      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.{{ all_ext_domain }}`)"
-      - "traefik.http.routers.portainer-secure.tls=true"
-      - "traefik.http.routers.portainer-secure.tls.certresolver=route53"
-      - "traefik.http.routers.portainer-secure.tls.domains[0].main={{ all_ext_domain }}"
-      - "traefik.http.routers.portainer-secure.tls.domains[0].sans=*.{{ all_ext_domain }}"
-      - "traefik.http.services.portainer-secure.loadbalancer.server.port=9000"
-      - "homepage.group=Infrastructure"
-      - "homepage.name=Portainer"
-      - "homepage.icon=sh-portainer-v1"
-      - "homepage.href=https://docker-infra-01.{{ all_ext_domain }}:9443"
-      - "homepage.description=Docker environment management"
-      - "homepage.widget.type=portainer"
-      - "homepage.widget.url=https://portainer:9443"
-      - "homepage.widget.env=1" 
-      - 'homepage.widget.key={{ vault_docker_utility_portainer_api_key }}'
+
   mail:
     container_name: mail
     restart: always
