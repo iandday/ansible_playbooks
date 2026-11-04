@@ -1,0 +1,82 @@
+---
+# {{ ansible_managed }}
+
+#- Apps:
+
+- Media:
+{% for service in vault_docker_utility_homepage_services_media %}
+    - {{ service.name }}:
+{% for k, v in service.items() %}
+{% if k != 'name' %}
+        {{ k }}: {{ v }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+- Sailing:
+{% for service in vault_docker_utility_homepage_services_sailing %}
+    - {{ service.name }}:
+{% for k, v in service.items() %}
+{% if k != 'name' %}
+        {{ k }}: {{ v }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+
+- Home:
+{% for service in vault_docker_utility_homepage_services_home %}
+    - {{ service.name }}:
+{% for k, v in service.items() %}
+{% if k != 'name' %}
+        {{ k }}: {{ v }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+- Services:
+    - Unifi Controller:
+        href: {{ vault_unifi_controller_url }}/network/default/dashboard
+        icon: sh-ubiquiti-unifi
+        widget:
+            type: unifi
+            url: {{ vault_unifi_controller_url }}
+            key: {{ vault_unifi_controller_key }}
+- Infrastructure:
+{% for service in vault_docker_utility_homepage_services_infrastructure %}
+    - {{ service.name }}:
+{% for k, v in service.items() %}
+{% if k != 'name' %}
+        {{ k }}: {{ v }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+    - Proxmox-Main:
+        href: https://{{ vault_all_pve_api_host }}:8006/
+        description: Proxmox Main Server
+        icon: sh-proxmox
+        widget:
+            type: proxmox
+            url: https://{{ vault_all_pve_api_host }}:8006/
+            username: {{ vault_pve_02_api_username }}
+            password: {{ vault_pve_02_api_password }}
+    - NAS:
+        href: https://{{ vault_truenas_ip }}
+        description: TrueNAS
+        icon: sh-truenas-core
+        widget:
+            type: truenas
+            url: https://{{ vault_truenas_ip }}
+            version: 2
+            key: {{ vault_truenas_api_key }}
+            enablePools: true
+            nasType: scale
+- Home Automation:
+{% for service in vault_docker_utility_homepage_services_automation %}
+    - {{ service.name }}:
+{% for k, v in service.items() %}
+{% if k != 'name' %}
+        {{ k }}: {{ v }}
+{% endif %}
+{% endfor %}
+{% endfor %}

@@ -1,0 +1,17 @@
+---
+# {{ ansible_managed }}
+
+- resources:
+    cpu: true
+    memory: true
+    disk: /
+
+- search:
+    provider: duckduckgo
+    target: _blank
+- openweathermap:
+    latitude: {{ vault_docker_utility_homepage_lattitude }}
+    longitude: {{ vault_docker_utility_homepage_longitude }}
+    provider: openweathermap
+    cache: 10
+    units: imperial

@@ -83,6 +83,22 @@
     mode: 0600
   become: true
 
+- name: copy homepage config files
+  become: true
+  template:
+    src: "homepage/{{ item }}.j2"
+    dest: "{{ docker_utility_docker_storage }}/homepage_config/{{ item }}"
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0600
+  loop:
+    - bookmarks.yaml
+    - docker.yaml
+    - proxmox.yaml
+    - services.yaml
+    - settings.yaml
+    - widgets.yaml
+
 - name: Ensure logrotate is installed
   become: true
   ansible.builtin.package:

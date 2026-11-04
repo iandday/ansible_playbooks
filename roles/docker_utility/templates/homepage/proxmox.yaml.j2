@@ -1,0 +1,11 @@
+---
+# {{ ansible_managed }}
+
+pve-02:
+  url: https://{{ vault_all_pve_api_host }}:8006/
+  token: {{ vault_pve_02_api_username }}
+  secret: {{ vault_pve_02_api_password }} 
+pve-nvr:
+  url: https://{{ vault_pve_spare_api_host }}:8006/
+  token: {{ vault_pve_spare_api_username }}
+  secret: {{ vault_pve_spare_api_password }}
