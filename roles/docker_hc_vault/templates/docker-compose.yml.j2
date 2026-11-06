@@ -2,7 +2,7 @@
 
 services:
   hcv_1:
-    image: hashicorp/vault:{{ docker_hc_vault_version }}
+    image: hashicorp/vault@{{ docker_hc_vault_container_hash }}
     container_name: hcv_1
     restart: unless-stopped
     user: "{{ docker_uid }}:{{ docker_gid }}"
@@ -33,6 +33,11 @@ services:
       - "traefik.http.routers.hc-vault.tls.certresolver=route53"
       - "traefik.http.routers.hc-vault.tls.domains[0].main={{ all_ext_domain }}"
       - "traefik.http.routers.hc-vault.tls.domains[0].sans=*.{{ all_ext_domain }}"
+      - "homepage.group=Services"
+      - "homepage.name=Hashicorp Vault"
+      - "homepage.icon=sh-hashicorp-vault"
+      - "homepage.href=https://hc-vault.{{ all_ext_domain }}/"
+      - "homepage.description=Secrets and CA"
     healthcheck:
       test: ["CMD", "vault", "status"]
       interval: 30s
@@ -45,7 +50,7 @@ services:
           cpus: '1'
           memory: 1G
   hcv_2:
-    image: hashicorp/vault:{{ docker_hc_vault_version }}
+    image: hashicorp/vault@{{ docker_hc_vault_container_hash }}
     container_name: hcv_2
     restart: unless-stopped
     user: "{{ docker_uid }}:{{ docker_gid }}"
@@ -88,7 +93,7 @@ services:
           cpus: '1'
           memory: 1G
   hcv_3:
-    image: hashicorp/vault:{{ docker_hc_vault_version }}
+    image: hashicorp/vault@{{ docker_hc_vault_container_hash }}
     container_name: hcv_3
     restart: unless-stopped
     user: "{{ docker_uid }}:{{ docker_gid }}"
@@ -131,7 +136,7 @@ services:
           cpus: '1'
           memory: 1G
   hcv_unsealer:
-    image: hashicorp/vault:{{ docker_hc_vault_version }}
+    image: hashicorp/vault@{{ docker_hc_vault_container_hash }}
     container_name: hcv_unsealer
     restart: unless-stopped
     user: "{{ docker_uid }}:{{ docker_gid }}"

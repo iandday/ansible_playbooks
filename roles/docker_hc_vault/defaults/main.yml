@@ -8,3 +8,4 @@ docker_hc_vault_required_vars:
   - docker_gid
 docker_hc_vault_docker_builds: "{{ all_docker_builds }}"
 docker_hc_vault_docker_storage: "{{ all_docker_storage }}"
+docker_hc_vault_container_hash: "sha256:962a92876e168d68eaaa24b0b8b49bbce1cb63024060a67bba95cd158a366fc2"
