@@ -15,68 +15,19 @@
     - "{{ docker_dockhand_docker_builds }}"
     - "{{ docker_dockhand_ssl_dir }}"
 
-- name: Check for dockhand ssl cert
-  become: true
-  stat:
-    path: "{{ docker_dockhand_ssl_cert }}"
-  register: dockhand_ssl_cert
-
-- name: Read certificate information if it exists
-  become: true
-  community.crypto.x509_certificate_info:
-    path: "{{ docker_dockhand_ssl_cert }}"
-  register: cert_info
-  when: dockhand_ssl_cert.stat.exists
-
-- name: Request a new certificate from Vault PKI
-  community.hashi_vault.vault_pki_generate_certificate:
-    url: "{{ vault_hc_vault_url }}"
-    auth_method: approle
-    role_id: "{{ vault_hc_vault_ansible_runner_role_id }}"
-    secret_id: "{{ vault_hc_vault_ansible_runner_secret_id }}"
-    engine_mount_point: "{{ vault_hc_vault_ansible_runner_pki_engine_path }}"
-    role_name: "{{ vault_hc_vault_ansible_runner_role_name }}"
-    common_name: "{{ docker_dockhand_cert_cn }}"
-    ttl: "7200h" 
-    ip_sans:
-      - "{{ ansible_host }}"
-    alt_names:
+- name: create ssl cert
+  include_role:
+    name: common
+    tasks_from: create_certificate.yml
+  vars:
+    certificate_path: "{{ docker_dockhand_ssl_cert }}"
+    certificate_key_path: "{{ docker_dockhand_ssl_key }}"
+    certificate_ca_path: "{{ docker_dockhand_ssl_ca_chain }}"
+    certificate_cn: "{{ docker_dockhand_cert_cn }}"
+    certificate_san:
       - "{{ inventory_hostname }}.{{ all_ext_domain }}" 
-  when: >
-    not dockhand_ssl_cert.stat.exists or 
-    (cert_info.valid_at.three_weeks_and_five_days is defined and not cert_info.valid_at.three_weeks_and_five_days)
-  register: vault_cert_response
-  delegate_to: localhost
-
-- name: Save the Private Key to the server
-  become: true
-  ansible.builtin.copy:
-    content: "{{ vault_cert_response.data.data.private_key }}"
-    dest: "{{ docker_dockhand_ssl_key }}"
-    mode: "0600"
-    owner: root
-    group: root
-  when: vault_cert_response.changed 
-
-- name: Save the Certificate to the server
-  become: true
-  ansible.builtin.copy:
-    content: "{{ vault_cert_response.data.data.certificate }}"
-    dest: "{{ docker_dockhand_ssl_cert }}"
-    mode: "0644"
-    owner: root
-    group: root
-  when: vault_cert_response.changed
-
-- name: Save the CA Chain to the server
-  become: true
-  ansible.builtin.copy:
-    content: "{{ vault_cert_response.data.data.issuing_ca }}"
-    dest: "{{  docker_dockhand_docker_builds }}/ca_chain.crt"
-    mode: "0644"
-    owner: root
-    group: root
-  when: vault_cert_response.changed
+    certificate_ip_san: 
+      - "{{ ansible_host }}"
 
 - name: copy docker files
   become: true

@@ -8,5 +8,6 @@ docker_dockhand_docker_storage: "{{ all_docker_storage }}/dockhand"
 docker_dockhand_ssl_dir: "{{ all_docker_storage }}/dockhand_ssl"
 docker_dockhand_ssl_cert: "{{ docker_dockhand_ssl_dir }}/dockhand.crt"
 docker_dockhand_ssl_key: "{{ docker_dockhand_ssl_dir }}/dockhand.key"
+docker_dockhand_ssl_ca_chain: "{{ docker_dockhand_ssl_dir }}/dockhand_ca_chain.crt"
 docker_dockhand_cert_cn: "dockhand.{{ all_ext_domain }}"
 docker_dockhand_host_port: 3001
