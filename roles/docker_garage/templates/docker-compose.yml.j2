@@ -46,6 +46,15 @@ services:
       - "traefik.http.routers.garage-static-secure.tls.domains[0].sans=*.garage-static.{{ all_ext_domain }}"
       - "traefik.http.services.garage-static-secure.loadbalancer.server.port=3902"
       - "traefik.http.routers.garage-static-secure.service=garage-static-secure"
+      - "traefik.http.routers.garage-media-secure.rule=Host(`garage-media.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.garage-media-secure.rule=HostRegexp(`.*.garage-media.{{ all_ext_domain }}`)"
+      - "traefik.http.routers.garage-media-secure.entrypoints=web-secure"
+      - "traefik.http.routers.garage-media-secure.tls=true"
+      - "traefik.http.routers.garage-media-secure.tls.certresolver=route53"
+      - "traefik.http.routers.garage-media-secure.tls.domains[0].main=garage-media.{{ all_ext_domain }}"
+      - "traefik.http.routers.garage-media-secure.tls.domains[0].sans=*.garage-media.{{ all_ext_domain }}"
+      - "traefik.http.services.garage-media-secure.loadbalancer.server.port=3902"
+      - "traefik.http.routers.garage-media-secure.service=garage-media-secure"
   garage1:
     image: dxflrs/garage:v2.5.0
     container_name: garage-1
