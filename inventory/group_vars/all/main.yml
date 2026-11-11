@@ -37,3 +37,4 @@ all_splunk_uf_port: 9997
 all_proxmox_validate_certs: False
 common_certificate_path: "{{ playbook_dir }}/inventory/certificates"
 all_root_ca_cert: "{{ common_certificate_path }}/CA.crt"
+

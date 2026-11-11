@@ -1,0 +1,22 @@
+---
+#
+# roles/docker_ollama/defaults/main.yml
+#
+
+docker_ollama_docker_builds: "{{ all_docker_builds }}"
+docker_ollama_docker_storage: "{{ all_docker_storage }}"
+docker_ollama_container_hash: "sha256:7a75d778d4c3cd66ea689160459562ad9da8cc42ee2dc140b5419f25b7290b20"
+docker_ollama_open_webui_container_hash: "sha256:46b59158e6558eeb980bc828e0f1b30238ad24d82ed84d5e5eda1dab2a082f14" #v0.13.3
+docker_ollama_nginx_container_hash: "sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11" #1.31.8-alpine3.24
+docker_ollama_open_webui_server_name: "chat.{{ all_ext_domain }}"
+docker_ollama_compose_dir: "{{ docker_ollama_docker_builds }}/ollama"
+docker_ollama_open_webui_nginx_conf_dir: "{{ docker_ollama_compose_dir }}/open_webui_nginx_conf"
+docker_ollama_open_webui_cert_dir: "{{ docker_ollama_compose_dir }}/open_webui_certs"
+
+
+
+docker_ollama_open_webui_data_dir: "{{ docker_ollama_docker_storage }}/open_webui"
+
+docker_ollama_open_webui_ssl_cert_file_name: "nginx.crt"
+docker_ollama_open_webui_ssl_cert_key_file_name: "nginx.key"
+docker_ollama_open_webui_ssl_cert_ca_file_name: "nginx-ca.crt"

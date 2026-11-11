@@ -85,3 +85,13 @@
     name: splunk
     state: restarted
   become: true
+
+- name: restart docker
+  service:
+    name: docker
+    state: restarted
+  become: true
+
+- name: reload ufw
+  command: ufw reload
+  become: true

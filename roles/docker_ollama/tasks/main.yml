@@ -1,0 +1,55 @@
+---
+#
+# roles/docker_ollama/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - "{{ docker_ollama_compose_dir }}"
+    - "{{ docker_ollama_open_webui_cert_dir }}"
+    - "{{ docker_ollama_open_webui_nginx_conf_dir }}"
+
+- name: create open webui data directories
+  become: true
+  file:
+    path: "{{ docker_ollama_open_webui_data_dir }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop: 
+    - "{{ docker_ollama_open_webui_data_dir }}"
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item.src }}.j2"
+    dest: "{{ item.dest }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - {src: "docker-compose.yml", dest: "{{ docker_ollama_compose_dir }}/docker-compose.yml"}
+    - {src: "open-webui-nginx.conf", dest: "{{ docker_ollama_open_webui_nginx_conf_dir }}/open-webui-nginx.conf"}
+
+- name: create ssl cert
+  include_role:
+    name: common
+    tasks_from: create_certificate.yml
+  vars:
+    certificate_path: "{{ docker_ollama_open_webui_cert_dir }}/{{ docker_ollama_open_webui_ssl_cert_file_name }}"
+    certificate_key_path: "{{ docker_ollama_open_webui_cert_dir }}/{{ docker_ollama_open_webui_ssl_cert_key_file_name }}"
+    certificate_chain_path: "{{ docker_ollama_open_webui_cert_dir }}/{{ docker_ollama_open_webui_ssl_cert_ca_file_name }}"
+    certificate_cn: "{{ docker_ollama_open_webui_server_name }}"
+    certificate_san:
+      - "{{ inventory_hostname }}.{{ all_ext_domain }}" 
+    certificate_ip_san: 
+      - "{{ ansible_host }}"

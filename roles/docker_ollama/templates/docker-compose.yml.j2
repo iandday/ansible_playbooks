@@ -1,0 +1,104 @@
+# {{ ansible_managed }}
+
+services:
+  ollama:
+    image: ollama/ollama@{{ docker_ollama_container_hash }}
+    container_name: ollama
+    restart: unless-stopped
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    volumes:
+      - {{ docker_ollama_docker_storage }}/ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_CONTEXT_LENGTH=32768
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_KV_CACHE_TYPE=q8_0
+  open-webui:
+    image: ghcr.io/open-webui/open-webui@{{ docker_ollama_open_webui_container_hash }}
+    container_name: open-webui
+    restart: unless-stopped
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SESSION_COOKIE_SECURE=true
+      - HSTS=max-age=31536000;includeSubDomains
+      - XFRAME_OPTIONS=DENY
+      - XCONTENT_TYPE=nosniffs
+      - REFERRER_POLICY=strict-origin-when-cross-origin
+      - PERMISSIONS_POLICY=camera=(),microphone=(),geolocation=()
+      #- CONTENT_SECURITY_POLICY=default-src 'self'; script-src 'self, script-scr-elem'; style-src 'self' 'unsafe-inline'
+      #- CONTENT_SECURITY_POLICY_REPORT_ONLY=default-src 'self'; report-uri /csp-report
+      - CROSS_ORIGIN_EMBEDDER_POLICY=require-corp
+      - CROSS_ORIGIN_OPENER_POLICY=same-origin
+      - CROSS_ORIGIN_RESOURCE_POLICY=same-origin
+      - CORS_ALLOW_ORIGIN=https://{{ docker_ollama_open_webui_server_name }}
+      - WEBUI_URL=https://{{ docker_ollama_open_webui_server_name }}
+      - DOCKER=True
+      - REDIS_URL=redis://valkey:6379/0
+      - ENABLE_WEBSOCKET_SUPPORT=true
+      - WEBSOCKET_MANAGER=redis
+      - WEBSOCKET_REDIS_URL=redis://valkey:6379/1
+      - REDIS_KEY_PREFIX=open-webui
+      - WEBUI_ADMIN_EMAIL={{ vault_docker_open_webui_admin_email }}
+      - WEBUI_ADMIN_PASSWORD={{ vault_docker_open_webui_admin_password }}
+      #- SCIM_ENABLED=true
+      #- SCIM_TOKEN={{ vault_docker_open_webui_scim_token }}
+      #- SCIM_AUTH_PROVIDER={{ vault_docker_open_webui_scim_auth_provider }}
+      - OAUTH_CLIENT_ID={{ vault_docker_open_webui_oauth_client_id }}
+      - OAUTH_CLIENT_SECRET={{ vault_docker_open_webui_oauth_client_secret }}
+      - OPENID_PROVIDER_URL={{ vault_docker_open_webui_openid_provider_url }}
+      - OPENID_REDIRECT_URI=https://chat.{{ all_ext_domain }}/oauth/oidc/callback
+      - OAUTH_PROVIDER_NAME={{ vault_docker_open_webui_oauth_provider_name }}
+      - OAUTH_SCOPES=openid email profile roles
+      - OAUTH_ROLES_CLAIM=roles
+      - OAUTH_ADMIN_ROLES=admin
+      - OAUTH_ALLOWED_ROLES=user,admin
+      - ENABLE_OAUTH_ROLE_MANAGEMENT=true
+      - ENABLE_OAUTH_SIGNUP=true
+      - ENABLE_LOGIN_FORM=false
+      - ENABLE_PASSWORD_AUTH=false
+      - OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
+    volumes:
+      - {{ docker_ollama_docker_storage }}/open_webui:/app/backend/data
+    expose:
+      - "8080"
+    depends_on:
+      - ollama  
+    labels:
+      - "homepage.group=Apps"
+      - "homepage.name=Our ChatGPT"
+      - "homepage.icon=sh-ollama"
+      - "homepage.href=https://{{ docker_ollama_open_webui_server_name }}/"
+      - "homepage.description=ChatGPT"  
+  nginx:
+    image: nginx@{{ docker_ollama_nginx_container_hash }}
+    container_name: open-webui-nginx
+    ports:
+      - "443:443"
+    volumes:
+      - {{ docker_ollama_open_webui_nginx_conf_dir }}:/etc/nginx/conf.d
+      - {{ docker_ollama_open_webui_cert_dir }}:/etc/nginx/ssl
+    depends_on:
+      - open-webui
+  valkey:
+    image: docker.io/valkey/valkey:8.0-alpine
+    container_name: valkey
+    restart: unless-stopped
+    volumes:
+      - {{ docker_ollama_docker_storage }}/open_webui_cache:/data
+    command: "valkey-server --save 30 1 --appendonly yes --maxmemory-policy noeviction"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  
+
+  
