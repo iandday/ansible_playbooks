@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+
+services:
+  dockerproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy@{{ docker_socket_proxy_container_hash }}
+    container_name: dockerproxy
+    environment:
+      - CONTAINERS={{ docker_socket_proxy_containers }}
+      - SERVICES={{ docker_socket_proxy_services }}
+      - TASKS={{ docker_socket_proxy_tasks }}
+      - POST={{ docker_socket_proxy_post }}
+    ports:
+      - 2375:2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped

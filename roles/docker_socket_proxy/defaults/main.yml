@@ -1,0 +1,12 @@
+---
+#
+# roles/docker_socket_proxy/defaults/main.yml
+#
+
+docker_socket_proxy_docker_builds: "{{ all_docker_builds }}/socket_proxy"
+docker_socket_proxy_docker_storage: "{{ all_docker_storage }}/socket_proxy"
+docker_socket_proxy_container_hash: "sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459" # v0.5.0
+docker_socket_proxy_containers: 1
+docker_socket_proxy_services: 0
+docker_socket_proxy_tasks: 0
+docker_socket_proxy_post: 0

@@ -1,0 +1,33 @@
+---
+#
+# roles/docker_socket_proxy/tasks/main.yml
+#
+
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - "{{ docker_socket_proxy_docker_builds }}"
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_socket_proxy_docker_builds }}/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: start compose stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_socket_proxy_docker_builds }}"
+    state: present
+  become: true
