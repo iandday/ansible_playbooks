@@ -8,3 +8,9 @@ docker_frigate_required_vars:
   - docker_gid
 docker_frigate_docker_builds: "{{ all_docker_builds }}"
 docker_frigate_docker_storage: "{{ all_docker_storage }}"
+docker_frigate_container_hash: "sha256:33459130f91d646c268d7f1166e53d14bd74e31b331e4dd8e1e7ed2f027f45d4"
+docker_frigate_reostream_container_hash: "sha256:b59e8c5abeff3f7e4870b4bd0611c9a48bf23fcb2b473242bc5fce25f74e059f"
+docker_frigate_compose_dir: '{{ docker_frigate_docker_builds }}/frigate'
+docker_frigate_ssl_dir: '{{ docker_frigate_compose_dir }}/ssl'
+docker_frigate_ssl_cert_name: "fullchain.pem"
+docker_frigate_ssl_cert_key_name: "privkey.pem"

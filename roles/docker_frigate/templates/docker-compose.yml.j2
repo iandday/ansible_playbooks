@@ -2,7 +2,7 @@
 
 services:
   reostream:
-    image: ghcr.io/volttech21/reostream:latest
+    image: ghcr.io/volttech21/reostream@{{ docker_frigate_reostream_container_hash }}
     restart: unless-stopped
     ports:
       - "8560:8560"
@@ -14,8 +14,8 @@ services:
     container_name: frigate
     privileged: true
     restart: unless-stopped
-    image: ghcr.io/blakeblackshear/frigate:0.18.2
-    shm_size: "512mb"
+    image: ghcr.io/blakeblackshear/frigate@{{ docker_frigate_container_hash }}
+    shm_size: "1024mb"
     networks:
       - default
     devices:
@@ -24,6 +24,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - {{ docker_frigate_docker_storage }}/frigate_config:/config
+      - {{ docker_frigate_ssl_dir }}:/etc/letsencrypt/live/frigate:ro
       - /mnt/video/:/media/frigate
       - type: tmpfs
         target: /tmp/cache
@@ -32,7 +33,7 @@ services:
     ports:
       - "8554:8554" # RTSP feeds
       - "5000:5000" # UI HTTP
-      - "8971:8971" # UI HTTPS
+      - "443:8971" # UI HTTPS
       - "1984:1984" # API
       - "8555:8555/tcp" # WebRTC over tcp
       - "8555:8555/udp" # WebRTC over udp

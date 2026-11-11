@@ -3,24 +3,53 @@
 # roles/docker_frigate/tasks/main.yml
 #
 
-# - name: load common role variables
-#   include_vars: "{{ playbook_dir }}/roles/common/vars/{{ item }}.yml"
-#   with_items:
-#     - main
-#     - vault
-#   no_log: true
-
-- name: check for required variables
-  fail:
-    msg: "Variable '{{ item }}' is not defined"
-  when: item not in vars
+- name: check for required variables from docker_frigate_required_vars
+  ansible.builtin.fail:
+    msg: "The required variable '{{ item }}' is missing!"
+  when: lookup('ansible.builtin.vars', item, default=none) is none
   loop: "{{ docker_frigate_required_vars }}"
+  
+- name: create compose directory
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0755
+  loop:
+    - "{{ docker_frigate_compose_dir }}"
+    - "{{ docker_frigate_ssl_dir }}"
 
-- name: wait for response
-  wait_for_connection:
-    delay: "1"
-    timeout: "300"
-  delegate_to: localhost
+- name: create ssl cert
+  include_role:
+    name: common
+    tasks_from: create_certificate.yml
+  vars:
+    certificate_path: "{{ docker_frigate_ssl_dir }}/cert.pem"
+    certificate_key_path: "{{ docker_frigate_ssl_dir }}/{{ docker_frigate_ssl_cert_key_name }}"
+    certificate_chain_path: "{{ docker_frigate_ssl_dir }}/{{ docker_frigate_ssl_cert_name }}"
+    certificate_cn: "{{ inventory_hostname }}.{{ all_ext_domain }}"
+    certificate_san: []
+    certificate_ip_san: 
+      - "{{ ansible_host }}"
 
-- name: start main play
-  include_tasks: install_docker_frigate.yml
+
+- name: copy docker files
+  become: true
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ docker_frigate_docker_builds }}/frigate/{{ item }}"
+    backup: true
+    owner: "{{ docker_uid }}"
+    group: "{{ docker_gid }}"
+    mode: 0700
+  loop:
+    - docker-compose.yml
+
+- name: install intel-media-va-driver-non-free
+  become: true
+  apt:
+    name: intel-media-va-driver-non-free
+    state: present
+    update_cache: true
